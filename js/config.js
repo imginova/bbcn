@@ -10,13 +10,13 @@
    ===================================================================== */
 
 // ---------- the clock ----------
-const HOUR_SECONDS = 60;   // real seconds per in-game hour
+const HOUR_SECONDS = 30;   // real seconds per in-game hour (a whole night lasts 3 minutes)
 const NIGHT_HOURS = 6;     // 12 AM to 6 AM
 
 // ---------- power ----------
 const BASE_DRAIN = 0;      // % power per second with nothing switched on (idle costs nothing)
-const UNIT_DRAIN = 0.20;   // % per second for EACH closed door or the raised camera
-                           // (both doors + camera = 0.60% per second)
+const UNIT_DRAIN = 0.40;   // % per second for EACH closed door or the raised camera
+                           // (both doors + camera = 1.20% per second)
 
 // ---------- difficulty levels (custom night) ----------
 const MIN_LEVEL = 1;

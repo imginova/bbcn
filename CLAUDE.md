@@ -24,8 +24,8 @@ This file holds everything a new Claude session, or a person, needs to keep work
 |---|---|---|---|
 | Doors | Block a shape at the door. Each closed door costs power. Toggling a door does **not** lower the camera | Click the door or its button | `A` left, `D` right |
 | Camera | Shows an ASCII feed of one room plus a map. Raising it costs power | Camera button, then click a room on the map | `Space` or `S` toggles; `1`–`7` jump to a camera |
-| Power | Starts at 100%. **Nothing drains while idle.** Each door or the camera costs 0.20% per second. At 0% the doors open, the camera dies, and a shape gets you 5–13 seconds later | n/a | n/a |
-| Clock | 12 AM to 6 AM, 60 real seconds per hour, so a night lasts 6 minutes | n/a | n/a |
+| Power | Starts at 100%. **Nothing drains while idle.** Each door or the camera costs 0.40% per second. At 0% the doors open, the camera dies, and a shape gets you 5–13 seconds later | n/a | n/a |
+| Clock | 12 AM to 6 AM, 30 real seconds per hour, so a night lasts 3 minutes | n/a | n/a |
 | Pause / sound | Pausing also happens automatically when the browser tab is hidden | Sound button at the top | `P` or `Esc` pauses, `M` mutes |
 
 ### The threats (custom night: each has its own level, 1–20)
@@ -51,6 +51,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **Doors work while the camera is up.** Jake asked for this so you keep watching while you close a door.
 - **The orb is invisible at the door.** Jake wanted it identified by its louder audio cue only.
 - **Power drains only while in use.** Jake removed the idle drain and asked for faster per-use drain to compensate. It went from 0.10% idle + 0.12% per item to 0% idle + 0.20% per item.
+- **Short nights, heavy drain.** The hour was cut from 60 to 30 seconds (3-minute nights), and the drain per item was doubled to 0.40% at the same time. Doubling it keeps the same share of the battery per in-game hour, so power stays just as tight over the shorter night.
 - **Visual style:** a single dark amber CRT terminal. The fonts are VT323 for display text and IBM Plex Mono for the art, both loaded from Google Fonts. The look is dark on purpose, so there's no light theme.
 
 ## How the code is organized
@@ -109,12 +110,12 @@ The game is published with Claude's **Artifact** tool.
   - For a screenshot, use `--headless=new --screenshot=out.png --window-size=900,1100 --virtual-time-budget=3000`.
   - For automated play, append a test `<script>` to a temporary copy *in the project folder* (so the relative paths work). It should send `keydown` events and write its results to `document.title`; then read them with `--dump-dom`.
   - Headless Chrome barely runs `requestAnimationFrame`, so the test script should drive the game itself with `setInterval(() => { update(0.02); renderGame(performance.now()); }, 20)` while `currentScreen === 'game'`.
-- **What a full test covers:** both doors with keys and mouse; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 359`); and phone width with no sideways scrolling.
+- **What a full test covers:** both doors with keys and mouse; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 179`); and phone width with no sideways scrolling.
 
 ## Not yet verified
 
 - **Sound has never been heard by Claude.** The rumble, footsteps, winding, tune and jumpscare volume need a human ear.
-- **Balance with the new power drain has not been play-tested.** The values are 0.20% per item and no idle drain.
+- **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain and 30-second hours.
 - **The live link has only been checked by Jake.** Claude's test browser wasn't signed in to claude.ai.
 - A best score saved before Lenny existed shows `–` for his level and is totaled out of 80.
 

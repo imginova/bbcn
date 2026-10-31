@@ -29,7 +29,7 @@ let windKey = false, windPointer = false;   // is W held down / is the Wind butt
 const sideOf = m => m.route[m.route.length - 1];   // which door it is heading for: 'L' or 'R'
 const atDoor = m => m.step === m.route.length - 1;  // is it standing in that doorway right now?
 
-// Turn seconds into the clock: 0-59s is 12 AM, 60-119s is 1 AM, and so on.
+// Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
 const hourLabel = h => (h === 0 ? 12 : h) + ' AM';
 

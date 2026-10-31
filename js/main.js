@@ -39,7 +39,7 @@ function loop(now) {
 // A testing helper you can use from the browser's developer console:
 //   nightShift.state         look at everything about the current night
 //   nightShift.speed = 20    make time pass 20 times faster
-//   nightShift.state.t = 359 jump to one second before 6 AM
+//   nightShift.state.t = 179 jump to one second before 6 AM
 window.nightShift = {
   get state() { return G; },
   get speed() { return speed; },

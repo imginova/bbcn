@@ -39,7 +39,7 @@ The files load in that order, and each one can use what the files above it creat
 
 Change something, save the file and reload the page to see what happens.
 
-- In `config.js`, set `HOUR_SECONDS = 10` for one-minute nights.
+- In `config.js`, set `HOUR_SECONDS = 10` for one-minute nights (it's 30 now, for 3-minute nights).
 - In `config.js`, set `UNIT_DRAIN = 0.05` and see how much easier the doors get.
 - In `data.js`, change `sym: '◆'` to another character, such as `'★'`.
 - In `sound.js`, change the numbers in `chime()` to play a different 6 AM tune.
