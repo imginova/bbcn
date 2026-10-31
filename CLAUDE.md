@@ -23,8 +23,9 @@ This file holds everything a new Claude session, or a person, needs to keep work
 | Part | How it works | Mouse | Keyboard |
 |---|---|---|---|
 | Doors | Block a shape at the door. Each closed door costs power. Toggling a door does **not** lower the camera | Click the door or its button | `A` left, `D` right |
+| Door lights | Only for ■. Shine while **held**, and only with the camera down. A lit doorway glows and shows ■ if it's there. Each lit light costs power | Hold the Left/Right light buttons | Hold `Q` left, `E` right |
 | Camera | Shows an ASCII feed of one room plus a map. Raising it costs power | Camera button, then click a room on the map | `Space` or `S` toggles; `1`–`7` jump to a camera |
-| Power | Starts at 100%. **Nothing drains while idle.** Each door or the camera costs 0.40% per second. At 0% the doors open, the camera dies, and a shape gets you 5–13 seconds later | n/a | n/a |
+| Power | Starts at 100%. **Nothing drains while idle.** Each door, door light or the camera costs 0.40% per second (the usage meter has 5 bars). At 0% the doors open, the camera dies, and a shape gets you 5–13 seconds later | n/a | n/a |
 | Clock | 12 AM to 6 AM, 30 real seconds per hour, so a night lasts 3 minutes | n/a | n/a |
 | Pause / sound | Pausing also happens automatically when the browser tab is hidden | Sound button at the top | `P` or `Esc` pauses, `M` mutes |
 
@@ -36,20 +37,25 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 |---|---|---|
 | `◆` Diamond (rose) | Stage → Dining → Backstage → West hall → **LEFT** door | Appears in the left doorway |
 | `▲` Triangle (cyan) | Stage → Dining → Supply → East hall → **RIGHT** door | Appears in the right doorway |
-| `●` Orb (violet) | Stage → Dining → either hall → **either** door | **Never appears in the doorway.** Its arrival plays a loud low **rumble** from its side instead of footsteps |
+| `●` Orb (violet) | Stage → Dining → either hall → **either** door | **Never appears in the doorway.** Its arrival plays a loud low **rumble** from its side instead of footsteps. **Stalls:** if both doors are shut when it arrives, it waits in the doorway instead of leaving. As soon as either door opens, it rumbles from that side and attacks that door with a fresh reaction window |
 | `( ͡° ͜ʖ ͡°)` Lenny (green) | Stays in the music box on **CAM 7 · Prize corner** | Works like FNAF 2's music box: the box unwinds over time, and you **hold `W` or the Wind button while on CAM 7** to rewind it, at 50% per second (empty to full in 2 seconds). Below 30% the Camera button shows "WIND CAM 7!", the CAM 7 map button flashes, and a warning chime plays. At 0% a tune plays, his face appears on the office monitor, and he gets you 4.5 seconds later. Nothing stops him once he's out |
+| `■` Square (orange) | Away → **far → medium → close** at either door → gets you on its next move | **Doors don't stop it.** Holding the door light on it freezes it, and every `lightPush(level)` seconds of steady light (0.5 s at level 1 to 1.0 s at level 20) pushes it back one stage; from far, it leaves the door. Letting go resets that progress. At far, a move has a 50% (`SQUARE_SWAP`) chance to switch doors instead of coming closer. Drawn bigger in the lit doorway the closer it is (`SQUARE_SIZES` in `art.js`), even through a closed door |
+| `(:` Smiley (yellow) | Hides in one of 4 spots in the office (`SMILEY_SPOTS` in `art.js`: poster, monitor, desk, ceiling lamp) | Each time you **lower** the camera, `smileyChance(level)` (2.5% at level 1 to 50% at level 20) wakes it: a giggle plays, panned toward its spot, and it appears in the office **in the office's own amber color** so you have to look. Click it within `smileyTime(level)` (5 s down to 2.5 s) or it gets you. A power-out cancels it |
 
 - **Doors:** when ◆, ▲ or ● reaches a doorway, you have a reaction window to shut the door: 4.0 seconds at level 1, down to 2.4 seconds at level 20 (raised from 2.6–1.4 when the nights got shorter). If the door is shut, the shape goes back to the stage with a knock sound. If not, a shaking jumpscare (no flashing) fills the screen with the shape, and the game-over screen offers Retry or Change levels.
 - **Movement sounds:** each move plays a footstep in that shape's own pitch (● deepest, ◆ middle, ▲ highest). The step gets louder and pans further toward its door the closer the shape is. ◆ and ▲ arriving at a doorway play heavy footsteps.
-- **Saved in the browser (`localStorage`):** the last levels used, the best result (the highest total of levels survived, out of 80) and the mute setting. Every read and write is wrapped in try/catch, so the game still works if storage is blocked.
+- **Saved in the browser (`localStorage`):** the last levels used, the best result (the highest total of levels survived, out of 120) and the mute setting. Every read and write is wrapped in try/catch, so the game still works if storage is blocked.
 
 ## Design decisions (and why)
 
-- **No door lights.** Jake felt lights imply a shape waits at the door, which makes the pace too slow.
-- **The threats are Unicode symbols, not characters.** That was Jake's direction. Lenny is the one face.
+- **Door lights are back, but only for ■.** Jake originally removed them because lights implied a shape waits at the door, slowing the pace. They returned with the ■ Square on request, as its only counter. ◆ ▲ ● still work without lights.
+- **Shapes slowed when ■ and (: arrived.** The movement intervals of ◆ ▲ ● went up 1.5x (4.8/5.2/6.4 to 7.2/7.8/9.6, before `PACE`) to make room for two more threats.
+- **New threats go at the end of `SETUP`**, so levels saved by older versions keep lining up: `[◆, ▲, ●, Lenny, ■, (:]`.
+- **The threats are Unicode symbols, not characters.** That was Jake's direction. Lenny and (: are the only faces.
 - **Custom night instead of 5 nights.** Jake wanted every threat to have its own adjustable level.
 - **Doors work while the camera is up.** Jake asked for this so you keep watching while you close a door.
 - **The orb is invisible at the door.** Jake wanted it identified by its louder audio cue only.
+- **The orb stalls when both doors are shut.** Requested so that shutting both doors doesn't simply send it away: it waits (costing you power for both doors) and then attacks whichever door opens first. It's the `stalls` flag in `data.js` and the `m.stalled` checks in `updateMob` (`game.js`). The stall only starts when it *arrives* at a doorway with both doors shut; a door shut during the normal reaction window still sends it back.
 - **Power drains only while in use.** Jake removed the idle drain and asked for faster per-use drain to compensate. It went from 0.10% idle + 0.12% per item to 0% idle + 0.20% per item.
 - **Short nights, heavy drain.** The hour was cut from 60 to 30 seconds (3-minute nights), and the drain per item was doubled to 0.40% at the same time. Doubling it keeps the same share of the battery per in-game hour, so power stays just as tight over the shorter night.
 - **Everyone speeds up with the clock.** `PACE` in `config.js` is `60 / HOUR_SECONDS` (2 with 30-second hours). The shapes' movement intervals are divided by it and Lenny's box drain is multiplied by it, so a short night holds as many visits and windings as the original 6-minute one did. The door reaction window is left alone on purpose, because it's about human reaction time, not the length of the night.
@@ -63,14 +69,14 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **`style.css`:** the color and font tokens at the top of `:root` (`--fg` amber, `--c-dia`, `--c-tri`, `--c-orb`, `--c-len`, `--danger`), then styles for each screen.
 - **`js/`**, plain classic scripts (not ES modules, so the game still works when `index.html` is opened from disk). Top-level `const`/`let`/`function` declarations are shared across the scripts through the global scope, so **load order matters** and **names must be unique across all files**. The files, in load order:
   1. **`helpers.js`:** `$` (getElementById), `store` (localStorage wrapped in try/catch) and `pick`.
-  2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `PACE`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW` and `LENNY_DELAY`. **Most balance changes happen here.**
-  3. **`data.js`:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `LENNY_FACE`, `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and the `unseen` flag), `LENNY`, and `SETUP` (everything with a level, in the order of `levels[]`).
+  2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `PACE`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW`, `LENNY_DELAY`, `lightPush(level)`, `SQUARE_SWAP`, `smileyChance(level)` and `smileyTime(level)`. **Most balance changes happen here.**
+  3. **`data.js`:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `LENNY_FACE`, `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and the `unseen`/`stalls` flags), `LENNY`, `SQUARE`, `SMILEY`, and `SETUP` (everything with a level, in the order of `levels[]`).
   4. **`sound.js`:** `sfx`, every sound, generated with the Web Audio API (`tone()` and `noise()` helpers).
-  5. **`art.js`:** the grid helpers (`grid`, `toHtml`, `inShape`, `stamp`, `stampFace`, `frame`, `symHtml`, `SYM_CLASS`), `ROOM_ART`, `SLOTS`, `prizeArt(g, lenny)` and `officeLines(now, dark, camUp)`. Art is a 2D grid of `{ch, cls}` cells.
-  6. **`game.js`:** the state (`levels`, `best`, `G`, `dirty`, `windKey`/`windPointer`) and the rules (`newGame`, `update(dt)`, `updateMob`, `bounce`, `updateLenny`, `camStatic`, `powerOutStart`), the player actions (`toggleDoor`, `toggleCam`, `setCam`, `setPaused`, `startNight`), and the endings (`win`, `lose`, `loseLenny`). The endings call `screens.js` to display results; they don't touch the page directly.
+  5. **`art.js`:** the grid helpers (`grid`, `toHtml`, `inShape`, `stamp`, `stampFace`, `frame`, `symHtml`, `SYM_CLASS`), `ROOM_ART`, `SLOTS`, `prizeArt(g, lenny)`, `SQUARE_SIZES`, `SMILEY_SPOTS` and `officeLines(now, dark, camUp)`. Art is a 2D grid of `{ch, cls}` cells.
+  6. **`game.js`:** the state (`levels`, `best`, `G`, `dirty`, `windKey`/`windPointer`, `lightKey`/`lightPointer`) and the rules (`newGame`, `update(dt)`, `powerUnits`, `lightOn(side)`, `updateMob`, `bounce`, `updateLenny`, `updateSquare`, `updateSmiley`, `maybeWakeSmiley`, `camStatic`, `powerOutStart`), the player actions (`toggleDoor`, `toggleCam`, `setCam`, `catchSmiley`, `setPaused`, `startNight`), and the endings (`win`, `lose(creature, side, dark)`, `loseLenny`, `loseSmiley`). The endings call `screens.js` to display results; they don't touch the page directly.
   7. **`render.js`:** `renderGame(now)` (the HUD, office or cameras, and the buttons), `doorGrid` and `renderFeed`. It reads `G` and never changes the rules.
   8. **`screens.js`:** `currentScreen`, `sel`, `show(name)`, `showPause`, `showScare(message, artHtml)`/`hideScare`, `showWin(sum, isBest)`, `goSetup`, the custom night screen (`buildSetup`, `renderSetup`, `changeLevel`, `setAllLevels`, `bestText`), How to play, and the mute button.
-  9. **`input.js`:** all event listeners: button clicks, the map, setup rows, one `keydown` handler that branches by `currentScreen`, `keyup` for `W`, pointer-hold on `#btnWind`, window blur and tab visibility.
+  9. **`input.js`:** all event listeners: button clicks, the map, setup rows, clicks on (: in `#officeArt`, one `keydown` handler that branches by `currentScreen`, `keyup` for `W`/`Q`/`E`, pointer-hold on `#btnWind` and the light buttons (`pressLight`/`releaseLight`), window blur and tab visibility.
   10. **`main.js`:** `speed`, the `requestAnimationFrame` game `loop`, the `window.nightShift` test hook and `boot()`.
 
 ### Gotchas
@@ -113,14 +119,15 @@ The game is published with Claude's **Artifact** tool.
   - For a screenshot, use `--headless=new --screenshot=out.png --window-size=900,1100 --virtual-time-budget=3000`.
   - For automated play, append a test `<script>` to a temporary copy *in the project folder* (so the relative paths work). It should send `keydown` events and write its results to `document.title`; then read them with `--dump-dom`.
   - Headless Chrome barely runs `requestAnimationFrame`, so the test script should drive the game itself with `setInterval(() => { update(0.02); renderGame(performance.now()); }, 20)` while `currentScreen === 'game'`.
-- **What a full test covers:** both doors with keys and mouse; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 179`); and phone width with no sideways scrolling.
+- **What a full test covers:** both doors with keys and mouse; both door lights with `Q`/`E` and the buttons, pushing ■ back stage by stage and ■ getting you; (: waking on camera-down, being clicked, and getting you; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 179`); and phone width with no sideways scrolling.
 
 ## Not yet verified
 
 - **Sound has never been heard by Claude.** The rumble, footsteps, winding, tune and jumpscare volume need a human ear.
+- **■ and (: have not been play-tested by a person.** Their numbers (■ every 3 s at `PACE` 2, light push 0.5–1.0 s per stage, (: 2.5–50% chance and 5–2.5 s to click) are first guesses.
 - **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain, 30-second hours and `PACE` 2. Lenny at level 20 now unwinds from full in about 12 seconds, though winding was doubled to 50% per second to help. The door reaction window is 4.0–2.4 seconds.
 - **The live link has only been checked by Jake.** Claude's test browser wasn't signed in to claude.ai.
-- A best score saved before Lenny existed shows `–` for his level and is totaled out of 80.
+- A best score saved before a threat existed shows `–` for its level (Lenny, ■, (:), and its total only counts the levels it had.
 
 ## Git and GitHub
 

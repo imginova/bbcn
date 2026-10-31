@@ -24,10 +24,16 @@ let best = store.get('best', null);   // hardest night survived: { sum, levels }
 let G = null;        // all the state of the night in progress (built by newGame)
 let dirty = true;    // "something changed, redraw now" (render.js also redraws 15x a second anyway)
 let windKey = false, windPointer = false;   // is W held down / is the Wind button held down?
+// Is each door light's key (Q / E) or on-screen button held down right now?
+const lightKey = { L: false, R: false }, lightPointer = { L: false, R: false };
 
 // Small questions about a shape `m` (one entry of G.mobs):
 const sideOf = m => m.route[m.route.length - 1];   // which door it is heading for: 'L' or 'R'
 const atDoor = m => m.step === m.route.length - 1;  // is it standing in that doorway right now?
+
+// Is a door light actually shining? You have to hold it, look at the office (camera down) and have power.
+const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && !G.powerOut;
+const otherSide = side => side === 'L' ? 'R' : 'L';
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
@@ -54,6 +60,7 @@ function newGame() {
       step: 0,                     // how far along the route it is
       timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       deadline: 0,                 // when standing in a doorway: the moment it gets you
+      stalled: false,              // the orb only: waiting at the door because both doors were shut
     })),
 
     lenny: {
@@ -63,6 +70,21 @@ function newGame() {
       outTimer: 0,                 // countdown from "out" to game over
       warnT: 0,                    // countdown to the next warning chime
       tickT: 0,                    // countdown to the next winding click
+    },
+
+    square: {
+      level: levels[SETUP.indexOf(SQUARE)],
+      side: null,                  // which door it is at: 'L', 'R', or null when it isn't at one
+      stage: 0,                    // 0 = away, 1 = far, 2 = medium, 3 = close
+      timer: SQUARE.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
+      pushT: 0,                    // how long the light has been shining on it without a break
+    },
+
+    smiley: {
+      level: levels[SETUP.indexOf(SMILEY)],
+      active: false,               // is (: hiding in the office right now?
+      spot: null,                  // which of SMILEY_SPOTS it is in
+      deadline: 0,                 // the moment it gets you if you haven't clicked it
     },
   };
 }
@@ -75,30 +97,51 @@ function update(dt) {
   updateLenny(dt);
   if (G.over) return;
 
-  // How many things are using power right now (0 to 3)?
-  // (G.doors.L ? 1 : 0) means "1 if the left door is closed, otherwise 0".
-  const units = (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0);
-
   if (!G.powerOut) {
-    G.power -= (BASE_DRAIN + UNIT_DRAIN * units) * dt;
+    G.power -= (BASE_DRAIN + UNIT_DRAIN * powerUnits()) * dt;
     if (G.power <= 0) return powerOutStart();
     for (const m of G.mobs) {
       updateMob(m, dt);
       if (G.over) return;
     }
+    updateSquare(dt);
+    if (G.over) return;
+    updateSmiley();
   } else {
     // Power is out: just wait for the shape in the dark.
     G.outTimer -= dt;
-    if (G.outTimer <= 0) lose(G.outBy, true);
+    if (G.outTimer <= 0) lose(G.outBy.c, sideOf(G.outBy), true);
   }
+}
+
+// How many things are using power right now (0 to 5): each closed door, the camera, each lit door light.
+// (G.doors.L ? 1 : 0) means "1 if the left door is closed, otherwise 0".
+function powerUnits() {
+  if (G.powerOut) return 0;
+  return (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0)
+       + (lightOn('L') ? 1 : 0) + (lightOn('R') ? 1 : 0);
 }
 
 // One shape's turn.
 function updateMob(m, dt) {
+  // Stalled (the orb found both doors shut): wait until you open one, then attack THAT door.
+  if (m.stalled) {
+    const opened = !G.doors.L ? 'L' : !G.doors.R ? 'R' : null;   // null = both still shut
+    if (!opened) return;
+    m.stalled = false;
+    // Swap to the route that ends at the opened door. Both orb routes are the same length,
+    // so it stays standing in a doorway, just on the other side if needed.
+    m.route = m.c.routes.find(route => route[route.length - 1] === opened);
+    m.deadline = G.t + reactWindow(m.level);   // the usual few seconds to shut it again
+    sfx.rumble(opened);
+    dirty = true;
+    return;
+  }
+
   // Standing in a doorway: shut door = it goes away; open door when time runs out = game over.
   if (atDoor(m)) {
     if (G.doors[sideOf(m)]) bounce(m);
-    else if (G.t >= m.deadline) lose(m);
+    else if (G.t >= m.deadline) lose(m.c, sideOf(m));
     return;
   }
 
@@ -114,10 +157,19 @@ function updateMob(m, dt) {
   const from = m.route[m.step];
   m.step++;
   if (atDoor(m)) {
-    // It just reached a doorway. If the door is already shut, it gives up at once.
-    if (G.doors[sideOf(m)]) { bounce(m); return; }
-    m.deadline = G.t + reactWindow(m.level);
-    if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.step(sideOf(m));
+    // It just reached a doorway.
+    if (m.c.stalls && G.doors.L && G.doors.R) {
+      // Both doors shut: the orb doesn't give up. It rumbles and waits (see the top of updateMob).
+      m.stalled = true;
+      sfx.rumble(sideOf(m));
+    } else if (G.doors[sideOf(m)]) {
+      // Its door is already shut: it gives up at once.
+      bounce(m);
+      return;
+    } else {
+      m.deadline = G.t + reactWindow(m.level);
+      if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.step(sideOf(m));
+    }
   } else {
     // A normal move between rooms: footstep, louder the closer it is.
     sfx.move(m.step / (m.route.length - 1), sideOf(m), m.c.pitch);
@@ -163,6 +215,69 @@ function updateLenny(dt) {
   }
 }
 
+// ■ Square: creeps to a door in stages (far, medium, close), then gets you on its next move.
+// Only the door light helps: while it shines on the square, the square can't move, and every
+// lightPush(level) seconds of steady light shove it back one stage. Off the door entirely at stage 0.
+function updateSquare(dt) {
+  const S = G.square;
+
+  if (S.stage > 0 && lightOn(S.side)) {
+    S.pushT += dt;
+    if (S.pushT >= lightPush(S.level)) {
+      S.pushT = 0;
+      sfx.shove(S.side);
+      S.stage--;
+      if (S.stage === 0) S.side = null;   // pushed all the way off the door
+      dirty = true;
+    }
+    return;   // frozen while lit
+  }
+  S.pushT = 0;   // letting go of the light loses the progress toward the next push
+
+  S.timer -= dt;
+  if (S.timer > 0) return;
+  S.timer = SQUARE.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= S.level) return;   // same dice roll as the other shapes
+
+  if (S.stage === 0) {
+    S.side = pick(['L', 'R']);   // arrives at a random door, far away
+    S.stage = 1;
+  } else if (S.stage === 1 && Math.random() < SQUARE_SWAP) {
+    S.side = otherSide(S.side);  // at FAR it may sneak over to the other door instead
+  } else if (S.stage < 3) {
+    S.stage++;
+  } else {
+    lose(SQUARE, S.side);        // it was already close: that's it
+    return;
+  }
+  dirty = true;
+}
+
+// (: Smiley: once it has woken up, you have until its deadline to click it.
+function updateSmiley() {
+  const S = G.smiley;
+  if (S.active && G.t >= S.deadline) loseSmiley();
+}
+
+// Lowering the camera might wake Smiley. It hides in a random spot and giggles from that direction.
+function maybeWakeSmiley() {
+  const S = G.smiley;
+  if (S.active || G.powerOut || Math.random() >= smileyChance(S.level)) return;
+  S.active = true;
+  S.spot = pick(SMILEY_SPOTS);
+  S.deadline = G.t + smileyTime(S.level);
+  sfx.giggle((S.spot[1] / 36) * 1.4 - 0.7);   // column 0..36 of the office becomes a pan of -0.7..+0.7
+  dirty = true;
+}
+
+// The player clicked (: in time.
+function catchSmiley() {
+  if (!G || G.over || G.paused || !G.smiley.active) return;
+  G.smiley.active = false;
+  sfx.pop();
+  dirty = true;
+}
+
 // Show static on the camera for `sec` seconds.
 // performance.now() is the time in milliseconds since the page opened.
 function camStatic(sec) {
@@ -178,6 +293,7 @@ function powerOutStart() {
   G.cam = false;
   G.outTimer = 5 + Math.random() * 8;                     // 5 to 13 seconds of darkness
   G.outBy = pick(G.mobs.filter(m => !m.c.unseen));        // ◆ or ▲, never the invisible orb
+  G.smiley.active = false;                                // in the dark there's nothing to find
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -198,6 +314,7 @@ function toggleCam() {
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
+  else maybeWakeSmiley();   // just looked back at the office: was something hiding while you weren't?
   dirty = true;
 }
 
@@ -224,6 +341,7 @@ function startNight() {
   sfx.init();
   store.set('levels', levels);
   windKey = windPointer = false;
+  lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
   newGame();
   hideScare();
   showPause(false);
@@ -247,21 +365,29 @@ function win() {
   showWin(sum, isBest);
 }
 
-// A shape got you. `dark` is true when it happened after the power ran out.
-function lose(m, dark = false) {
+// A shape (c, from data.js) got you through door `side`. `dark` is true when the power had run out.
+function lose(c, side, dark = false) {
   G.over = true;
   sfx.humOff();
   sfx.scream();
   const when = hourLabel(hourOf(G.t));
-  const doorName = sideOf(m) === 'L' ? 'LEFT door' : 'RIGHT door';
+  const doorName = side === 'L' ? 'LEFT door' : 'RIGHT door';
   const message = dark
-    ? `The power ran out. ${symHtml(m.c)} found you in the dark at ${when}.`
-    : `${symHtml(m.c)} came through the ${doorName} at ${when}.`;
+    ? `The power ran out. ${symHtml(c)} found you in the dark at ${when}.`
+    : `${symHtml(c)} came through the ${doorName} at ${when}.`;
   // The jumpscare: the shape drawn huge, filling a 44 x 22 grid.
   const W = 44, H = 22;
   const g = Array.from({ length: H }, () => Array.from({ length: W }, () => ({ ch: ' ', cls: '' })));
-  stamp(g, 0, 0, m.c, W, H);
+  stamp(g, 0, 0, c, W, H);
   showScare(message, toHtml(g));
+}
+
+function loseSmiley() {
+  G.over = true;
+  sfx.humOff();
+  sfx.scream();
+  const message = `You didn't find ${symHtml(SMILEY)} in time. It got you at ${hourLabel(hourOf(G.t))}.`;
+  showScare(message, `<span class="bigface s-smi">${SMILEY.sym}</span>`);
 }
 
 function loseLenny() {

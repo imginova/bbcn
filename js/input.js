@@ -80,6 +80,38 @@ for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) {
 }
 btnWind.addEventListener('contextmenu', e => e.preventDefault());   // no right-click / long-press menu
 
+// The door lights also shine only while HELD, so they work the same way as the Wind button.
+// pressLight() is shared with the Q / E keys below: it remembers the hold and plays a click.
+function pressLight(side, holds) {
+  if (!holds[side]) {
+    holds[side] = true;
+    if (G && !G.over && !G.paused && lightOn(side)) sfx.light();
+    dirty = true;
+  }
+}
+function releaseLight(side, holds) {
+  holds[side] = false;
+  dirty = true;
+}
+for (const side of ['L', 'R']) {
+  const btn = $('btnLight' + side);
+  btn.addEventListener('pointerdown', e => {
+    sfx.init();
+    pressLight(side, lightPointer);
+    btn.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    btn.addEventListener(ev, () => releaseLight(side, lightPointer));
+  }
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+// Clicking (: in the office catches it. It's two cells ("(" and ":"), each with class "smi".
+$('officeArt').addEventListener('click', e => {
+  if (e.target.closest('.smi')) catchSmiley();
+});
+
 // ---------- keyboard ----------
 // One listener for every key press. What a key does depends on which screen is showing.
 // e.key is the key's name: 'a', 'Enter', ' ' (Space), 'ArrowUp', ...
@@ -127,6 +159,8 @@ document.addEventListener('keydown', e => {
     else if (k === 'd' || k === 'D') toggleDoor('R');
     else if (k === ' ' || k === 's' || k === 'S') { e.preventDefault(); toggleCam(); }
     else if (k === 'w' || k === 'W') windKey = true;                         // released in keyup below
+    else if (k === 'q' || k === 'Q') pressLight('L', lightKey);              // left door light, also released in keyup
+    else if (k === 'e' || k === 'E') pressLight('R', lightKey);              // right door light
     else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);            // /^[1-7]$/ means "exactly one digit from 1 to 7"
     else if (k === 'h' || k === 'H') openHowto();
 
@@ -136,11 +170,19 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Letting go of W stops winding.
-document.addEventListener('keyup', e => { if (e.key === 'w' || e.key === 'W') windKey = false; });
+// Letting go of W stops winding; letting go of Q or E switches that door light off.
+document.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w') windKey = false;
+  else if (k === 'q') releaseLight('L', lightKey);
+  else if (k === 'e') releaseLight('R', lightKey);
+});
 
-// If the window loses focus while W is held, we would never see the key being released, so stop winding.
-window.addEventListener('blur', () => { windKey = windPointer = false; });
+// If the window loses focus while a key is held, we would never see it being released, so let go of everything.
+window.addEventListener('blur', () => {
+  windKey = windPointer = false;
+  lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
+});
 
 // Switching to another tab pauses the game.
 document.addEventListener('visibilitychange', () => {

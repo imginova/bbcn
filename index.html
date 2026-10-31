@@ -20,7 +20,7 @@
   The game has five screens, and only one is visible at a time
   (the others carry the `hidden` attribute):
     #scr-title  title screen
-    #scr-setup  custom night: set each threat's level
+    #scr-setup  custom night: set each threat's level (six of them)
     #scr-game   the night itself (HUD, office or cameras, controls)
     #scr-win    6 AM, you survived
     #scare      jumpscare and game over (covers the whole window)
@@ -44,8 +44,8 @@
     <section id="scr-title" class="title">
       <p class="eyebrow">Overnight guard post · 12 AM to 6 AM</p>
       <h1>BARE BONES CUSTOM NIGHT</h1>
-      <p class="tag">Six hours, two doors, one battery. Three shapes wander this building after closing, and something waits in the music box.</p>
-      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="face">( ͡° ͜ʖ ͡°)</span></p>
+      <p class="tag">Six hours, two doors, two lights, one battery. Four shapes wander this building after closing, something waits in the music box, and something else likes to hide.</p>
+      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="sym s-sqr">■</span><span class="face">( ͡° ͜ʖ ͡°)</span><span class="smi-face s-smi">(:</span></p>
       <div class="menu">
         <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
         <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
@@ -57,7 +57,7 @@
     <section id="scr-setup" class="setup" hidden>
       <p class="eyebrow">Before your shift</p>
       <h2>CUSTOM NIGHT</h2>
-      <p class="sub">Set each one from level 1 to 20. Shapes at 1 barely move; at 20 they move at every chance and give you less time at the door. Lenny's level sets how fast his music box unwinds.</p>
+      <p class="sub">Set each one from level 1 to 20. Shapes at 1 barely move; at 20 they move at every chance and give you less time at the door. Lenny's level sets how fast his music box unwinds, and Smiley's sets how often it wakes up.</p>
       <div class="rows" id="rows"></div>
       <div class="setup-actions">
         <button id="btnStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
@@ -109,8 +109,10 @@
         <button id="btnL" type="button"><span>Left door<kbd>A</kbd></span><span class="state" id="stL">OPEN</span></button>
         <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
         <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
+        <button id="btnLightL" type="button" class="light"><span>Left light<kbd>Q</kbd></span><span class="state" id="stLightL">HOLD</span></button>
+        <button id="btnLightR" type="button" class="light"><span>Right light<kbd>E</kbd></span><span class="state" id="stLightR">HOLD</span></button>
       </div>
-      <p class="keys hint">1–7 jump to a camera · hold W on CAM 7 to wind · P pauses · M toggles sound</p>
+      <p class="keys hint">1–7 jump to a camera · hold Q / E for the door lights · hold W on CAM 7 to wind · P pauses · M toggles sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -159,14 +161,18 @@
       <li>Three shapes, <span class="sym s-dia">◆</span> <span class="sym s-tri">▲</span> <span class="sym s-orb">●</span>, walk from the stage toward your office. ◆ always comes to the left door, ▲ to the right, and ● picks a side.</li>
       <li>You can hear the shapes move. Each one has its own note, and its steps get louder and lean toward its side the closer it gets.</li>
       <li>When ◆ or ▲ steps into a doorway you see it there and hear heavy footsteps. You have about three seconds to shut that door. If the door is shut, the shape goes back to the stage.</li>
-      <li>● never shows up in the doorway. When it arrives you hear a loud rumble from its side instead, with the same three seconds to react.</li>
+      <li>● never shows up in the doorway. When it arrives you hear a loud rumble from its side instead, with the same three seconds to react. If both doors are shut when it arrives, it waits outside; the moment you open either door it rumbles again and goes for that one.</li>
       <li><span class="face">( ͡° ͜ʖ ͡°)</span> sleeps in the music box on CAM 7. The box slowly unwinds; hold W (or the Wind button) while watching CAM 7 to wind it back up. When it gets low, the Camera button warns you. If it runs out, he comes for you and nothing can stop him.</li>
+      <li><span class="sym s-sqr">■</span> creeps up to either door in three steps: far, medium, close. One more step and it gets you, and doors don't stop it. Hold a door light (Q or E) to see it; keep holding and it gets pushed further back. From far away it may sneak over to the other door.</li>
+      <li><span class="smi-face s-smi">(:</span> hides in your office. If you hear a giggle after lowering the camera, find (: somewhere in the office and click it quickly.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
-      <li>Doors and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
+      <li>Doors, door lights and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>
     <div class="table-wrap">
       <table>
         <tr><td>Left / right door</td><td>A / D, or click the door or its button (works with the camera up too)</td></tr>
+        <tr><td>Door lights</td><td>Hold Q (left) / E (right), or hold the light buttons (camera down only)</td></tr>
+        <tr><td>Catch (:</td><td>Click it in the office</td></tr>
         <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Pick a camera</td><td>1 to 7, or click a room on the map</td></tr>
         <tr><td>Wind the music box</td><td>Hold W, or hold the Wind button, while on CAM 7</td></tr>

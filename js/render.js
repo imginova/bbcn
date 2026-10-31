@@ -18,9 +18,9 @@ function renderGame(now) {
   const seg = Math.ceil(p / 10);                // 10 bars, one per 10%
   $('pwbar').textContent = '[' + '|'.repeat(seg) + '.'.repeat(10 - seg) + ']';
 
-  const units = G.powerOut ? 0 : (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0);
+  const units = powerUnits();                   // 0 to 5: doors, camera and door lights in use
   const usage = $('usage');
-  usage.textContent = '▮'.repeat(units) + '▯'.repeat(3 - units);
+  usage.textContent = '▮'.repeat(units) + '▯'.repeat(5 - units);
   usage.classList.toggle('low', units >= 3);
 
   // ----- the view: office or camera -----
@@ -31,11 +31,20 @@ function renderGame(now) {
     renderFeed(now);
   } else {
     office.classList.toggle('dark', G.powerOut);
-    $('doorL').innerHTML = toHtml(doorGrid('L', now));
-    $('doorR').innerHTML = toHtml(doorGrid('R', now));
+    for (const side of ['L', 'R']) {
+      $('door' + side).innerHTML = toHtml(doorGrid(side, now));
+      $('door' + side).classList.toggle('lit', lightOn(side));   // style.css makes a lit doorway glow
+    }
     const og = grid(officeLines(now, G.powerOut, G.cam), 36);
     // Once Lenny is out he flickers on your desk monitor (shown 3 frames out of 4).
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
+    // Smiley hiding in its spot. It's drawn in the office's own color on purpose, so you have to look.
+    // The "smi" class is what input.js listens for when you click it.
+    if (G.smiley.active) {
+      const [r, c] = G.smiley.spot;
+      og[r][c] = { ch: '(', cls: 'smi' };
+      og[r][c + 1] = { ch: ':', cls: 'smi' };
+    }
     $('officeArt').innerHTML = toHtml(og);
   }
 
@@ -45,6 +54,12 @@ function renderGame(now) {
     $(btn).setAttribute('aria-pressed', String(G.doors[side]));
     $(btn).disabled = G.powerOut;
     $(label).textContent = G.powerOut ? 'NO POWER' : G.doors[side] ? 'CLOSED' : 'OPEN';
+  }
+  // The door lights only work while you're looking at the office (camera down).
+  for (const [side, btn, label] of [['L', 'btnLightL', 'stLightL'], ['R', 'btnLightR', 'stLightR']]) {
+    $(btn).classList.toggle('on', lightOn(side));
+    $(btn).disabled = G.powerOut;
+    $(label).textContent = G.powerOut ? 'NO POWER' : G.cam ? 'CAM UP' : lightOn(side) ? 'ON' : 'HOLD';
   }
   $('btnCam').classList.toggle('on', G.cam);
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
@@ -57,6 +72,7 @@ function renderGame(now) {
 
 // One door of the office as a grid: 12 wide (10 inside the frame) and 16 tall.
 // Closed: a wall of # with = bands. Open: empty, with a dotted floor, plus any shape standing there.
+// With the door light on, the ■ square shows up too if it's at this door.
 function doorGrid(side, now) {
   const W = 10, H = 14;
   const closed = G.doors[side];
@@ -77,6 +93,14 @@ function doorGrid(side, now) {
       if (closed) g[r][c].cls = 'door';
       else if (r >= H - 1) g[r][c].cls = 'dim';
     }
+  }
+
+  // The door light shows the ■ square if it's at this door, bigger the closer it is.
+  // It shows even through a closed door: doors don't stop the square, so the light has to reveal it.
+  const S = G.square;
+  if (lightOn(side) && S.side === side && S.stage > 0) {
+    const [r0, c0, w, h] = SQUARE_SIZES[S.stage];
+    stamp(g, r0, c0, SQUARE, w, h);
   }
 
   if (!closed) {

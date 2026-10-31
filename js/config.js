@@ -21,7 +21,7 @@ const PACE = 60 / HOUR_SECONDS;
 
 // ---------- power ----------
 const BASE_DRAIN = 0;      // % power per second with nothing switched on (idle costs nothing)
-const UNIT_DRAIN = 0.40;   // % per second for EACH closed door or the raised camera
+const UNIT_DRAIN = 0.40;   // % per second for EACH closed door, door light or the raised camera
                            // (both doors + camera = 1.20% per second)
 
 // ---------- difficulty levels (custom night) ----------
@@ -45,3 +45,15 @@ const boxDrain = level => (0.6 + (level - 1) * (3.4 / 19)) * PACE;
 const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
 const BOX_LOW = 30;        // below this %, the camera button and CAM 7 start warning you
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you
+
+// ---------- ■ Square and the door lights ----------
+// Seconds of steady light needed to push the square back ONE stage; keep holding to push it further.
+// 0.5s at level 1, up to 1.0s at level 20 (harder squares are more stubborn).
+const lightPush = level => 0.5 + (level - 1) * (0.5 / 19);
+const SQUARE_SWAP = 0.5;   // chance that a square at FAR switches doors instead of coming closer
+
+// ---------- (: Smiley ----------
+// Chance that lowering the camera wakes Smiley: 2.5% at level 1, up to 50% at level 20.
+const smileyChance = level => level / MAX_LEVEL * 0.5;
+// Seconds you get to find and click it: 5s at level 1, down to 2.5s at level 20.
+const smileyTime = level => 5 - (level - 1) * (2.5 / 19);

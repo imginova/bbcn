@@ -12,12 +12,15 @@
 
 // Characters that should automatically get a color when they appear in a picture.
 // The hollow ones (◇ △ ○) are on the office poster.
-const SYM_CLASS = { '◆': 'sym s-dia', '▲': 'sym s-tri', '●': 'sym s-orb', '◇': 'sym s-dia', '△': 'sym s-tri', '○': 'sym s-orb' };
+const SYM_CLASS = { '◆': 'sym s-dia', '▲': 'sym s-tri', '●': 'sym s-orb', '■': 'sym s-sqr', '◇': 'sym s-dia', '△': 'sym s-tri', '○': 'sym s-orb' };
 
-// The HTML for a threat's symbol (or Lenny's face), used on the menus and end screens.
-const symHtml = (d, extra = '') => d.id === 'len'
-  ? `<span class="face${extra}">${LENNY_FACE}</span>`
-  : `<span class="sym s-${d.id}${extra}">${d.sym}</span>`;
+// The HTML for a threat's symbol (or a face), used on the menus and end screens.
+// Lenny's face and Smiley's (: are wider than one character, so they get their own classes.
+function symHtml(d, extra = '') {
+  if (d.id === 'len') return `<span class="face${extra}">${LENNY_FACE}</span>`;
+  if (d.id === 'smi') return `<span class="smi-face s-smi${extra}">${d.sym}</span>`;
+  return `<span class="sym s-${d.id}${extra}">${d.sym}</span>`;
+}
 
 // A few characters mean something special in HTML, so they must be "escaped".
 const esc = ch => ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch === '&' ? '&amp;' : ch;
@@ -39,8 +42,10 @@ function toHtml(g) {
 //   diamond:  |x| + |y| <= 1   (a square tipped on its corner)
 //   triangle: gets wider as y goes down
 //   circle:   x² + y² <= 1
+//   square:   every point is inside, so it fills the whole area
 // The tiny + 0.0001 stops rounding errors from shaving off the tips.
 function inShape(id, x, y) {
+  if (id === 'sqr') return true;
   if (id === 'dia') return Math.abs(x) + Math.abs(y) <= 1.0001;
   if (id === 'tri') return Math.abs(x) <= (y + 1) / 2 + 0.0001;
   return x * x + y * y <= 1.0001;
@@ -192,6 +197,18 @@ function prizeArt(g, lenny) {
     stampFace(g, 6, 16, ' s-len');
   }
 }
+
+// ---------- the square in a lit doorway ----------
+// How the ■ looks at each stage, as [top row, left column, width, height] inside a door grid
+// (doorGrid in render.js). Far away it's small and low; close up it fills the doorway.
+// Index 0 is unused because stage 0 means "not at a door".
+const SQUARE_SIZES = [null, [8, 4, 4, 2], [6, 3, 6, 4], [3, 1, 10, 9]];
+
+// ---------- Smiley's hiding spots ----------
+// Where (: can appear in the office picture, as [row, column] of its "(".
+// They match the lines in officeLines() below: on the poster, on the monitor,
+// on the desk next to the coffee, and up by the ceiling lamp.
+const SMILEY_SPOTS = [[3, 9], [10, 13], [14, 20], [2, 31]];
 
 // ---------- the office ----------
 // The middle of the office view (36 characters wide), between the two doors.

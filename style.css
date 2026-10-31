@@ -27,6 +27,8 @@
   --c-tri: #62d2ff;
   --c-orb: #c8a6ff;
   --c-len: #a8ee7e;
+  --c-sqr: #ff8a3d;
+  --c-smi: #fff07a;
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --art: min(16px, calc((100vw - 60px) / 37));
@@ -112,7 +114,16 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
 .s-dia { color: var(--c-dia); }
 .s-tri { color: var(--c-tri); }
 .s-orb { color: var(--c-orb); }
+.s-sqr { color: var(--c-sqr); }
 .s-len, .face { color: var(--c-len); }
+.s-smi { color: var(--c-smi); }
+/* Smiley's (: on menus and in the help. It's plain text, two characters wide. */
+.smi-face { display: inline-block; white-space: pre; font-weight: 600; }
+/* Smiley hiding in the office. It keeps the office's color so you have to look for it,
+   but the invisible ::after box around it makes it easier to click than two tiny letters. */
+.smi { position: relative; cursor: pointer; }
+.smi::after { content: ""; position: absolute; inset: -8px -4px; }
+.bigface.s-smi { color: var(--c-smi); text-shadow: 0 0 18px var(--c-smi); font-family: var(--font-mono); font-weight: 600; }
 /* The face uses system fonts: the terminal font cannot draw its combining marks. */
 .face, .bigface { font-family: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; }
 .face { display: inline-block; white-space: pre; font-weight: 600; }
@@ -151,6 +162,7 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .lvrow.sel { border-color: var(--fg); background: rgba(242,179,91,.06); }
 .lvrow .sym.big { font-size: 32px; width: auto; justify-self: center; }
 .lvrow .face.big { font-size: 16px; justify-self: center; }
+.lvrow .smi-face.big { font-size: 26px; justify-self: center; }
 .lvrow .who { min-width: 0; }
 .lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
 .lvrow .who small { color: var(--dim); font-size: 12px; }
@@ -174,6 +186,8 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .viewport { display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
 .office { display: flex; justify-content: center; transition: color .3s; }
 .office pre[data-door] { cursor: pointer; }
+/* A door light shining: the doorway glows. */
+.office pre.lit { background: rgba(242,179,91,.16); box-shadow: 0 0 18px rgba(242,179,91,.25); }
 .office.dark { color: var(--faint); }
 .office.dark .door, .office.dark .dim { color: #2a1f13; }
 .office.dark .sym { color: inherit; }
@@ -203,6 +217,10 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .controls button.on { border-color: var(--fg); background: rgba(242,179,91,.12); }
 .controls button.on .state { color: var(--fg); }
 .controls button:disabled { opacity: .35; cursor: not-allowed; }
+/* The two door lights sit on a second row, under their doors (columns 1 and 3). */
+#btnLightL { grid-column: 1; }
+#btnLightR { grid-column: 3; }
+.controls button.light { touch-action: none; user-select: none; -webkit-user-select: none; }
 .hint { margin-top: 10px; text-align: center; }
 
 .overlay {

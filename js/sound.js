@@ -153,6 +153,19 @@ const sfx = (() => {
       for (let i = 0; i < 3; i++) noise(0.12, { vol: 0.6, freq: 320, delay: i * 0.16, pan: panOf(side) });
     },
 
+    // ----- the door lights and ■ -----
+    light() { tone(2600, 0.03, { vol: 0.05 }); noise(0.05, { vol: 0.05, freq: 4000, type: 'highpass' }); },
+    // ■ being pushed back one stage by the light: a short scrape from its side.
+    shove(side) { noise(0.22, { vol: 0.35, freq: 700, pan: panOf(side) }); tone(140, 0.2, { type: 'sawtooth', vol: 0.12, slide: -60, pan: panOf(side) }); },
+
+    // ----- (: Smiley -----
+    // A cutesy giggle: three quick rising chirps. pan says where in the office it is hiding.
+    giggle(pan) {
+      [1046, 1318, 1568].forEach((f, i) => tone(f, 0.09, { type: 'triangle', vol: 0.18, slide: 300, delay: i * 0.1, pan }));
+    },
+    // Clicking it in time: a little pop.
+    pop() { tone(500, 0.08, { type: 'sine', vol: 0.3, slide: 700 }); },
+
     // ----- Lenny's music box -----
     windTick() { tone(2300, 0.025, { vol: 0.05 }); },
     boxWarn() {
