@@ -37,6 +37,10 @@ const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Numbe
 // (level - 1) goes from 0 to 19, so (level - 1) * (1.6 / 19) goes from 0 to 1.6.
 const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
 
+// The orb never visits the same door more than this many times in a row (see chooseRoute in game.js).
+// Pure coin flips made some nights feel like it only ever went right.
+const MAX_STREAK = 2;
+
 // ---------- Lenny's music box ----------
 // How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
 // Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1

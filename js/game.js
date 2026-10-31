@@ -81,6 +81,7 @@ function newGame() {
       stallSides: [],              // which shut doors it's waiting for you to open
       lurkT: 0,                    // ● Patient: countdown to its next soft growl while waiting
       waited: false,               // ● Patient: has it already waited behind a door this visit?
+      recent: [],                  // the doors of its last visits, newest first (see chooseRoute)
     })),
 
     lenny: {
@@ -237,6 +238,17 @@ function updateMob(m, dt) {
   dirty = true;
 }
 
+// Pick the next route for a shape. ◆ and ▲ only have one route, so nothing changes for them.
+// The orb picks a door at random, but if its last MAX_STREAK visits were all at the same door,
+// it must go to the other one this time: still random, just without long one-sided streaks.
+function chooseRoute(m) {
+  const streak = m.recent.length === MAX_STREAK && m.recent.every(side => side === m.recent[0]);
+  if (m.c.routes.length > 1 && streak) {
+    return m.c.routes.find(route => route[route.length - 1] !== m.recent[0]);
+  }
+  return pick(m.c.routes);
+}
+
 // The orb starts waiting in the doorway until one of `sides` opens.
 function stall(m, sides) {
   m.stalled = true;
@@ -250,7 +262,8 @@ function stall(m, sides) {
 function bounce(m) {
   sfx.knock(sideOf(m));
   m.waited = false;
-  m.route = pick(m.c.routes);
+  m.recent = [sideOf(m), ...m.recent].slice(0, MAX_STREAK);   // remember the last few doors it visited
+  m.route = chooseRoute(m);
   m.step = 0;
   m.timer = m.c.interval * (1 + Math.random() * 0.5);
   if (G.cam && G.camRoom === 'stage') camStatic(0.3);
