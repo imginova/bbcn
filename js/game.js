@@ -80,6 +80,7 @@ function newGame() {
       stalled: false,              // the orb only: waiting at the door because its way in was shut
       stallSides: [],              // which shut doors it's waiting for you to open
       lurkT: 0,                    // ● Patient: countdown to its next soft growl while waiting
+      stallT: 0,                   // how long it has been waiting behind a door
       waited: false,               // ● Patient: has it already waited behind a door this visit?
       recent: [],                  // the doors of its last visits, newest first (see chooseRoute)
     })),
@@ -150,10 +151,12 @@ function powerUnits() {
 function updateMob(m, dt) {
   // Stalled (the orb found its way in shut): wait until you open one of those doors, then attack THAT door.
   if (m.stalled) {
+    m.stallT += dt;   // how long it has been waiting behind the door
     // .find() gives the first side in the list whose door is open, or undefined if they're all still shut.
     const opened = m.stallSides.find(side => !G.doors[side]);
     if (!opened) {
-      // ● Patient: a soft growl every few seconds, so you don't forget it's waiting there.
+      // ● Patient: it growls once it has waited PATIENT_WAIT seconds (that's your cue that it's ready),
+      // then again every LURK_EVERY seconds, so you don't forget it's there.
       if (modOn('orb')) {
         m.lurkT -= dt;
         if (m.lurkT <= 0) { sfx.lurk(sideOf(m)); m.lurkT = LURK_EVERY; }
@@ -161,6 +164,9 @@ function updateMob(m, dt) {
       return;
     }
     m.stalled = false;
+    // ● Patient: opened before it had waited long enough? Then it isn't finished with you yet:
+    // it still attacks, but shutting the door again only makes it wait all over again.
+    if (modOn('orb') && m.stallT < PATIENT_WAIT) m.waited = false;
     // Swap to the route that ends at the opened door. Both orb routes are the same length,
     // so it stays standing in a doorway, just on the other side if needed.
     m.route = m.c.routes.find(route => route[route.length - 1] === opened);
@@ -175,8 +181,8 @@ function updateMob(m, dt) {
     const side = sideOf(m);
     if (G.doors[side] && m.c.stalls && modOn('orb') && !m.waited) {
       // ● Patient: the first time you shut it out, it doesn't knock and leave. It waits behind the door
-      // (growling). Open the door and it attacks once more; shut it again in time and THEN it gives up.
-      m.waited = true;
+      // (growling). Once it has waited PATIENT_WAIT seconds, open the door and it attacks once more;
+      // shut it again in time and THEN it gives up.
       stall(m, [side]);
       return;
     }
@@ -219,7 +225,6 @@ function updateMob(m, dt) {
       stall(m, ['L', 'R']);
     } else if (m.c.stalls && modOn('orb') && G.doors[sideOf(m)]) {
       // ● Patient: even with just its own door shut, it waits behind that door instead of leaving.
-      m.waited = true;
       stall(m, [sideOf(m)]);
     } else if (G.doors[sideOf(m)]) {
       // Its door is already shut: it gives up at once.
@@ -250,10 +255,14 @@ function chooseRoute(m) {
 }
 
 // The orb starts waiting in the doorway until one of `sides` opens.
+// With Patient, this counts as its one wait for this visit (m.waited), and its first growl
+// comes exactly when it has waited long enough (PATIENT_WAIT seconds).
 function stall(m, sides) {
   m.stalled = true;
   m.stallSides = sides;
-  m.lurkT = LURK_EVERY;
+  m.stallT = 0;
+  m.lurkT = PATIENT_WAIT;
+  if (modOn('orb')) m.waited = true;
   sfx.rumble(sideOf(m));
 }
 

@@ -54,7 +54,7 @@ const CREATURES = [
     routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
   { id: 'orb', sym: '●', name: 'Orb', door: 'Picks EITHER door', path: 'Invisible at the door: listen for the rumble',
     interval: 12.0 / PACE, pitch: 48, loudness: 1, unseen: true, stalls: true,
-    mod: { name: 'Patient', desc: 'Shut it out and it waits (growling) instead of leaving. Open the door, let it attack once more, and slam it again in time' },
+    mod: { name: 'Patient', desc: 'Shut it out and it waits instead of leaving. When it growls, open the door, let it attack once more, and slam it again. Open too soon and it just waits again' },
     routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
 ];
 

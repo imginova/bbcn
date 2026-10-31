@@ -75,3 +75,5 @@ const TRICK_CHANCE = 0.5;   // ▲ Trickster: chance, on each of its movement ti
 const BOLD_SLOW = 2;        // ■ Bold: it needs this many times as much light to be pushed back each stage
 const WANDER_TIME = 25;     // Lenny Wanderer: about how many seconds between the box's moves
 const LURK_EVERY = 4;       // ● Patient: seconds between the soft growls while it waits behind a door
+const PATIENT_WAIT = 2;     // ● Patient: seconds it must wait behind the door (until its first growl) before
+                            // open-and-slam sends it away. Open sooner and it just waits again.
