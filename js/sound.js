@@ -124,13 +124,16 @@ const sfx = (() => {
     stat() { noise(0.3, { vol: 0.09, freq: 2600, type: 'highpass' }); },   // camera static
 
     // ----- the shapes -----
-    // Heavy footsteps when ◆ or ▲ steps into a doorway: two deep thuds (turned up on request).
-    step(side) {
+    // ◆ or ▲ in the doorway, trying to get in. It sounds different from their footsteps on purpose,
+    // and a bit louder: a thud on the door, the handle rattling, and a creak that rises from the
+    // shape's own pitch (so ◆'s is lower than ▲'s). That's your cue to shut the door NOW.
+    arrive(side, pitch) {
       const pan = panOf(side);
-      tone(58, 0.25, { type: 'sine', vol: 1.0, pan });
-      noise(0.1, { vol: 0.55, freq: 250, pan });
-      tone(52, 0.25, { type: 'sine', vol: 1.0, delay: 0.26, pan });
-      noise(0.1, { vol: 0.55, freq: 250, delay: 0.26, pan });
+      tone(60, 0.22, { type: 'sine', vol: 0.8, pan });                       // thud
+      for (let i = 0; i < 4; i++) {                                           // rattle, rattle, rattle, rattle
+        noise(0.05, { vol: 0.45, freq: 2500, type: 'highpass', delay: 0.12 + i * 0.07, pan });
+      }
+      tone(pitch * 2, 0.5, { type: 'sawtooth', vol: 0.18, slide: pitch * 2, delay: 0.1, pan });   // creak
     },
     // A shape changing rooms. progress goes from 0 (at the stage) to 1 (at your door):
     // quiet and centered far away, loud and to one side when close.

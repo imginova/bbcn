@@ -170,7 +170,7 @@ function updateMob(m, dt) {
       return;
     } else {
       m.deadline = G.t + reactWindow(m.level);
-      if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.step(sideOf(m));
+      if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.arrive(sideOf(m), m.c.pitch);
     }
   } else {
     // A normal move between rooms: footstep, louder the closer it is.
