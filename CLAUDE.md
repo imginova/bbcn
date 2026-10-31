@@ -71,7 +71,10 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 
 ### Gotchas
 
-- **`index.html` is a page fragment.** It has no `<!doctype>`, `<html>`, `<head>` or `<body>`, because the Artifact publisher adds them. It starts with `<title>`. Don't add a skeleton.
+- **`index.html` is a page fragment.** It has no `<!doctype>`, `<html>`, `<head>` or `<body>`, because the Artifact publisher adds them. Don't add a skeleton.
+- **The game must also work when `index.html` is double-clicked.** Jake plays it that way. Two things make that work, so keep both:
+  - `<meta charset="utf-8">` (plus a viewport meta) at the very top of `index.html`. Without it, symbols like ◆ turn into gibberish.
+  - `[hidden] { display: none !important; }` in `style.css`. The artifact wrapper supplies this rule, but a local file doesn't. Without it, every hidden overlay with a `display` rule shows at once; for example, the Game Over screen covers the title.
 - **Avoid global names that clash with browser built-ins.** Because the scripts share the global scope, a name like `screen` could collide with `window.screen`. That's why the variable is called `currentScreen`.
 - **Keep art ASCII-only**, except the threat symbols. Non-ASCII glyphs come from fallback fonts with different widths and break the alignment. Symbols get the `.sym` class (inline-block, `1ch` wide) to keep their column.
 - **Lenny's face needs a system font.** IBM Plex Mono can't draw its combining marks (U+0361 and U+035C), which show up as a box. `.face` and `.bigface` use a `system-ui` font stack. Inside the ASCII grid the face is one cell followed by 7 empty cells, so it spans 8 columns.
@@ -100,7 +103,11 @@ The game is published with Claude's **Artifact** tool.
   ```bash
   node -e "const fs=require('fs');let h=fs.readFileSync('index.html','utf8');h=h.replace('<link rel=\"stylesheet\" href=\"style.css\">',()=>'<style>'+fs.readFileSync('style.css','utf8')+'</style>');h=h.replace(/<script src=\"([^\"]+)\"><\/script>/g,(m,f)=>'<script>'+fs.readFileSync(f,'utf8')+'</script>');fs.writeFileSync('_preview-test.html','<!doctype html><html><head><meta charset=\"utf-8\"><style>[hidden]{display:none!important}</style></head><body>\n'+h+'\n</body></html>')"
   ```
-  Delete `_preview-test.html` afterwards; it's only for testing.
+  Delete `_preview-test.html` afterwards; it's only for testing. The inlined copy adds its own `[hidden]` rule and charset, so it **won't** catch problems specific to opening the real file.
+- **Testing the real file the way Jake opens it:** run headless Chrome (installed on Jake's Mac) against `file:///…/index.html`:
+  - For a screenshot, use `--headless=new --screenshot=out.png --window-size=900,1100 --virtual-time-budget=3000`.
+  - For automated play, append a test `<script>` to a temporary copy *in the project folder* (so the relative paths work). It should send `keydown` events and write its results to `document.title`; then read them with `--dump-dom`.
+  - Headless Chrome barely runs `requestAnimationFrame`, so the test script should drive the game itself with `setInterval(() => { update(0.02); renderGame(performance.now()); }, 20)` while `currentScreen === 'game'`.
 - **What a full test covers:** both doors with keys and mouse; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 359`); and phone width with no sideways scrolling.
 
 ## Not yet verified

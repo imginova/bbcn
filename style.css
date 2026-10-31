@@ -47,6 +47,12 @@ body {
 }
 * { box-sizing: border-box; }
 
+/* The game hides screens with the HTML `hidden` attribute. Browsers hide those by default,
+   but any rule that sets `display` (like `#scare { display: flex }`) would win and show
+   them anyway: that's how the Game Over screen covered everything when opened from a file.
+   !important makes `hidden` always win. */
+[hidden] { display: none !important; }
+
 .app { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
 .topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
