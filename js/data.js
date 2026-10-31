@@ -29,20 +29,21 @@ const LENNY_FACE = '( ͡° ͜ʖ ͡°)';
 //   id        short name used in code and CSS classes (s-dia, s-tri, s-orb)
 //   sym       the character drawn on screen
 //   door/path text shown on the custom night screen
-//   interval  seconds between chances to move (lower = more chances)
+//   interval  seconds between chances to move (lower = more chances). Each one is
+//             divided by PACE (config.js), so shorter hours make everyone faster.
 //   pitch     the note of its footstep sound, so you can tell them apart by ear
 //   unseen    true = never drawn in the doorway; you only hear it arrive
 //   routes    list of possible paths. The last entry is the door it attacks:
 //             'L' (left) or 'R' (right). The orb has two routes and picks one.
 const CREATURES = [
   { id: 'dia', sym: '◆', name: 'Diamond', door: 'Always the LEFT door', path: 'Stage → Dining → Backstage → West hall',
-    interval: 4.8, pitch: 72,
+    interval: 4.8 / PACE, pitch: 72,
     routes: [['stage', 'dining', 'backstage', 'whall', 'L']] },
   { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall',
-    interval: 5.2, pitch: 118,
+    interval: 5.2 / PACE, pitch: 118,
     routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
   { id: 'orb', sym: '●', name: 'Orb', door: 'Picks EITHER door', path: 'Invisible at the door: listen for the rumble',
-    interval: 6.4, pitch: 48, unseen: true,
+    interval: 6.4 / PACE, pitch: 48, unseen: true,
     routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
 ];
 

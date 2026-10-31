@@ -52,6 +52,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **The orb is invisible at the door.** Jake wanted it identified by its louder audio cue only.
 - **Power drains only while in use.** Jake removed the idle drain and asked for faster per-use drain to compensate. It went from 0.10% idle + 0.12% per item to 0% idle + 0.20% per item.
 - **Short nights, heavy drain.** The hour was cut from 60 to 30 seconds (3-minute nights), and the drain per item was doubled to 0.40% at the same time. Doubling it keeps the same share of the battery per in-game hour, so power stays just as tight over the shorter night.
+- **Everyone speeds up with the clock.** `PACE` in `config.js` is `60 / HOUR_SECONDS` (2 with 30-second hours). The shapes' movement intervals are divided by it and Lenny's box drain is multiplied by it, so a short night holds as many visits and windings as the original 6-minute one did. The door reaction window is left alone on purpose, because it's about human reaction time, not the length of the night.
 - **Visual style:** a single dark amber CRT terminal. The fonts are VT323 for display text and IBM Plex Mono for the art, both loaded from Google Fonts. The look is dark on purpose, so there's no light theme.
 
 ## How the code is organized
@@ -60,7 +61,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **`style.css`:** the color and font tokens at the top of `:root` (`--fg` amber, `--c-dia`, `--c-tri`, `--c-orb`, `--c-len`, `--danger`), then styles for each screen.
 - **`js/`**, plain classic scripts (not ES modules, so the game still works when `index.html` is opened from disk). Top-level `const`/`let`/`function` declarations are shared across the scripts through the global scope, so **load order matters** and **names must be unique across all files**. The files, in load order:
   1. **`helpers.js`:** `$` (getElementById), `store` (localStorage wrapped in try/catch) and `pick`.
-  2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW` and `LENNY_DELAY`. **Most balance changes happen here.**
+  2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `PACE`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW` and `LENNY_DELAY`. **Most balance changes happen here.**
   3. **`data.js`:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `LENNY_FACE`, `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and the `unseen` flag), `LENNY`, and `SETUP` (everything with a level, in the order of `levels[]`).
   4. **`sound.js`:** `sfx`, every sound, generated with the Web Audio API (`tone()` and `noise()` helpers).
   5. **`art.js`:** the grid helpers (`grid`, `toHtml`, `inShape`, `stamp`, `stampFace`, `frame`, `symHtml`, `SYM_CLASS`), `ROOM_ART`, `SLOTS`, `prizeArt(g, lenny)` and `officeLines(now, dark, camUp)`. Art is a 2D grid of `{ch, cls}` cells.
@@ -115,7 +116,7 @@ The game is published with Claude's **Artifact** tool.
 ## Not yet verified
 
 - **Sound has never been heard by Claude.** The rumble, footsteps, winding, tune and jumpscare volume need a human ear.
-- **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain and 30-second hours.
+- **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain, 30-second hours and `PACE` 2. Lenny at level 20 now unwinds from full in about 12 seconds, which may be too punishing.
 - **The live link has only been checked by Jake.** Claude's test browser wasn't signed in to claude.ai.
 - A best score saved before Lenny existed shows `–` for his level and is totaled out of 80.
 
