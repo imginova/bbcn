@@ -55,8 +55,10 @@ $('map').addEventListener('click', e => {
 $('rows').addEventListener('click', e => {
   const step = e.target.closest('.step');
   if (step) {
-    changeLevel(Number(step.dataset.i), Number(step.dataset.d));
+    // A mouse or finger already changed the level on pointerdown (see the hold-to-repeat code below).
+    // e.detail is 0 when the "click" came from the keyboard (Enter/Space on a focused button).
     if (e.detail) step.blur();
+    else changeLevel(Number(step.dataset.i), Number(step.dataset.d));
     return;
   }
   // A modifier checkbox: let go of keyboard focus after a mouse click, so Space keeps working (see keydown).
@@ -67,6 +69,33 @@ $('rows').addEventListener('click', e => {
   const row = e.target.closest('.lvrow');
   if (row) { sel = Number(row.dataset.i); renderSetup(); }
 });
+
+// Holding − or + keeps changing the level, like holding down a key: one step straight away,
+// then after a short pause (400 ms) one step every 70 ms until you let go or it hits 0 / 20.
+let holdTimer = 0;
+function stopHold() { clearTimeout(holdTimer); holdTimer = 0; }
+function startHold(i, d) {
+  stopHold();
+  changeLevel(i, d);
+  const repeat = delay => {
+    holdTimer = setTimeout(() => {
+      const before = levels[i];
+      changeLevel(i, d);
+      if (levels[i] !== before) repeat(70);   // stop repeating once it can't go any further
+    }, delay);
+  };
+  repeat(400);
+}
+$('rows').addEventListener('pointerdown', e => {
+  const step = e.target.closest('.step');
+  if (!step || e.button !== 0) return;   // e.button 0 = the main mouse button (or a finger)
+  sfx.init();
+  startHold(Number(step.dataset.i), Number(step.dataset.d));
+});
+// Letting go anywhere, sliding off the button, or leaving the window stops the repeat.
+for (const ev of ['pointerup', 'pointercancel', 'blur']) window.addEventListener(ev, stopHold);
+$('rows').addEventListener('pointerout', e => { if (e.target.closest('.step')) stopHold(); });
+$('rows').addEventListener('contextmenu', e => { if (e.target.closest('.step')) e.preventDefault(); });   // no long-press menu on phones
 
 // Ticking or unticking a modifier checkbox fires a "change" event.
 $('rows').addEventListener('change', e => {

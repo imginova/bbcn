@@ -76,7 +76,7 @@ const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
 // then you have a few seconds to find (: in the office and click it (see updateSmiley in game.js).
-const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your office', path: 'Heard a giggle after lowering the camera? Find (: and click it',
+const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your office', path: 'Heard a giggle (often after lowering the camera)? Find (: and click it',
   mod: { name: 'Twins', desc: 'Two (: hide at once and you must click both, with 50% more time' } };
 
 // Everything that gets a level on the custom night screen, in order.
@@ -87,11 +87,22 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY];
 
 // Ready-made challenges for the custom night screen. Each one sets every level
 // (in SETUP order: ◆ ▲ ● Lenny ■ (:) and which modifiers are ticked (by id).
+// They're in order from easiest to hardest, measured by a bot playing each one many times.
+// Every ★ modifier shows up in at least one challenge before Nightmare, so you can practise it.
+// "6/20" is all six threats at level 20 with no modifiers (like FNAF's 4/20 mode);
+// Nightmare is 6/20 with every modifier on.
 const PRESETS = [
-  { name: 'Warm-up',     levels: [4, 4, 3, 3, 0, 0],         mods: [] },
-  { name: 'Shape party', levels: [14, 14, 14, 0, 0, 0],      mods: ['dia', 'tri', 'orb'] },
-  { name: 'Lights out',  levels: [6, 6, 0, 0, 18, 0],        mods: ['sqr'] },
-  { name: 'Music lover', levels: [6, 6, 6, 18, 0, 0],        mods: ['len'] },
-  { name: 'Hide & seek', levels: [0, 0, 10, 0, 10, 18],      mods: ['orb', 'smi'] },
-  { name: 'Nightmare',   levels: [20, 20, 20, 20, 20, 20],   mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
+  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],         mods: [] },
+  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],      mods: ['orb', 'smi'] },
+  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20],      mods: ['smi'] },
+  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],        mods: ['sqr'] },
+  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],      mods: ['tri'] },
+  { name: 'Waiting game',    levels: [10, 10, 20, 6, 12, 0],     mods: ['orb'] },
+  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8],        mods: ['len'] },
+  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],      mods: ['dia'] },
+  { name: 'Shape party',     levels: [16, 16, 16, 6, 0, 0],      mods: ['dia', 'tri', 'orb'] },
+  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12],   mods: ['len', 'sqr'] },
+  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16],   mods: ['dia', 'len', 'smi'] },
+  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],   mods: [] },
+  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],   mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
 ];

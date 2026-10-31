@@ -44,7 +44,9 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 | ■ **Bold** | Needs `BOLD_SLOW` (2×) as much light per stage (2 s per stage at level 20) | Still frozen while lit, so lighting it early, before close, keeps it safe. (It used to switch to a door trick at close, but the bot test showed that made ■ *easier*) |
 | (: **Twins** | Two (: hide in two different spots at once; both must be clicked | 50% more time |
 
-**Challenges:** `PRESETS` in `data.js` (Warm-up, Shape party, Lights out, Music lover, Hide & seek, Nightmare) fill in every level and modifier with one click.
+**Challenges:** `PRESETS` in `data.js` fill in every level and modifier with one click; each button also shows the score it's worth. There are 13, ordered easiest to hardest by bot measurements: Warm-up, Hide & seek, Double trouble, Lights out, Prank call, Waiting game, Music lover, Don't blink, Shape party, Graveyard shift, Overtime, **6/20** (all six at 20, no modifiers, like FNAF's 4/20) and Nightmare (6/20 plus every modifier). Every modifier appears in at least one challenge before Nightmare (on request). With 1 s reactions, the smart bot ends Warm-up with about 94% power, the middle challenges with 85–65%, Overtime with 55%, 6/20 with 60% (but with slow reactions it wins 6/20 only 84% of the time, against 99% for Overtime) and Nightmare with 35%.
+
+**Holding − or +** on the custom night screen repeats: one step at once, then after 400 ms one step every 70 ms until you let go or the level hits 0 or 20 (`startHold`/`stopHold` in `input.js`, on `pointerdown`).
 
 | Threat | Route | Special behavior |
 |---|---|---|
@@ -92,7 +94,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
   6. **`game.js`:** the state (`levels`, `mods`, `best`, `nightScore`, `MAX_SCORE`, `G` including `G.mod`, `dirty`, `windKey`/`windPointer`, `lightKey`/`lightPointer`) and the rules (`newGame`, `update(dt)`, `powerUnits`, `lightOn(side)`, `modOn(id)`, `updateMob`, `stall`, `bounce`, `updateLenny`, `wanderBox`, `updateSquare`, `updateSmiley`, `maybeWakeSmiley`, `wakeSmiley`, `camStatic`, `powerOutStart`), the player actions (`toggleDoor`, `toggleCam`, `setCam`, `catchSmiley(i)`, `setPaused`, `startNight`), and the endings (`win`, `lose(creature, side, dark)`, `loseLenny`, `loseSmiley`). The endings call `screens.js` to display results; they don't touch the page directly.
   7. **`render.js`:** `renderGame(now)` (the HUD, office or cameras, and the buttons), `doorGrid` and `renderFeed`. It reads `G` and never changes the rules.
   8. **`screens.js`:** `currentScreen`, `sel`, `show(name)`, `showPause`, `showScare(message, artHtml)`/`hideScare`, `showWin(sum, isBest)`, `goSetup`, the custom night screen (`buildSetup`, `renderSetup`, `changeLevel`, `setAllLevels`, `setMod`, `applyPreset`, `bestText`), How to play, and the mute button.
-  9. **`input.js`:** all event listeners: button clicks, the map, setup rows and their modifier checkboxes (`change`), the challenge buttons, presses on (: in `#officeArt` (on `pointerdown`, because the office is redrawn 15 times a second), one `keydown` handler that branches by `currentScreen`, `keyup` for `W`/`Q`/`E`, pointer-hold on `#btnWind` and the light buttons (`pressLight`/`releaseLight`), window blur and tab visibility.
+  9. **`input.js`:** all event listeners: button clicks, the map, setup rows (with hold-to-repeat on − and +) and their modifier checkboxes (`change`), the challenge buttons, presses on (: in `#officeArt` (on `pointerdown`, because the office is redrawn 15 times a second), one `keydown` handler that branches by `currentScreen`, `keyup` for `W`/`Q`/`E`, pointer-hold on `#btnWind` and the light buttons (`pressLight`/`releaseLight`), window blur and tab visibility.
   10. **`main.js`:** `speed`, the `requestAnimationFrame` game `loop`, the `window.nightShift` test hook and `boot()`.
 
 ### Gotchas

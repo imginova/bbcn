@@ -85,8 +85,10 @@ function buildSetup() {
         <button type="button" class="step" data-i="${i}" data-d="1" aria-label="Raise ${c.name} level">+</button>
       </span>
     </div>`).join('');
+  // Each challenge button shows the score it's worth (levels plus +MOD_BONUS per modifier).
+  const presetScore = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
   $('presets').innerHTML = '<span class="lab">Challenges</span>' +
-    PRESETS.map((p, i) => `<button type="button" data-preset="${i}">${p.name}</button>`).join('');
+    PRESETS.map((p, i) => `<button type="button" data-preset="${i}">${p.name} <span class="dim">${presetScore(p)}</span></button>`).join('');
 }
 
 // Update the numbers, bars, checkboxes, score and selected row on the custom night screen.
