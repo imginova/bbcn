@@ -1,10 +1,10 @@
-# Night Shift: project handoff
+# Bare Bones Custom Night: project handoff
 
 This file holds everything a new Claude session, or a person, needs to keep working on this project. Claude Code reads `CLAUDE.md` automatically when it starts in this folder. In a plain claude.ai chat, attach this file together with `index.html`, `style.css` and the `js/` folder. [`README.md`](README.md) is the beginner-friendly guide for Jake.
 
 ## What this is
 
-**Night Shift** is a browser game in the style of Five Nights at Freddy's (FNAF), drawn in ASCII art and played with the mouse and keyboard. You sit in a security office from 12 AM to 6 AM, close two doors, watch seven cameras, wind a music box and ration your power.
+**Bare Bones Custom Night** (it was called *Night Shift* until 2026-10-31; the repo name `bbcn` is its initials) is a browser game in the style of Five Nights at Freddy's (FNAF), drawn in ASCII art and played with the mouse and keyboard. You sit in a security office from 12 AM to 6 AM, close two doors, watch seven cameras, wind a music box and ration your power.
 
 - **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and ten scripts in `js/`. It has no build step, no dependencies and no sound files. Jake is learning from this code, so every file has a header comment and learning-oriented comments.
 - **Live, shareable link:** https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG. It's private: only the owner and people they share it with through the page's **Share** menu can open it. It belongs to the Claude account the project moved to on 2026-10-31. The old link (`5qmjeiJHMdgo8STTf2ZAFF`) belongs to the previous account and can't be updated from the new one.
@@ -37,9 +37,9 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 | `◆` Diamond (rose) | Stage → Dining → Backstage → West hall → **LEFT** door | Appears in the left doorway |
 | `▲` Triangle (cyan) | Stage → Dining → Supply → East hall → **RIGHT** door | Appears in the right doorway |
 | `●` Orb (violet) | Stage → Dining → either hall → **either** door | **Never appears in the doorway.** Its arrival plays a loud low **rumble** from its side instead of footsteps |
-| `( ͡° ͜ʖ ͡°)` Lenny (green) | Stays in the music box on **CAM 7 · Prize corner** | Works like FNAF 2's music box: the box unwinds over time, and you **hold `W` or the Wind button while on CAM 7** to rewind it. Below 30% the Camera button shows "WIND CAM 7!", the CAM 7 map button flashes, and a warning chime plays. At 0% a tune plays, his face appears on the office monitor, and he gets you 4.5 seconds later. Nothing stops him once he's out |
+| `( ͡° ͜ʖ ͡°)` Lenny (green) | Stays in the music box on **CAM 7 · Prize corner** | Works like FNAF 2's music box: the box unwinds over time, and you **hold `W` or the Wind button while on CAM 7** to rewind it, at 50% per second (empty to full in 2 seconds). Below 30% the Camera button shows "WIND CAM 7!", the CAM 7 map button flashes, and a warning chime plays. At 0% a tune plays, his face appears on the office monitor, and he gets you 4.5 seconds later. Nothing stops him once he's out |
 
-- **Doors:** when ◆, ▲ or ● reaches a doorway, you have a reaction window to shut the door: 2.6 seconds at level 1, down to 1.4 seconds at level 20. If the door is shut, the shape goes back to the stage with a knock sound. If not, a jumpscare fills the screen with the shape, and the game-over screen offers Retry or Change levels.
+- **Doors:** when ◆, ▲ or ● reaches a doorway, you have a reaction window to shut the door: 4.0 seconds at level 1, down to 2.4 seconds at level 20 (raised from 2.6–1.4 when the nights got shorter). If the door is shut, the shape goes back to the stage with a knock sound. If not, a shaking jumpscare (no flashing) fills the screen with the shape, and the game-over screen offers Retry or Change levels.
 - **Movement sounds:** each move plays a footstep in that shape's own pitch (● deepest, ◆ middle, ▲ highest). The step gets louder and pans further toward its door the closer the shape is. ◆ and ▲ arriving at a doorway play heavy footsteps.
 - **Saved in the browser (`localStorage`):** the last levels used, the best result (the highest total of levels survived, out of 80) and the mute setting. Every read and write is wrapped in try/catch, so the game still works if storage is blocked.
 
@@ -53,6 +53,8 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **Power drains only while in use.** Jake removed the idle drain and asked for faster per-use drain to compensate. It went from 0.10% idle + 0.12% per item to 0% idle + 0.20% per item.
 - **Short nights, heavy drain.** The hour was cut from 60 to 30 seconds (3-minute nights), and the drain per item was doubled to 0.40% at the same time. Doubling it keeps the same share of the battery per in-game hour, so power stays just as tight over the shorter night.
 - **Everyone speeds up with the clock.** `PACE` in `config.js` is `60 / HOUR_SECONDS` (2 with 30-second hours). The shapes' movement intervals are divided by it and Lenny's box drain is multiplied by it, so a short night holds as many visits and windings as the original 6-minute one did. The door reaction window is left alone on purpose, because it's about human reaction time, not the length of the night.
+- **No strobe on the jumpscare.** It used to flash the whole screen red; that was removed on request. The jumpscare only shakes now. Don't add flashing back.
+- **The rename kept the internal names.** The `window.nightShift` test hook and the `nightshift:` prefix on saved `localStorage` keys stay as they are, so saved levels and best scores aren't lost.
 - **Visual style:** a single dark amber CRT terminal. The fonts are VT323 for display text and IBM Plex Mono for the art, both loaded from Google Fonts. The look is dark on purpose, so there's no light theme.
 
 ## How the code is organized
@@ -116,7 +118,7 @@ The game is published with Claude's **Artifact** tool.
 ## Not yet verified
 
 - **Sound has never been heard by Claude.** The rumble, footsteps, winding, tune and jumpscare volume need a human ear.
-- **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain, 30-second hours and `PACE` 2. Lenny at level 20 now unwinds from full in about 12 seconds, which may be too punishing.
+- **Balance with the new power drain has not been play-tested.** The values are 0.40% per item, no idle drain, 30-second hours and `PACE` 2. Lenny at level 20 now unwinds from full in about 12 seconds, though winding was doubled to 50% per second to help. The door reaction window is 4.0–2.4 seconds.
 - **The live link has only been checked by Jake.** Claude's test browser wasn't signed in to claude.ai.
 - A best score saved before Lenny existed shows `–` for his level and is totaled out of 80.
 

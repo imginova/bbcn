@@ -33,15 +33,15 @@ const MAX_LEVEL = 20;
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
 // Seconds you get to shut the door once a shape is in the doorway.
-// This is a straight line: 2.6s at level 1, sliding down to 1.4s at level 20.
-// (level - 1) goes from 0 to 19, so (level - 1) * (1.2 / 19) goes from 0 to 1.2.
-const reactWindow = level => 2.6 - (level - 1) * (1.2 / 19);
+// This is a straight line: 4.0s at level 1, sliding down to 2.4s at level 20.
+// (level - 1) goes from 0 to 19, so (level - 1) * (1.6 / 19) goes from 0 to 1.6.
+const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
 
 // ---------- Lenny's music box ----------
 // How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
 // Multiplied by PACE (2), that's 1.2 at level 1 (about 83s from full)
 // up to 8.0 at level 20 (about 12s from full).
 const boxDrain = level => (0.6 + (level - 1) * (3.4 / 19)) * PACE;
-const WIND_RATE = 25;      // % wound back per second while you hold W
+const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
 const BOX_LOW = 30;        // below this %, the camera button and CAM 7 start warning you
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you

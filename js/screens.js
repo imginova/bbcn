@@ -30,7 +30,8 @@ function goSetup() {
 }
 
 // ---------- jumpscare and game over ----------
-// First the jumpscare (shaking and flashing red) for 1.5 seconds, then the Game Over message and buttons.
+// First the jumpscare (shaking) for 1.5 seconds, then the Game Over message and buttons.
+// There is no flashing strobe on purpose: it was removed to make the scare easier on the eyes.
 function showScare(message, artHtml) {
   const art = $('scareArt'), cover = $('scare');
   $('loseMsg').innerHTML = message;
@@ -38,13 +39,11 @@ function showScare(message, artHtml) {
   art.hidden = false;
   $('scareMsg').hidden = true;
   cover.hidden = false;
-  art.classList.add('shake');     // the shake and flash animations are defined in style.css
-  cover.classList.add('flash');
+  art.classList.add('shake');     // the shake animation is defined in style.css
   clearTimeout(scareTimer);
   // setTimeout(fn, 1500) runs fn once, 1500 milliseconds from now.
   scareTimer = setTimeout(() => {
     art.classList.remove('shake');
-    cover.classList.remove('flash');
     art.hidden = true;
     $('scareMsg').hidden = false;
     $('btnRetry').focus({ preventScroll: true });
