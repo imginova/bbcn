@@ -337,13 +337,14 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
     <ul>
       <li>Survive from 12 AM to 6 AM. Each hour lasts one real minute.</li>
       <li>Three shapes, <span class="sym s-dia">◆</span> <span class="sym s-tri">▲</span> <span class="sym s-orb">●</span>, walk from the stage toward your office. ◆ always comes to the left door, ▲ to the right, and ● picks a side.</li>
-      <li>When a shape steps into a doorway you hear footsteps and have about two seconds to shut that door. If the door is shut, the shape goes back to the stage.</li>
+      <li>You can hear the shapes move. Each one has its own note, and its steps get louder and lean toward its side the closer it gets.</li>
+      <li>When a shape steps into a doorway you hear heavy footsteps and have about two seconds to shut that door. If the door is shut, the shape goes back to the stage.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
       <li>Doors and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>
     <div class="table-wrap">
       <table>
-        <tr><td>Left / right door</td><td>A / D, or click the door or its button</td></tr>
+        <tr><td>Left / right door</td><td>A / D, or click the door or its button (works with the camera up too)</td></tr>
         <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Pick a camera</td><td>1 to 6, or click a room on the map</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
@@ -383,11 +384,12 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
   const CAM_ORDER = ['stage', 'dining', 'backstage', 'supply', 'whall', 'ehall'];
 
   const CREATURES = [
-    { id: 'dia', sym: '◆', name: 'Diamond',  door: 'Always the LEFT door',  path: 'Stage → Dining → Backstage → West hall', interval: 4.8,
+    // pitch: the note of each shape's footstep, so you can tell them apart by ear.
+    { id: 'dia', sym: '◆', name: 'Diamond',  door: 'Always the LEFT door',  path: 'Stage → Dining → Backstage → West hall', interval: 4.8, pitch: 72,
       routes: [['stage', 'dining', 'backstage', 'whall', 'L']] },
-    { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall', interval: 5.2,
+    { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall', interval: 5.2, pitch: 118,
       routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
-    { id: 'orb', sym: '●', name: 'Orb',      door: 'Picks EITHER door',     path: 'Stage → Dining → a hall (shorter route, slower steps)', interval: 6.4,
+    { id: 'orb', sym: '●', name: 'Orb',      door: 'Picks EITHER door',     path: 'Stage → Dining → a hall (shorter route, slower steps)', interval: 6.4, pitch: 48,
       routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
   ];
   const SYM_CLASS = { '◆': 'sym s-dia', '▲': 'sym s-tri', '●': 'sym s-orb', '◇': 'sym s-dia', '△': 'sym s-tri', '○': 'sym s-orb' };
@@ -454,6 +456,13 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
         noise(0.08, { vol: 0.3, freq: 250, pan });
         tone(52, 0.2, { type: 'sine', vol: 0.75, delay: 0.26, pan });
         noise(0.08, { vol: 0.3, freq: 250, delay: 0.26, pan });
+      },
+      // A shape changing rooms: faint and centered at the stage, loud and to one side near your office.
+      move(progress, side, pitch) {
+        const vol = 0.03 + 0.55 * progress * progress;
+        const pan = panOf(side) * progress;
+        tone(pitch, 0.18, { type: 'sine', vol, slide: -pitch * 0.3, pan });
+        noise(0.08, { vol: vol * 0.6, freq: 250 + 600 * progress, pan });
       },
       knock(side) { for (let i = 0; i < 3; i++) noise(0.12, { vol: 0.6, freq: 320, delay: i * 0.16, pan: panOf(side) }); },
       powerDown() { tone(440, 1.8, { type: 'sawtooth', vol: 0.14, slide: -400 }); },
@@ -636,6 +645,8 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
       if (G.doors[sideOf(m)]) { bounce(m); return; }
       m.deadline = G.t + reactWindow(m.level);
       sfx.step(sideOf(m));
+    } else {
+      sfx.move(m.step / (m.route.length - 1), sideOf(m), m.c.pitch);
     }
     // Static on the feed you are watching when something walks in or out of it.
     if (G.cam && (G.camRoom === from || G.camRoom === m.route[m.step])) camStatic(0.35);
@@ -673,7 +684,6 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
     if (!G || G.over || G.paused) return;
     if (G.powerOut) { sfx.deny(); return; }
     G.doors[side] = !G.doors[side];
-    if (G.cam) G.cam = false;
     sfx.door(side);
     dirty = true;
   }
