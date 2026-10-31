@@ -1,12 +1,12 @@
 # Night Shift: project handoff
 
-This file holds everything a new Claude session, or a person, needs to keep working on this project. Claude Code reads `CLAUDE.md` automatically when it starts in this folder. In a plain claude.ai chat, paste this file in together with `index.html`.
+This file holds everything a new Claude session, or a person, needs to keep working on this project. Claude Code reads `CLAUDE.md` automatically when it starts in this folder. In a plain claude.ai chat, attach this file together with `index.html`, `style.css` and the `js/` folder. [`README.md`](README.md) is the beginner-friendly guide for Jake.
 
 ## What this is
 
 **Night Shift** is a browser game in the style of Five Nights at Freddy's (FNAF), drawn in ASCII art and played with the mouse and keyboard. You sit in a security office from 12 AM to 6 AM, close two doors, watch seven cameras, wind a music box and ration your power.
 
-- **The whole game is one file: [`index.html`](index.html)**, about 1,200 lines of HTML, CSS and JavaScript. It has no build step, no dependencies and no sound files.
+- **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and ten scripts in `js/`. It has no build step, no dependencies and no sound files. Jake is learning from this code, so every file has a header comment and learning-oriented comments.
 - **Live, shareable link:** https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF. It's private: only the owner and people they share it with through the page's **Share** menu can open it.
 - **Owner:** Jake Harris. Jake is new to programming: explain changes in plain language and avoid jargon.
 
@@ -16,7 +16,7 @@ This file holds everything a new Claude session, or a person, needs to keep work
 - **Commit only when asked.** After each change, ask "Commit these changes?" Commits go straight to `main`.
 - **After every change, republish the live link** so Jake can play it right away (see "Publishing" below).
 - **Keep the pace fast.** Jake specifically removed slow mechanics such as door lights.
-- **Keep everything in `index.html`** unless Jake asks otherwise.
+- **Keep the split by job and keep the comments.** Put new code in the file whose job it matches, and comment it in the same beginner-friendly style: explain *why*, define jargon the first time it appears. Update `README.md` if a file's job changes.
 
 ## Gameplay as it stands now
 
@@ -53,52 +53,54 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **Power drains only while in use.** Jake removed the idle drain and asked for faster per-use drain to compensate. It went from 0.10% idle + 0.12% per item to 0% idle + 0.20% per item.
 - **Visual style:** a single dark amber CRT terminal. The fonts are VT323 for display text and IBM Plex Mono for the art, both loaded from Google Fonts. The look is dark on purpose, so there's no light theme.
 
-## How the code is organized (`index.html`)
+## How the code is organized
 
-1. **`<style>`:** the color and font tokens at the top of `:root` (`--fg` amber, `--c-dia`, `--c-tri`, `--c-orb`, `--c-len`, `--danger`), then styles for each screen.
-2. **HTML:** the screens `#scr-title`, `#scr-setup`, `#scr-game` and `#scr-win`, plus the full-screen overlays `#scare` (jumpscare and game over) and `#howto`. Visibility is switched with the `hidden` attribute.
-3. **`<script>`**, one closure, in this order:
-   - **Tuning constants:** `HOUR_SECONDS`, `NIGHT_HOURS`, `BASE_DRAIN`, `UNIT_DRAIN`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW`, `LENNY_DELAY`, `LENNY_FACE`. **Most balance changes happen here.**
-   - **Data:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and the `unseen` flag), `LENNY`, and `SETUP` (everything with a level, in the order of `levels[]`).
-   - **`sfx`:** every sound, generated with the Web Audio API (`tone()` and `noise()` helpers). It includes `door`, `cam`, `step`, `move`, `rumble`, `knock`, `windTick`, `boxWarn`, `boxTune`, `scream`, `chime` and the background `humOn`/`humOff`.
-   - **ASCII grid helpers:** art is a 2D grid of `{ch, cls}` cells. `grid()` turns text lines into cells, `toHtml()` renders them, `stamp()` draws a shape (diamond, triangle or circle) from `inShape()`, `stampFace()` places Lenny's face, and `frame()` boxes a room.
-   - **Room art:** `ROOM_ART` (the inside of each camera room, 38×9 characters), `SLOTS` (where each shape stands in each room) and `prizeArt()` (the music box's lid and contents by wind level).
-   - **State:** `levels`, `best`, `screen` and `G`, the current night: time `t`, `power`, `doors`, `cam`, `camRoom`, `mobs[]`, `lenny`, power-out fields and `over`/`paused`.
-   - **Game logic:** `newGame`, `update(dt)` (runs `updateLenny`, power drain and `updateMob` for each shape), `bounce`, `powerOutStart`, `win`, `lose`, `loseLenny` and `showScare`.
-   - **Actions:** `toggleDoor`, `toggleCam`, `setCam`, `setPaused`, `startNight` and `goSetup`.
-   - **Rendering:** `officeLines` and `doorGrid` (the office), `renderFeed` (the cameras and wind bar), `renderGame` (the HUD and buttons), and `buildSetup`/`renderSetup` (the custom night screen).
-   - **Input:** button clicks, map and setup-row clicks, one `keydown` handler that branches by screen, a `keyup` handler for `W`, and pointer-hold on `#btnWind`.
-   - **Loop:** `requestAnimationFrame` drives `update(dt * speed)` and redraws the game at about 15 frames per second.
+- **`index.html`:** the structure only. It has the screens `#scr-title`, `#scr-setup`, `#scr-game` and `#scr-win`, plus the full-screen overlays `#scare` (jumpscare and game over) and `#howto`. Visibility is switched with the `hidden` attribute. It loads `style.css`, then the scripts at the bottom **in order**.
+- **`style.css`:** the color and font tokens at the top of `:root` (`--fg` amber, `--c-dia`, `--c-tri`, `--c-orb`, `--c-len`, `--danger`), then styles for each screen.
+- **`js/`**, plain classic scripts (not ES modules, so the game still works when `index.html` is opened from disk). Top-level `const`/`let`/`function` declarations are shared across the scripts through the global scope, so **load order matters** and **names must be unique across all files**. The files, in load order:
+  1. **`helpers.js`:** `$` (getElementById), `store` (localStorage wrapped in try/catch) and `pick`.
+  2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW` and `LENNY_DELAY`. **Most balance changes happen here.**
+  3. **`data.js`:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `LENNY_FACE`, `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and the `unseen` flag), `LENNY`, and `SETUP` (everything with a level, in the order of `levels[]`).
+  4. **`sound.js`:** `sfx`, every sound, generated with the Web Audio API (`tone()` and `noise()` helpers).
+  5. **`art.js`:** the grid helpers (`grid`, `toHtml`, `inShape`, `stamp`, `stampFace`, `frame`, `symHtml`, `SYM_CLASS`), `ROOM_ART`, `SLOTS`, `prizeArt(g, lenny)` and `officeLines(now, dark, camUp)`. Art is a 2D grid of `{ch, cls}` cells.
+  6. **`game.js`:** the state (`levels`, `best`, `G`, `dirty`, `windKey`/`windPointer`) and the rules (`newGame`, `update(dt)`, `updateMob`, `bounce`, `updateLenny`, `camStatic`, `powerOutStart`), the player actions (`toggleDoor`, `toggleCam`, `setCam`, `setPaused`, `startNight`), and the endings (`win`, `lose`, `loseLenny`). The endings call `screens.js` to display results; they don't touch the page directly.
+  7. **`render.js`:** `renderGame(now)` (the HUD, office or cameras, and the buttons), `doorGrid` and `renderFeed`. It reads `G` and never changes the rules.
+  8. **`screens.js`:** `currentScreen`, `sel`, `show(name)`, `showPause`, `showScare(message, artHtml)`/`hideScare`, `showWin(sum, isBest)`, `goSetup`, the custom night screen (`buildSetup`, `renderSetup`, `changeLevel`, `setAllLevels`, `bestText`), How to play, and the mute button.
+  9. **`input.js`:** all event listeners: button clicks, the map, setup rows, one `keydown` handler that branches by `currentScreen`, `keyup` for `W`, pointer-hold on `#btnWind`, window blur and tab visibility.
+  10. **`main.js`:** `speed`, the `requestAnimationFrame` game `loop`, the `window.nightShift` test hook and `boot()`.
 
 ### Gotchas
 
-- **`index.html` is a page fragment.** It has no `<!doctype>`, `<html>`, `<head>` or `<body>`, because the Artifact publisher adds them. It starts with `<title>` and `<style>`. Don't add a skeleton.
+- **`index.html` is a page fragment.** It has no `<!doctype>`, `<html>`, `<head>` or `<body>`, because the Artifact publisher adds them. It starts with `<title>`. Don't add a skeleton.
+- **Avoid global names that clash with browser built-ins.** Because the scripts share the global scope, a name like `screen` could collide with `window.screen`. That's why the variable is called `currentScreen`.
 - **Keep art ASCII-only**, except the threat symbols. Non-ASCII glyphs come from fallback fonts with different widths and break the alignment. Symbols get the `.sym` class (inline-block, `1ch` wide) to keep their column.
 - **Lenny's face needs a system font.** IBM Plex Mono can't draw its combining marks (U+0361 and U+035C), which show up as a box. `.face` and `.bigface` use a `system-ui` font stack. Inside the ASCII grid the face is one cell followed by 7 empty cells, so it spans 8 columns.
-- **To add a camera:** update `ROOMS`, `CAM_ORDER`, `ROOM_ART`, `SLOTS`, the `#map` buttons and the `grid-template-areas` in `.map`, the `1–7` key check and the help text.
-- **To add a leveled threat:** add it to `CREATURES`, or handle it separately like `LENNY`, and make sure it lands in `SETUP`. Old saved levels are padded automatically.
+- **To add a camera:** update `ROOMS` and `CAM_ORDER` (`data.js`), `ROOM_ART` and `SLOTS` (`art.js`), the `#map` buttons (`index.html`), `.map`'s `grid-template-areas` (`style.css`), the `1–7` key check (`input.js`) and the help text.
+- **To add a leveled threat:** add it to `CREATURES` in `data.js`, or handle it separately like `LENNY`, and make sure it lands in `SETUP`. Old saved levels are padded automatically.
+- **To add a new script file:** add a `<script src>` line in `index.html` in the right load-order position, and add it to the `files` map when publishing.
 - **The `window.nightShift` test hook:** `nightShift.state` shows the current night, and `nightShift.speed = 20` fast-forwards time. It's harmless to leave in.
 
 ## Publishing (the live link)
 
 The game is published with Claude's **Artifact** tool.
 
+- **The page is multi-file.** Publish `file_path: index.html` and pass every other file in `files`, mapping each published path to the same local path: `{"style.css": "style.css", "js/helpers.js": "js/helpers.js", ...}` for all ten scripts. On an update, files that are left out are kept as they were, so always include the ones you changed. Listing all of them is the safest.
 - **In the same session that created it:** publish the same `file_path` (`index.html`) again, and the URL stays the same.
-- **From a new session or computer:** first **read** the artifact with `action: "read"` and `url: https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF`. Then publish with that same `url` and `file_path: index.html`. Without the `url`, a new, separate link is created.
+- **From a new session or computer:** first **read** the artifact with `action: "read"` and `url: https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF`. Then publish with that same `url`, `file_path: index.html` and the `files` map. Without the `url`, a new, separate link is created.
 - If a publish is refused because a newer version exists, merge the differences it shows and publish again.
 - **Page rules:** fonts may only come from Google Fonts, scripts only from cdnjs, jsDelivr or unpkg with pinned versions, and all other CSS and JS must be inline. `alert`/`confirm` don't work, and sound starts only after the player clicks or presses a key.
 
 ## Testing
 
-- **Quick syntax check:**
+- **Quick syntax check:** this parses each script, then all of them together in load order, which also catches duplicate names across files:
   ```bash
-  node -e "const h=require('fs').readFileSync('index.html','utf8');new Function(h.split('<script>')[1].split('</script>')[0]);console.log('script parses OK')"
+  node -e "const fs=require('fs');const o=[...fs.readFileSync('index.html','utf8').matchAll(/<script src=\"([^\"]+)\"/g)].map(m=>m[1]);o.forEach(f=>new Function(fs.readFileSync(f,'utf8')));new Function(o.map(f=>fs.readFileSync(f,'utf8')).join('\n;\n'));console.log('OK:',o.join(', '))"
   ```
-- **Playing it locally:** wrap the fragment in a full page skeleton, then open that copy in a browser:
+- **Playing it locally:** double-clicking `index.html` works in a normal browser. The Claude desktop app's browser pane, however, opens local files as `data:` pages, which can't load `style.css` or `js/*.js`. So for that pane, build one temporary file with everything inlined:
   ```bash
-  { printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}</style></head><body>\n'; cat index.html; printf '\n</body></html>\n'; } > _preview-test.html
+  node -e "const fs=require('fs');let h=fs.readFileSync('index.html','utf8');h=h.replace('<link rel=\"stylesheet\" href=\"style.css\">',()=>'<style>'+fs.readFileSync('style.css','utf8')+'</style>');h=h.replace(/<script src=\"([^\"]+)\"><\/script>/g,(m,f)=>'<script>'+fs.readFileSync(f,'utf8')+'</script>');fs.writeFileSync('_preview-test.html','<!doctype html><html><head><meta charset=\"utf-8\"><style>[hidden]{display:none!important}</style></head><body>\n'+h+'\n</body></html>')"
   ```
-  Delete `_preview-test.html` afterwards; it's only for testing. In the Claude desktop app's browser pane, a copy inside the project folder is interactive.
+  Delete `_preview-test.html` afterwards; it's only for testing.
 - **What a full test covers:** both doors with keys and mouse; the camera staying up while doors toggle; all 7 cameras; ● staying invisible in the doorway; winding with `W` and with the button (and not working on other cameras); Lenny's warning and loss; the power-out loss; the 6 AM win (set `nightShift.state.t = 359`); and phone width with no sideways scrolling.
 
 ## Not yet verified
@@ -116,5 +118,7 @@ The game is published with Claude's **Artifact** tool.
 | `bf1814a` | Doors no longer lower the camera; movement sounds get louder with distance |
 | `4d6bc5a` | ● hidden at doors with a rumble cue; Lenny's music box on CAM 7 |
 | `0493a4d` | No idle power drain; 0.20% per door or camera; 3-bar usage meter (committed by Jake) |
+| `1cff9ed` | This handoff guide |
+| (next) | Split the single file into `index.html`, `style.css` and `js/*.js`, with learning comments and `README.md`; gameplay unchanged |
 
 The repository has **no remote**, so nothing is on GitHub or anywhere else. To move the project to another computer, either copy this whole folder, including the hidden `.git` folder, or create a GitHub repository and push to it. The live link works from any computer once you're signed in to claude.ai.

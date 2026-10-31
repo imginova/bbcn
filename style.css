@@ -1,0 +1,252 @@
+/* =====================================================================
+   style.css: how everything LOOKS (colors, fonts, sizes, layout).
+
+   CSS never changes what the game DOES; it only styles the HTML in
+   index.html. Each rule is "selector { property: value; }":
+     .monitor   means "every element with class="monitor""
+     #scare     means "the element with id="scare""
+     button     means "every <button>"
+
+   Layout: one amber security monitor, centered. A top bar, then the
+   active screen. In game: HUD strip, ASCII viewport, control strip.
+   The look is deliberately dark only (an old CRT in a dark office).
+   ===================================================================== */
+
+/* ---------- design tokens ----------
+   "--name: value" defines a CSS variable; var(--name) uses it.
+   Change a color here and it changes everywhere it is used. */
+:root {
+  --bg: #0d0a07;
+  --panel: #16100a;
+  --line: #3d2c19;
+  --fg: #f2b35b;
+  --dim: #8a6942;
+  --faint: #4a3823;
+  --danger: #ff5546;
+  --c-dia: #ff6b84;
+  --c-tri: #62d2ff;
+  --c-orb: #c8a6ff;
+  --c-len: #a8ee7e;
+  --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --art: min(16px, calc((100vw - 60px) / 37));
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  overflow-x: hidden;
+}
+* { box-sizing: border-box; }
+
+.app { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar button { white-space: nowrap; flex: none; }
+
+.monitor {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 80px rgba(0,0,0,.65);
+}
+/* The faint horizontal "scanlines" of an old monitor: a see-through stripe pattern laid on top. */
+.monitor::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
+}
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+button:hover { border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+button.primary:hover { background: transparent; color: var(--fg); }
+kbd { font: inherit; font-size: 11px; color: var(--dim); border: 1px solid var(--faint); padding: 0 5px; margin-left: 6px; }
+button.primary kbd { color: inherit; border-color: currentColor; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 1; text-wrap: balance; }
+h1 { font-size: clamp(56px, 14vw, 120px); letter-spacing: .04em; }
+h2 { font-size: clamp(38px, 8vw, 56px); letter-spacing: .04em; }
+p { margin: 0; }
+.eyebrow { color: var(--dim); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.keys { color: var(--dim); font-size: 12px; }
+.sub { color: var(--dim); max-width: 62ch; }
+
+/* ---------- ASCII art ----------
+   Every drawing lives in a <pre> ("preformatted") block, which keeps spaces and line breaks
+   exactly as written. A monospace font makes every character the same width, so columns line up. */
+pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.18; margin: 0; white-space: pre; }
+/* Symbols like ◆ come from a different font and can be wider than a letter.
+   Forcing them to exactly 1 character wide (1ch) keeps the drawing from going crooked. */
+.sym { display: inline-block; width: 1ch; text-align: center; font-weight: 600; }
+.s-dia { color: var(--c-dia); }
+.s-tri { color: var(--c-tri); }
+.s-orb { color: var(--c-orb); }
+.s-len, .face { color: var(--c-len); }
+/* The face uses system fonts: the terminal font cannot draw its combining marks. */
+.face, .bigface { font-family: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; }
+.face { display: inline-block; white-space: pre; font-weight: 600; }
+pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 columns of the 0.6em-wide mono font */
+.bigface { display: block; white-space: pre; font-size: min(15vw, 24vh); line-height: 1.3; color: var(--c-len); text-shadow: 0 0 18px var(--c-len); }
+.alert { color: var(--danger) !important; animation: blink 0.8s steps(2) infinite; }
+.map button.alert { border-color: var(--danger); }
+.map button.alert[aria-current="true"] { background: var(--danger); color: var(--bg) !important; animation: none; }
+.wind { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.wind .bars { white-space: pre; font-variant-numeric: tabular-nums; }
+#btnWind { touch-action: none; user-select: none; -webkit-user-select: none; }
+#btnWind.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.dim { color: var(--dim); }
+.door { color: var(--dim); }
+
+/* ---------- title ---------- */
+.title { display: flex; flex-direction: column; gap: 18px; padding-block: 24px; }
+.title .tag { font-size: 16px; max-width: 46ch; }
+.trio { font-size: 40px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.trio .sym { width: auto; }
+.trio .face { font-size: 28px; }
+.menu { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- setup ---------- */
+.setup { display: flex; flex-direction: column; gap: 18px; }
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.lvrow {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.lvrow.sel { border-color: var(--fg); background: rgba(242,179,91,.06); }
+.lvrow .sym.big { font-size: 32px; width: auto; justify-self: center; }
+.lvrow .face.big { font-size: 16px; justify-self: center; }
+.lvrow .who { min-width: 0; }
+.lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
+.lvrow .who small { color: var(--dim); font-size: 12px; }
+.ctrl { display: flex; align-items: center; gap: 8px; }
+.ctrl button { padding: 4px 12px; font-size: 18px; line-height: 1; }
+.lv { display: flex; flex-direction: column; align-items: center; min-width: 13ch; font-variant-numeric: tabular-nums; }
+.lv b { font-family: var(--font-display); font-size: 30px; font-weight: 400; line-height: 1; }
+.lv .bar { font-size: 11px; color: var(--dim); letter-spacing: -.02em; white-space: pre; }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.best { color: var(--dim); }
+.best b { color: var(--fg); font-weight: 600; }
+
+/* ---------- game ---------- */
+.hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+.meter { display: flex; align-items: baseline; gap: 8px; font-size: 13px; letter-spacing: .06em; }
+.meter .lab { color: var(--dim); font-size: 11px; letter-spacing: .14em; }
+.meter b { font-family: var(--font-display); font-size: 30px; font-weight: 400; min-width: 4ch; text-align: right; }
+.meter .bars { white-space: pre; }
+.low { color: var(--danger); }
+.viewport { display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
+.office { display: flex; justify-content: center; transition: color .3s; }
+.office pre[data-door] { cursor: pointer; }
+.office.dark { color: var(--faint); }
+.office.dark .door, .office.dark .dim { color: #2a1f13; }
+.office.dark .sym { color: inherit; }
+.office.dark .sym.lit { color: var(--danger); text-shadow: 0 0 6px var(--danger); }
+
+.cams { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+.feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; }
+.rec { color: var(--danger); }
+.rec::before { content: "\25CF  "; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: ". stage prize" "backstage dining supply" "whall you ehall";
+  gap: 6px;
+  width: min(270px, 100%);
+  align-self: center;
+}
+.map button { padding: 7px 4px; font-size: 11px; line-height: 1.3; letter-spacing: .04em; text-transform: none; }
+.map button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
+
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.controls button { padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+.controls button.on { border-color: var(--fg); background: rgba(242,179,91,.12); }
+.controls button.on .state { color: var(--fg); }
+.controls button:disabled { opacity: .35; cursor: not-allowed; }
+.hint { margin-top: 10px; text-align: center; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(13,10,7,.92);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 20px; text-align: center;
+}
+
+/* ---------- end screens ---------- */
+.endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
+.endcard .big { font-family: var(--font-display); font-size: clamp(72px, 18vw, 140px); line-height: .9; }
+.endcard .lvls { font-size: 18px; display: flex; gap: 18px; flex-wrap: wrap; }
+.endcard .lvls .sym { width: auto; margin-right: 6px; }
+
+#scare {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center;
+}
+#scareArt { font-size: min(3.3vw, 3.4vh); line-height: 1; }
+#scareArt .sym { text-shadow: 0 0 10px currentColor; }
+#scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#scareMsg h2 { color: var(--danger); }
+.shake { animation: shake .07s linear infinite; }
+@keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
+.flash { animation: flash .1s steps(2) 8; }
+@keyframes flash { 50% { background: var(--danger); } }
+
+/* ---------- help ---------- */
+#howto { position: fixed; inset: 0; z-index: 40; background: rgba(13,10,7,.94); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.howto-card { max-width: 640px; width: 100%; border: 1px solid var(--line); background: var(--panel); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.howto-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.howto-card table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.howto-card td { border-top: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
+.howto-card td:first-child { color: var(--dim); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- small screens ----------
+   @media rules only apply when their condition is true. This one kicks in on phones (560px wide or less). */
+@media (max-width: 560px) {
+  .monitor { padding: 12px; }
+  .lvrow { grid-template-columns: 72px minmax(0, 1fr); }
+  .lvrow .face.big { font-size: 12px; }
+  .lvrow .ctrl { grid-column: 1 / -1; justify-content: center; }
+  .controls button { font-size: 11px; }
+  .controls kbd { display: none; }
+}
+/* Some players turn on "reduce motion" in their system settings; respect it by switching off shaking and blinking. */
+@media (prefers-reduced-motion: reduce) {
+  .shake, .flash, .rec::before, .alert { animation: none; }
+}
