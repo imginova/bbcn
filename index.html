@@ -1,0 +1,1042 @@
+<title>Night Shift</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap">
+<style>
+/* Layout: one amber security monitor, centered. Top bar, then the active screen; in game: HUD strip, ASCII viewport, control strip. */
+/* Deliberately single-theme: a dark CRT in a dark office, on any host background. */
+:root {
+  --bg: #0d0a07;
+  --panel: #16100a;
+  --line: #3d2c19;
+  --fg: #f2b35b;
+  --dim: #8a6942;
+  --faint: #4a3823;
+  --danger: #ff5546;
+  --c-dia: #ff6b84;
+  --c-tri: #62d2ff;
+  --c-orb: #c8a6ff;
+  --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --art: min(16px, calc((100vw - 60px) / 37));
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  overflow-x: hidden;
+}
+* { box-sizing: border-box; }
+
+.app { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar button { white-space: nowrap; flex: none; }
+
+.monitor {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 80px rgba(0,0,0,.65);
+}
+.monitor::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
+}
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+button:hover { border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+button.primary:hover { background: transparent; color: var(--fg); }
+kbd { font: inherit; font-size: 11px; color: var(--dim); border: 1px solid var(--faint); padding: 0 5px; margin-left: 6px; }
+button.primary kbd { color: inherit; border-color: currentColor; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 1; text-wrap: balance; }
+h1 { font-size: clamp(56px, 14vw, 120px); letter-spacing: .04em; }
+h2 { font-size: clamp(38px, 8vw, 56px); letter-spacing: .04em; }
+p { margin: 0; }
+.eyebrow { color: var(--dim); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.keys { color: var(--dim); font-size: 12px; }
+.sub { color: var(--dim); max-width: 62ch; }
+
+pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.18; margin: 0; white-space: pre; }
+.sym { display: inline-block; width: 1ch; text-align: center; font-weight: 600; }
+.s-dia { color: var(--c-dia); }
+.s-tri { color: var(--c-tri); }
+.s-orb { color: var(--c-orb); }
+.dim { color: var(--dim); }
+.door { color: var(--dim); }
+
+/* ---------- title ---------- */
+.title { display: flex; flex-direction: column; gap: 18px; padding-block: 24px; }
+.title .tag { font-size: 16px; max-width: 46ch; }
+.trio { font-size: 40px; display: flex; gap: 22px; }
+.trio .sym { width: auto; }
+.menu { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- setup ---------- */
+.setup { display: flex; flex-direction: column; gap: 18px; }
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.lvrow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.lvrow.sel { border-color: var(--fg); background: rgba(242,179,91,.06); }
+.lvrow .sym.big { font-size: 32px; width: auto; }
+.lvrow .who { min-width: 0; }
+.lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
+.lvrow .who small { color: var(--dim); font-size: 12px; }
+.ctrl { display: flex; align-items: center; gap: 8px; }
+.ctrl button { padding: 4px 12px; font-size: 18px; line-height: 1; }
+.lv { display: flex; flex-direction: column; align-items: center; min-width: 13ch; font-variant-numeric: tabular-nums; }
+.lv b { font-family: var(--font-display); font-size: 30px; font-weight: 400; line-height: 1; }
+.lv .bar { font-size: 11px; color: var(--dim); letter-spacing: -.02em; white-space: pre; }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.best { color: var(--dim); }
+.best b { color: var(--fg); font-weight: 600; }
+
+/* ---------- game ---------- */
+.hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+.meter { display: flex; align-items: baseline; gap: 8px; font-size: 13px; letter-spacing: .06em; }
+.meter .lab { color: var(--dim); font-size: 11px; letter-spacing: .14em; }
+.meter b { font-family: var(--font-display); font-size: 30px; font-weight: 400; min-width: 4ch; text-align: right; }
+.meter .bars { white-space: pre; }
+.low { color: var(--danger); }
+.viewport { display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
+.office { display: flex; justify-content: center; transition: color .3s; }
+.office pre[data-door] { cursor: pointer; }
+.office.dark { color: var(--faint); }
+.office.dark .door, .office.dark .dim { color: #2a1f13; }
+.office.dark .sym { color: inherit; }
+.office.dark .sym.lit { color: var(--danger); text-shadow: 0 0 6px var(--danger); }
+
+.cams { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+.feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; }
+.rec { color: var(--danger); }
+.rec::before { content: "\25CF  "; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: ". stage ." "backstage dining supply" "whall you ehall";
+  gap: 6px;
+  width: min(270px, 100%);
+  align-self: center;
+}
+.map button { padding: 7px 4px; font-size: 11px; line-height: 1.3; letter-spacing: .04em; text-transform: none; }
+.map button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
+
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.controls button { padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+.controls button.on { border-color: var(--fg); background: rgba(242,179,91,.12); }
+.controls button.on .state { color: var(--fg); }
+.controls button:disabled { opacity: .35; cursor: not-allowed; }
+.hint { margin-top: 10px; text-align: center; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(13,10,7,.92);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 20px; text-align: center;
+}
+
+/* ---------- end screens ---------- */
+.endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
+.endcard .big { font-family: var(--font-display); font-size: clamp(72px, 18vw, 140px); line-height: .9; }
+.endcard .lvls { font-size: 18px; display: flex; gap: 18px; flex-wrap: wrap; }
+.endcard .lvls .sym { width: auto; margin-right: 6px; }
+
+#scare {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center;
+}
+#scareArt { font-size: min(3.3vw, 3.4vh); line-height: 1; }
+#scareArt .sym { text-shadow: 0 0 10px currentColor; }
+#scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#scareMsg h2 { color: var(--danger); }
+.shake { animation: shake .07s linear infinite; }
+@keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
+.flash { animation: flash .1s steps(2) 8; }
+@keyframes flash { 50% { background: var(--danger); } }
+
+/* ---------- help ---------- */
+#howto { position: fixed; inset: 0; z-index: 40; background: rgba(13,10,7,.94); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.howto-card { max-width: 640px; width: 100%; border: 1px solid var(--line); background: var(--panel); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.howto-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.howto-card table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.howto-card td { border-top: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
+.howto-card td:first-child { color: var(--dim); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+@media (max-width: 560px) {
+  .monitor { padding: 12px; }
+  .lvrow { grid-template-columns: 34px minmax(0, 1fr); }
+  .lvrow .ctrl { grid-column: 1 / -1; justify-content: center; }
+  .controls button { font-size: 11px; }
+  .controls kbd { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shake, .flash, .rec::before { animation: none; }
+}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <span class="id">Night Shift · Security terminal 06</span>
+    <button id="btnMute" type="button" aria-pressed="false">Sound on</button>
+  </div>
+
+  <div class="monitor" id="monitor">
+
+    <!-- TITLE -->
+    <section id="scr-title" class="title">
+      <p class="eyebrow">Overnight guard post · 12 AM to 6 AM</p>
+      <h1>NIGHT SHIFT</h1>
+      <p class="tag">Six hours, two doors, one battery. Three shapes wander this building after closing, and they are heading for your office.</p>
+      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span></p>
+      <div class="menu">
+        <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
+        <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
+      </div>
+      <p class="keys">Turn sound on: footsteps warn you when something reaches a door.</p>
+    </section>
+
+    <!-- SETUP -->
+    <section id="scr-setup" class="setup" hidden>
+      <p class="eyebrow">Before your shift</p>
+      <h2>CUSTOM NIGHT</h2>
+      <p class="sub">Set each shape from level 1 (barely moves) to 20 (moves at every chance and gives you less time at the door).</p>
+      <div class="rows" id="rows"></div>
+      <div class="setup-actions">
+        <button id="btnStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
+        <button id="btnAll20" type="button">All 20</button>
+        <button id="btnHowSetup" type="button">How to play</button>
+        <button id="btnBack" type="button">Back</button>
+      </div>
+      <p class="best" id="bestLine"></p>
+      <p class="keys">↑ ↓ pick a shape · ← → change its level · Enter starts · Esc goes back</p>
+    </section>
+
+    <!-- GAME -->
+    <section id="scr-game" hidden>
+      <div class="hud">
+        <div class="clock" id="clock">12 AM</div>
+        <div class="meter"><span class="lab">POWER</span><b id="pw">100%</b><span class="bars" id="pwbar"></span></div>
+        <div class="meter"><span class="lab">USAGE</span><span class="bars" id="usage"></span></div>
+      </div>
+
+      <div class="viewport">
+        <div class="office" id="office">
+          <pre class="art" id="doorL" data-door="L" aria-label="Left door"></pre>
+          <pre class="art" id="officeArt" aria-hidden="true"></pre>
+          <pre class="art" id="doorR" data-door="R" aria-label="Right door"></pre>
+        </div>
+        <div class="cams" id="cams" hidden>
+          <div class="feed">
+            <div class="feed-head"><span id="feedName">CAM 1 · STAGE</span><span class="rec">REC</span></div>
+            <pre class="art" id="feed"></pre>
+          </div>
+          <div class="map" id="map">
+            <button type="button" data-room="stage" style="grid-area:stage">CAM 1<br>Stage</button>
+            <button type="button" data-room="backstage" style="grid-area:backstage">CAM 3<br>Backstage</button>
+            <button type="button" data-room="dining" style="grid-area:dining">CAM 2<br>Dining</button>
+            <button type="button" data-room="supply" style="grid-area:supply">CAM 4<br>Supply</button>
+            <button type="button" data-room="whall" style="grid-area:whall">CAM 5<br>West hall</button>
+            <span class="you">YOU</span>
+            <button type="button" data-room="ehall" style="grid-area:ehall">CAM 6<br>East hall</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnL" type="button"><span>Left door<kbd>A</kbd></span><span class="state" id="stL">OPEN</span></button>
+        <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
+        <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
+      </div>
+      <p class="keys hint">1–6 jump to a camera · P pauses · M toggles sound</p>
+
+      <div class="overlay" id="pause" hidden>
+        <h2>PAUSED</h2>
+        <div class="menu">
+          <button id="btnResume" type="button" class="primary">Resume <kbd>P</kbd></button>
+          <button id="btnHowPause" type="button">How to play</button>
+          <button id="btnQuit" type="button">Quit to setup</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WIN -->
+    <section id="scr-win" class="endcard" hidden>
+      <p class="eyebrow">Shift complete</p>
+      <div class="big">6:00 AM</div>
+      <p id="winMsg">You kept them out until morning.</p>
+      <div class="lvls" id="winLevels"></div>
+      <p class="best" id="winBest"></p>
+      <div class="menu">
+        <button id="btnAgainWin" type="button" class="primary">Play again <kbd>Enter</kbd></button>
+        <button id="btnLevelsWin" type="button">Change levels <kbd>C</kbd></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- JUMPSCARE / GAME OVER -->
+<div id="scare" hidden>
+  <pre class="art" id="scareArt"></pre>
+  <div id="scareMsg" hidden>
+    <h2>GAME OVER</h2>
+    <p id="loseMsg"></p>
+    <div class="menu">
+      <button id="btnRetry" type="button" class="primary">Retry <kbd>Enter</kbd></button>
+      <button id="btnLevelsLose" type="button">Change levels <kbd>C</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="howto" hidden>
+  <div class="howto-card" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <h2 id="howtoTitle">HOW TO PLAY</h2>
+    <ul>
+      <li>Survive from 12 AM to 6 AM. Each hour lasts one real minute.</li>
+      <li>Three shapes, <span class="sym s-dia">◆</span> <span class="sym s-tri">▲</span> <span class="sym s-orb">●</span>, walk from the stage toward your office. ◆ always comes to the left door, ▲ to the right, and ● picks a side.</li>
+      <li>When a shape steps into a doorway you hear footsteps and have about two seconds to shut that door. If the door is shut, the shape goes back to the stage.</li>
+      <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
+      <li>Doors and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
+    </ul>
+    <div class="table-wrap">
+      <table>
+        <tr><td>Left / right door</td><td>A / D, or click the door or its button</td></tr>
+        <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 6, or click a room on the map</td></tr>
+        <tr><td>Pause</td><td>P or Esc</td></tr>
+        <tr><td>Sound</td><td>M, or the button at the top</td></tr>
+      </table>
+    </div>
+    <div class="menu"><button id="btnHowClose" type="button" class="primary">Got it <kbd>Esc</kbd></button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('nightshift:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('nightshift:' + k, JSON.stringify(v)); } catch {} },
+  };
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // ---------- tuning ----------
+  const HOUR_SECONDS = 60;
+  const NIGHT_HOURS = 6;
+  const BASE_DRAIN = 0.10;  // % power per second with nothing switched on
+  const UNIT_DRAIN = 0.12;  // extra % per second for each closed door / raised camera
+  const MIN_LEVEL = 1, MAX_LEVEL = 20;
+  // Seconds you get to shut the door once a shape is in the doorway: 2.6s at level 1, 1.4s at level 20.
+  const reactWindow = level => 2.6 - (level - 1) * (1.2 / 19);
+
+  const ROOMS = {
+    stage:     { cam: 1, name: 'STAGE' },
+    dining:    { cam: 2, name: 'DINING HALL' },
+    backstage: { cam: 3, name: 'BACKSTAGE' },
+    supply:    { cam: 4, name: 'SUPPLY CLOSET' },
+    whall:     { cam: 5, name: 'WEST HALL' },
+    ehall:     { cam: 6, name: 'EAST HALL' },
+  };
+  const CAM_ORDER = ['stage', 'dining', 'backstage', 'supply', 'whall', 'ehall'];
+
+  const CREATURES = [
+    { id: 'dia', sym: '◆', name: 'Diamond',  door: 'Always the LEFT door',  path: 'Stage → Dining → Backstage → West hall', interval: 4.8,
+      routes: [['stage', 'dining', 'backstage', 'whall', 'L']] },
+    { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall', interval: 5.2,
+      routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
+    { id: 'orb', sym: '●', name: 'Orb',      door: 'Picks EITHER door',     path: 'Stage → Dining → a hall (shorter route, slower steps)', interval: 6.4,
+      routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
+  ];
+  const SYM_CLASS = { '◆': 'sym s-dia', '▲': 'sym s-tri', '●': 'sym s-orb', '◇': 'sym s-dia', '△': 'sym s-tri', '○': 'sym s-orb' };
+
+  // ---------- sound (generated, no files) ----------
+  const sfx = (() => {
+    let ctx = null, master = null, hum = null, noiseBuf = null;
+    let muted = store.get('muted', false);
+    const VOL = 0.6;
+    function init() {
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        master = ctx.createGain();
+        master.gain.value = muted ? 0 : VOL;
+        master.connect(ctx.destination);
+      } catch { ctx = null; }
+    }
+    function out(node, pan) {
+      if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; node.connect(p).connect(master); }
+      else node.connect(master);
+    }
+    function tone(freq, dur, { type = 'square', vol = 0.2, slide = 0, delay = 0, pan = 0 } = {}) {
+      if (!ctx) return;
+      const t = ctx.currentTime + delay;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq + slide), t + dur);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); out(g, pan);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function noise(dur, { vol = 0.2, freq = 1000, type = 'lowpass', delay = 0, pan = 0 } = {}) {
+      if (!ctx) return;
+      if (!noiseBuf) {
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      const t = ctx.currentTime + delay;
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noiseBuf;
+      f.type = type; f.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f).connect(g); out(g, pan);
+      s.start(t); s.stop(t + dur + 0.05);
+    }
+    const panOf = side => side === 'L' ? -0.8 : 0.8;
+    return {
+      init,
+      get muted() { return muted; },
+      toggleMute() { muted = !muted; store.set('muted', muted); if (master) master.gain.value = muted ? 0 : VOL; },
+      click() { tone(900, 0.03, { vol: 0.05 }); },
+      deny() { tone(120, 0.15, { type: 'sawtooth', vol: 0.12 }); },
+      door(side) { noise(0.25, { vol: 0.55, freq: 420, pan: panOf(side) }); tone(75, 0.25, { type: 'sine', vol: 0.5, slide: -35, pan: panOf(side) }); },
+      cam() { tone(1500, 0.04, { vol: 0.07 }); noise(0.14, { vol: 0.1, freq: 3200, type: 'highpass' }); },
+      stat() { noise(0.3, { vol: 0.09, freq: 2600, type: 'highpass' }); },
+      step(side) {
+        const pan = panOf(side);
+        tone(58, 0.2, { type: 'sine', vol: 0.75, pan });
+        noise(0.08, { vol: 0.3, freq: 250, pan });
+        tone(52, 0.2, { type: 'sine', vol: 0.75, delay: 0.26, pan });
+        noise(0.08, { vol: 0.3, freq: 250, delay: 0.26, pan });
+      },
+      knock(side) { for (let i = 0; i < 3; i++) noise(0.12, { vol: 0.6, freq: 320, delay: i * 0.16, pan: panOf(side) }); },
+      powerDown() { tone(440, 1.8, { type: 'sawtooth', vol: 0.14, slide: -400 }); },
+      scream() {
+        tone(880, 1.3, { type: 'sawtooth', vol: 0.32, slide: -520 });
+        tone(935, 1.3, { type: 'square', vol: 0.18, slide: -610 });
+        noise(1.3, { vol: 0.45, freq: 5000 });
+      },
+      chime() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.7, { type: 'triangle', vol: 0.2, delay: i * 0.22 })); },
+      humOn() {
+        if (!ctx || hum) return;
+        const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = 60;
+        f.type = 'lowpass'; f.frequency.value = 170;
+        g.gain.value = 0.035;
+        o.connect(f).connect(g).connect(master);
+        o.start();
+        hum = o;
+      },
+      humOff() { if (hum) { try { hum.stop(); } catch {} hum = null; } },
+    };
+  })();
+
+  // ---------- ASCII grid helpers ----------
+  const esc = ch => ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch === '&' ? '&amp;' : ch;
+  function grid(lines, w, cls = '') {
+    return lines.map(l => Array.from(l.padEnd(w).slice(0, w)).map(ch => ({ ch, cls: SYM_CLASS[ch] || cls })));
+  }
+  function toHtml(g) {
+    return g.map(row => row.map(c => c.cls ? `<span class="${c.cls}">${esc(c.ch)}</span>` : esc(c.ch)).join('')).join('\n');
+  }
+  function inShape(id, x, y) { // x, y in [-1, 1]
+    if (id === 'dia') return Math.abs(x) + Math.abs(y) <= 1.0001;
+    if (id === 'tri') return Math.abs(x) <= (y + 1) / 2 + 0.0001;
+    return x * x + y * y <= 1.0001;
+  }
+  function stamp(g, r0, c0, creature, w, h, extra = '') {
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const x = ((c + 0.5) / w) * 2 - 1, y = ((r + 0.5) / h) * 2 - 1;
+      const row = g[r0 + r];
+      if (row && row[c0 + c] && inShape(creature.id, x, y)) row[c0 + c] = { ch: creature.sym, cls: `sym s-${creature.id}${extra}` };
+    }
+  }
+  const frame = (inner, w) => ['+' + '-'.repeat(w) + '+', ...inner.map(l => '|' + l.padEnd(w).slice(0, w) + '|'), '+' + '-'.repeat(w) + '+'];
+
+  // ---------- camera rooms (38 x 9 inside a frame) ----------
+  const ROOM_ART = {
+    stage: [
+      '  *     .      *      .     *     .   ',
+      ' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ',
+      '  (                                )  ',
+      '  (                                )  ',
+      '  (                                )  ',
+      ' ==================================== ',
+      ' ||                                || ',
+      " ||   ''    ''    ''    ''    ''   || ",
+      '                                      ',
+    ],
+    dining: [
+      '   o  o  o                o  o  o    ',
+      '  [========]             [========]  ',
+      '   o  o  o                o  o  o    ',
+      '                                      ',
+      '                                      ',
+      '                                      ',
+      '      o   o   o   o   o   o   o      ',
+      '     [===========================]   ',
+      '      o   o   o   o   o   o   o      ',
+    ],
+    backstage: [
+      '  .----.   .----.        [][][][][]  ',
+      '  | oo |   | ^^ |        [][][][][]  ',
+      "  '----'   '----'        ----------  ",
+      '   mask     mask         spare parts ',
+      '                                      ',
+      '                                      ',
+      '                                      ',
+      '  []  [ ]  []   ##   [__]   ##   []  ',
+      '  ---------------------------------- ',
+    ],
+    supply: [
+      '   |      |      |       ______      ',
+      '   |      |      |      | SOAP |     ',
+      '  (_)    (_)    (_)     |______|     ',
+      '  mop    mop    mop                  ',
+      '                                      ',
+      '                                      ',
+      '                                      ',
+      '   [___]  [___]        .-----.       ',
+      '   bucket bucket       | BIN |       ',
+    ],
+    whall: [
+      ' \\                                  / ',
+      '  \\                                /  ',
+      '   \\     +------------------+     /   ',
+      '    |    |                  |    |    ',
+      '    |    |                  |    |    ',
+      '    |    |                  |    |    ',
+      '   /     +------------------+     \\   ',
+      "  /   ''    ''    ''    ''    ''   \\  ",
+      ' /         YOUR OFFICE -->          \\ ',
+    ],
+    ehall: [
+      ' \\                                  / ',
+      '  \\                                /  ',
+      '   \\     +------------------+     /   ',
+      '    |    |                  |    |    ',
+      '    |    |                  |    |    ',
+      '    |    |                  |    |    ',
+      '   /     +------------------+     \\   ',
+      "  /   ''    ''    ''    ''    ''   \\  ",
+      ' /          <-- YOUR OFFICE         \\ ',
+    ],
+  };
+  // Where each shape stands in each room, by creature index: [row, col] of the shape's center (inner coords).
+  const SLOTS = {
+    stage:     [[3, 9], [3, 19], [3, 29]],
+    dining:    [[4, 8], [4, 19], [4, 30]],
+    backstage: [[5, 10], [5, 19], [5, 28]],
+    supply:    [[5, 10], [5, 19], [5, 28]],
+    whall:     [[4, 15], [4, 15], [4, 22]],
+    ehall:     [[4, 15], [4, 15], [4, 22]],
+  };
+
+  // ---------- state ----------
+  const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
+  let levels = (store.get('levels', [5, 5, 5]) || []).slice(0, 3);
+  while (levels.length < 3) levels.push(5);
+  levels = levels.map(clampLevel);
+  let best = store.get('best', null);
+  let screen = 'title';
+  let sel = 0;
+  let G = null;
+  let speed = 1;
+  let dirty = true;
+  let scareTimer = 0;
+
+  const sideOf = m => m.route[m.route.length - 1];
+  const atDoor = m => m.step === m.route.length - 1;
+  const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
+  const hourLabel = h => (h === 0 ? 12 : h) + ' AM';
+
+  function newGame() {
+    G = {
+      t: 0, power: 100,
+      doors: { L: false, R: false },
+      cam: false, camRoom: 'whall',
+      powerOut: false, outTimer: 0, outBy: null,
+      over: false, paused: false, staticUntil: 0,
+      mobs: CREATURES.map((c, i) => ({
+        c, i, level: levels[i], route: pick(c.routes), step: 0,
+        timer: c.interval * (0.7 + Math.random() * 0.6), deadline: 0,
+      })),
+    };
+  }
+
+  function camStatic(sec) { G.staticUntil = performance.now() + sec * 1000; sfx.stat(); }
+
+  function bounce(m) {
+    sfx.knock(sideOf(m));
+    m.route = pick(m.c.routes);
+    m.step = 0;
+    m.timer = m.c.interval * (1 + Math.random() * 0.5);
+    if (G.cam && G.camRoom === 'stage') camStatic(0.3);
+  }
+
+  function updateMob(m, dt) {
+    if (atDoor(m)) {
+      if (G.doors[sideOf(m)]) bounce(m);
+      else if (G.t >= m.deadline) lose(m);
+      return;
+    }
+    m.timer -= dt;
+    if (m.timer > 0) return;
+    m.timer = m.c.interval * (0.85 + Math.random() * 0.3);
+    if (Math.random() * MAX_LEVEL >= m.level) return; // level / 20 chance to move
+    const from = m.route[m.step];
+    m.step++;
+    if (atDoor(m)) {
+      if (G.doors[sideOf(m)]) { bounce(m); return; }
+      m.deadline = G.t + reactWindow(m.level);
+      sfx.step(sideOf(m));
+    }
+    // Static on the feed you are watching when something walks in or out of it.
+    if (G.cam && (G.camRoom === from || G.camRoom === m.route[m.step])) camStatic(0.35);
+    dirty = true;
+  }
+
+  function update(dt) {
+    G.t += dt;
+    if (G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();
+    const units = (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0);
+    if (!G.powerOut) {
+      G.power -= (BASE_DRAIN + UNIT_DRAIN * units) * dt;
+      if (G.power <= 0) return powerOutStart();
+      for (const m of G.mobs) { updateMob(m, dt); if (G.over) return; }
+    } else {
+      G.outTimer -= dt;
+      if (G.outTimer <= 0) lose(G.outBy, true);
+    }
+  }
+
+  function powerOutStart() {
+    G.power = 0;
+    G.powerOut = true;
+    G.doors.L = G.doors.R = false;
+    G.cam = false;
+    G.outTimer = 5 + Math.random() * 8;
+    G.outBy = pick(G.mobs);
+    sfx.humOff();
+    sfx.powerDown();
+    dirty = true;
+  }
+
+  // ---------- actions ----------
+  function toggleDoor(side) {
+    if (!G || G.over || G.paused) return;
+    if (G.powerOut) { sfx.deny(); return; }
+    G.doors[side] = !G.doors[side];
+    if (G.cam) G.cam = false;
+    sfx.door(side);
+    dirty = true;
+  }
+  function toggleCam() {
+    if (!G || G.over || G.paused) return;
+    if (G.powerOut) { sfx.deny(); return; }
+    G.cam = !G.cam;
+    sfx.cam();
+    if (G.cam) camStatic(0.2);
+    dirty = true;
+  }
+  function setCam(room) {
+    if (!G || G.over || G.paused) return;
+    if (G.powerOut) { sfx.deny(); return; }
+    G.cam = true;
+    G.camRoom = room;
+    sfx.cam();
+    camStatic(0.22);
+    dirty = true;
+  }
+  function setPaused(p) {
+    if (!G || G.over) return;
+    G.paused = p;
+    $('pause').hidden = !p;
+    if (p) sfx.humOff(); else if (!G.powerOut) sfx.humOn();
+  }
+
+  function startNight() {
+    sfx.init();
+    store.set('levels', levels);
+    newGame();
+    clearTimeout(scareTimer);
+    $('scare').hidden = true;
+    $('pause').hidden = true;
+    show('game');
+    sfx.humOn();
+    dirty = true;
+  }
+
+  function win() {
+    G.over = true;
+    sfx.humOff();
+    sfx.chime();
+    const sum = levels.reduce((a, b) => a + b, 0);
+    const isBest = !best || sum > best.sum;
+    if (isBest) { best = { sum, levels: levels.slice() }; store.set('best', best); }
+    const powerLeft = Math.max(0, Math.ceil(G.power));
+    $('winMsg').textContent = `You kept them out until morning with ${powerLeft}% power left.`;
+    $('winLevels').innerHTML = CREATURES.map((c, i) => `<span><span class="sym s-${c.id}">${c.sym}</span>level ${levels[i]}</span>`).join('') + `<span class="dim">total ${sum} / 60</span>`;
+    $('winBest').innerHTML = isBest ? '<b>New best.</b> This is the hardest night you have survived.' : bestText();
+    show('win');
+  }
+
+  function lose(m, dark = false) {
+    G.over = true;
+    sfx.humOff();
+    sfx.scream();
+    const h = hourLabel(hourOf(G.t));
+    const sideName = dark ? 'darkness' : (sideOf(m) === 'L' ? 'LEFT door' : 'RIGHT door');
+    $('loseMsg').innerHTML = dark
+      ? `The power ran out. <span class="sym s-${m.c.id}">${m.c.sym}</span> found you in the dark at ${h}.`
+      : `<span class="sym s-${m.c.id}">${m.c.sym}</span> came through the ${sideName} at ${h}.`;
+    // Fill the whole screen with the shape.
+    const W = 44, H = 22;
+    const g = Array.from({ length: H }, () => Array.from({ length: W }, () => ({ ch: ' ', cls: '' })));
+    stamp(g, 0, 0, m.c, W, H);
+    const art = $('scareArt');
+    art.innerHTML = toHtml(g);
+    $('scareMsg').hidden = true;
+    art.hidden = false;
+    const sc = $('scare');
+    sc.hidden = false;
+    art.classList.add('shake');
+    sc.classList.add('flash');
+    clearTimeout(scareTimer);
+    scareTimer = setTimeout(() => {
+      art.classList.remove('shake');
+      sc.classList.remove('flash');
+      art.hidden = true;
+      $('scareMsg').hidden = false;
+      $('btnRetry').focus({ preventScroll: true });
+    }, 1500);
+  }
+
+  function goSetup() {
+    clearTimeout(scareTimer);
+    $('scare').hidden = true;
+    if (G) { G.over = true; sfx.humOff(); }
+    show('setup');
+  }
+
+  // ---------- rendering ----------
+  function officeLines(now, dark) {
+    const fan = dark ? '-' : '|/-\\'[Math.floor(now / 80) % 4];
+    const m1 = dark ? '        ' : ' SYSTEM ';
+    const m2 = dark ? '        ' : (G.cam ? ' CAM UP ' : ' ONLINE ');
+    const ray1 = dark ? '         ' : '\\  |  / ';
+    const ray2 = dark ? '         ' : '/  |  \\ ';
+    return [
+      '====================================',
+      `                           ${ray1}`,
+      "    .---------------.        *      ",
+      '    |  ◇    △    ○  |               ',
+      `    | LET'S  PARTY! |     ${ray2}`,
+      "    '---------------'               ",
+      '                                    ',
+      '        .------------.              ',
+      "        | .--------. |      .---.   ",
+      `        | |${m1}| |     ( ${fan} )  `,
+      `        | |${m2}| |      '---'   `,
+      "        | '--------' |       _|_    ",
+      "        '-----.  .---'              ",
+      "  .-----------'--'-------------.    ",
+      '  |  [] coffee  ~~~   papers   |    ',
+      "  '----------------------------'    ",
+    ];
+  }
+
+  function doorGrid(side, now) {
+    const W = 10, H = 14;
+    const closed = G.doors[side];
+    const lines = ['+' + '-'.repeat(W) + '+'];
+    for (let r = 0; r < H; r++) {
+      let inner;
+      if (closed) inner = r % 4 === 3 ? '='.repeat(W) : '#'.repeat(W);
+      else if (r === H - 2) inner = ' . . . . .';
+      else if (r === H - 1) inner = '. . . . . ';
+      else inner = ' '.repeat(W);
+      lines.push('|' + inner + '|');
+    }
+    lines.push('+' + '='.repeat(W) + '+');
+    const g = grid(lines, W + 2);
+    for (let r = 1; r <= H; r++) for (let c = 1; c <= W; c++) {
+      if (closed) g[r][c].cls = 'door';
+      else if (r >= H - 1) g[r][c].cls = 'dim';
+    }
+    if (!closed) {
+      const visitor = G.mobs.find(m => atDoor(m) && sideOf(m) === side);
+      if (visitor && !G.powerOut) stamp(g, 5, 1, visitor.c, W, 5);
+      if (G.powerOut && side === 'L' && G.outTimer < 3 && Math.floor(now / 110) % 3 !== 0) stamp(g, 5, 1, G.outBy.c, W, 5, ' lit');
+    }
+    return g;
+  }
+
+  function renderFeed(now) {
+    const room = G.camRoom;
+    $('feedName').textContent = `CAM ${ROOMS[room].cam} · ${ROOMS[room].name}`;
+    let g;
+    if (now < G.staticUntil) {
+      const noise = ' .:;*#%';
+      g = Array.from({ length: 11 }, () => Array.from({ length: 40 }, () => ({ ch: noise[Math.floor(Math.random() * noise.length)], cls: 'dim' })));
+    } else {
+      g = grid(frame(ROOM_ART[room], 38), 40);
+      G.mobs.forEach(m => {
+        if (atDoor(m) || m.route[m.step] !== room) return;
+        const [r, c] = SLOTS[room][m.i];
+        stamp(g, r, c - 1, m.c, 5, 3);
+      });
+    }
+    $('feed').innerHTML = toHtml(g);
+    document.querySelectorAll('#map button').forEach(b => b.setAttribute('aria-current', String(b.dataset.room === room)));
+  }
+
+  function renderGame(now) {
+    const h = hourOf(G.t);
+    $('clock').textContent = hourLabel(h);
+    const p = Math.max(0, Math.ceil(G.power));
+    const pw = $('pw');
+    pw.textContent = G.powerOut ? 'OUT' : p + '%';
+    pw.classList.toggle('low', p <= 20);
+    const seg = Math.ceil(p / 10);
+    $('pwbar').textContent = '[' + '|'.repeat(seg) + '.'.repeat(10 - seg) + ']';
+    const units = G.powerOut ? 0 : 1 + (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0);
+    const us = $('usage');
+    us.textContent = '▮'.repeat(units) + '▯'.repeat(4 - units);
+    us.classList.toggle('low', units >= 4);
+
+    const office = $('office'), cams = $('cams');
+    office.hidden = G.cam;
+    cams.hidden = !G.cam;
+    if (G.cam) renderFeed(now);
+    else {
+      office.classList.toggle('dark', G.powerOut);
+      $('doorL').innerHTML = toHtml(doorGrid('L', now));
+      $('doorR').innerHTML = toHtml(doorGrid('R', now));
+      $('officeArt').innerHTML = toHtml(grid(officeLines(now, G.powerOut), 36));
+    }
+
+    for (const [side, btn, st] of [['L', 'btnL', 'stL'], ['R', 'btnR', 'stR']]) {
+      $(btn).classList.toggle('on', G.doors[side]);
+      $(btn).setAttribute('aria-pressed', String(G.doors[side]));
+      $(btn).disabled = G.powerOut;
+      $(st).textContent = G.powerOut ? 'NO POWER' : G.doors[side] ? 'CLOSED' : 'OPEN';
+    }
+    $('btnCam').classList.toggle('on', G.cam);
+    $('btnCam').setAttribute('aria-pressed', String(G.cam));
+    $('btnCam').disabled = G.powerOut;
+    $('stCam').textContent = G.powerOut ? 'NO POWER' : G.cam ? 'UP' : 'DOWN';
+  }
+
+  // ---------- setup screen ----------
+  function buildSetup() {
+    $('rows').innerHTML = CREATURES.map((c, i) => `
+      <div class="lvrow" data-i="${i}">
+        <span class="sym big s-${c.id}" aria-hidden="true">${c.sym}</span>
+        <span class="who"><b>${c.name.toUpperCase()} · ${c.door}</b><small>${c.path}</small></span>
+        <span class="ctrl">
+          <button type="button" class="step" data-i="${i}" data-d="-1" aria-label="Lower ${c.name} level">−</button>
+          <span class="lv"><b id="lv${i}"></b><span class="bar" id="bar${i}"></span></span>
+          <button type="button" class="step" data-i="${i}" data-d="1" aria-label="Raise ${c.name} level">+</button>
+        </span>
+      </div>`).join('');
+  }
+  function bestText() {
+    if (!best) return 'No night survived yet.';
+    return `Best: survived to 6 AM on ${CREATURES.map((c, i) => `<span class="sym s-${c.id}">${c.sym}</span>${best.levels[i]}`).join(' ')} <b>(total ${best.sum} / 60)</b>`;
+  }
+  function renderSetup() {
+    document.querySelectorAll('.lvrow').forEach((row, i) => row.classList.toggle('sel', i === sel));
+    levels.forEach((lv, i) => {
+      $('lv' + i).textContent = 'LEVEL ' + String(lv).padStart(2, '0');
+      $('bar' + i).textContent = '|'.repeat(lv) + '.'.repeat(MAX_LEVEL - lv);
+    });
+    $('bestLine').innerHTML = bestText();
+  }
+  function changeLevel(i, d) {
+    levels[i] = clampLevel(levels[i] + d);
+    store.set('levels', levels);
+    sel = i;
+    sfx.click();
+    renderSetup();
+  }
+
+  // ---------- screens ----------
+  function show(name) {
+    screen = name;
+    for (const s of ['title', 'setup', 'game', 'win']) $('scr-' + s).hidden = s !== name;
+    if (name === 'setup') renderSetup();
+    if (name === 'game') dirty = true;
+  }
+  function openHowto() {
+    if (screen === 'game' && G && !G.over && !G.paused) setPaused(true);
+    $('howto').hidden = false;
+    $('btnHowClose').focus({ preventScroll: true });
+  }
+  function closeHowto() { $('howto').hidden = true; }
+  function renderMute() {
+    $('btnMute').textContent = sfx.muted ? 'Sound off' : 'Sound on';
+    $('btnMute').setAttribute('aria-pressed', String(sfx.muted));
+  }
+  function toggleMute() { sfx.init(); sfx.toggleMute(); renderMute(); }
+
+  // ---------- input: mouse ----------
+  const onClick = (id, fn) => $(id).addEventListener('click', e => { sfx.init(); fn(e); if (e.detail) e.currentTarget.blur(); });
+  onClick('btnMute', toggleMute);
+  onClick('btnPlay', () => show('setup'));
+  onClick('btnHowTitle', openHowto);
+  onClick('btnHowSetup', openHowto);
+  onClick('btnHowPause', openHowto);
+  onClick('btnHowClose', closeHowto);
+  onClick('btnStart', startNight);
+  onClick('btnBack', () => show('title'));
+  onClick('btnAll20', () => { levels = levels.map(() => MAX_LEVEL); store.set('levels', levels); sfx.click(); renderSetup(); });
+  onClick('btnL', () => toggleDoor('L'));
+  onClick('btnR', () => toggleDoor('R'));
+  onClick('btnCam', toggleCam);
+  onClick('btnResume', () => setPaused(false));
+  onClick('btnQuit', () => { $('pause').hidden = true; goSetup(); });
+  onClick('btnAgainWin', startNight);
+  onClick('btnLevelsWin', goSetup);
+  onClick('btnRetry', startNight);
+  onClick('btnLevelsLose', goSetup);
+  $('doorL').addEventListener('click', () => toggleDoor('L'));
+  $('doorR').addEventListener('click', () => toggleDoor('R'));
+  $('map').addEventListener('click', e => {
+    const b = e.target.closest('button[data-room]');
+    if (!b) return;
+    setCam(b.dataset.room);
+    if (e.detail) b.blur();
+  });
+  $('rows').addEventListener('click', e => {
+    const step = e.target.closest('.step');
+    if (step) { changeLevel(Number(step.dataset.i), Number(step.dataset.d)); if (e.detail) step.blur(); return; }
+    const row = e.target.closest('.lvrow');
+    if (row) { sel = Number(row.dataset.i); renderSetup(); }
+  });
+  $('howto').addEventListener('click', e => { if (e.target.id === 'howto') closeHowto(); });
+
+  // ---------- input: keyboard ----------
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    const onButton = e.target instanceof HTMLButtonElement;
+    if ((k === ' ' || k === 'Enter') && onButton) return; // let the focused button handle it
+    sfx.init();
+    if (k === 'm' || k === 'M') { toggleMute(); return; }
+
+    if (!$('howto').hidden) {
+      if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeHowto(); }
+      return;
+    }
+    if (!$('scare').hidden) {
+      if ($('scareMsg').hidden) return;
+      if (k === 'Enter' || k === 'r' || k === 'R') { e.preventDefault(); startNight(); }
+      else if (k === 'c' || k === 'C' || k === 'Escape') goSetup();
+      return;
+    }
+    if (screen === 'title') {
+      if (k === 'Enter') { e.preventDefault(); show('setup'); }
+      else if (k === 'h' || k === 'H') openHowto();
+    } else if (screen === 'setup') {
+      if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); sel = (sel + 2) % 3; renderSetup(); }
+      else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); sel = (sel + 1) % 3; renderSetup(); }
+      else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); changeLevel(sel, -1); }
+      else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); changeLevel(sel, 1); }
+      else if (k === 'Enter') { e.preventDefault(); startNight(); }
+      else if (k === 'Escape') show('title');
+      else if (k === 'h' || k === 'H') openHowto();
+    } else if (screen === 'game' && G && !G.over) {
+      if (k === 'p' || k === 'P' || k === 'Escape') { setPaused(!G.paused); return; }
+      if (G.paused) return;
+      if (k === 'a' || k === 'A') toggleDoor('L');
+      else if (k === 'd' || k === 'D') toggleDoor('R');
+      else if (k === ' ' || k === 's' || k === 'S') { e.preventDefault(); toggleCam(); }
+      else if (/^[1-6]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
+      else if (k === 'h' || k === 'H') openHowto();
+    } else if (screen === 'win') {
+      if (k === 'Enter' || k === 'r' || k === 'R') { e.preventDefault(); startNight(); }
+      else if (k === 'c' || k === 'C' || k === 'Escape') goSetup();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && screen === 'game' && G && !G.over && !G.paused) setPaused(true);
+  });
+
+  // ---------- loop ----------
+  let last = performance.now(), sinceRender = 0;
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (screen === 'game' && G && !G.over) {
+      if (!G.paused) update(dt * speed);
+      sinceRender += dt;
+      if (!G.over && (dirty || sinceRender > 1 / 15)) { renderGame(now); dirty = false; sinceRender = 0; }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // Test hook: open the browser console and run nightShift.speed = 20 to fast-forward.
+  window.nightShift = {
+    get state() { return G; },
+    get speed() { return speed; },
+    set speed(v) { speed = Math.max(0.1, Number(v) || 1); },
+  };
+
+  function boot(data) {
+    if (data && Array.isArray(data.levels)) levels = data.levels.slice(0, 3).map(clampLevel);
+    buildSetup();
+    renderMute();
+    show('title');
+    requestAnimationFrame(loop);
+  }
+  try { window.claude?.hot?.snapshot?.(() => ({ levels })); } catch {}
+  window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
