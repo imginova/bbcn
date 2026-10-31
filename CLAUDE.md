@@ -7,8 +7,8 @@ This file holds everything a new Claude session, or a person, needs to keep work
 **Night Shift** is a browser game in the style of Five Nights at Freddy's (FNAF), drawn in ASCII art and played with the mouse and keyboard. You sit in a security office from 12 AM to 6 AM, close two doors, watch seven cameras, wind a music box and ration your power.
 
 - **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and ten scripts in `js/`. It has no build step, no dependencies and no sound files. Jake is learning from this code, so every file has a header comment and learning-oriented comments.
-- **Live, shareable link:** https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF. It's private: only the owner and people they share it with through the page's **Share** menu can open it.
-- **Owner:** Jake Harris. Jake is new to programming: explain changes in plain language and avoid jargon.
+- **Live, shareable link:** https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG. It's private: only the owner and people they share it with through the page's **Share** menu can open it. It belongs to the Claude account the project moved to on 2026-10-31. The old link (`5qmjeiJHMdgo8STTf2ZAFF`) belongs to the previous account and can't be updated from the new one.
+- **Owner:** Jake Harris started the project. Jake's son now works on it, using the `imginova` GitHub account that owns the repo. Both are new to programming: explain changes in plain language and avoid jargon.
 
 ## Working agreements with the owner
 
@@ -89,7 +89,7 @@ The game is published with Claude's **Artifact** tool.
 
 - **The page is multi-file.** Publish `file_path: index.html` and pass every other file in `files`, mapping each published path to the same local path: `{"style.css": "style.css", "js/helpers.js": "js/helpers.js", ...}` for all ten scripts. On an update, files that are left out are kept as they were, so always include the ones you changed. Listing all of them is the safest.
 - **In the same session that created it:** publish the same `file_path` (`index.html`) again, and the URL stays the same.
-- **From a new session or computer:** first **read** the artifact with `action: "read"` and `url: https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF`. Then publish with that same `url`, `file_path: index.html` and the `files` map. Without the `url`, a new, separate link is created.
+- **From a new session or computer:** first **read** the artifact with `action: "read"` and `url: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG`. Then publish with that same `url`, `file_path: index.html` and the `files` map. Without the `url`, a new, separate link is created.
 - If a publish is refused because a newer version exists, merge the differences it shows and publish again.
 - **Page rules:** fonts may only come from Google Fonts, scripts only from cdnjs, jsDelivr or unpkg with pinned versions, and all other CSS and JS must be inline. `alert`/`confirm` don't work, and sound starts only after the player clicks or presses a key.
 
@@ -104,7 +104,8 @@ The game is published with Claude's **Artifact** tool.
   node -e "const fs=require('fs');let h=fs.readFileSync('index.html','utf8');h=h.replace('<link rel=\"stylesheet\" href=\"style.css\">',()=>'<style>'+fs.readFileSync('style.css','utf8')+'</style>');h=h.replace(/<script src=\"([^\"]+)\"><\/script>/g,(m,f)=>'<script>'+fs.readFileSync(f,'utf8')+'</script>');fs.writeFileSync('_preview-test.html','<!doctype html><html><head><meta charset=\"utf-8\"><style>[hidden]{display:none!important}</style></head><body>\n'+h+'\n</body></html>')"
   ```
   Delete `_preview-test.html` afterwards; it's only for testing. The inlined copy adds its own `[hidden]` rule and charset, so it **won't** catch problems specific to opening the real file.
-- **Testing the real file the way Jake opens it:** run headless Chrome (installed on Jake's Mac) against `file:///…/index.html`:
+- **The current computer is Windows**, with no Node.js and no Chrome. The two `node` commands above won't run until Node.js is installed (nodejs.org). Microsoft Edge is installed and works the same as headless Chrome: `"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"`.
+- **Testing the real file the way Jake opens it:** run headless Chrome or Edge against `file:///…/index.html`:
   - For a screenshot, use `--headless=new --screenshot=out.png --window-size=900,1100 --virtual-time-budget=3000`.
   - For automated play, append a test `<script>` to a temporary copy *in the project folder* (so the relative paths work). It should send `keydown` events and write its results to `document.title`; then read them with `--dump-dom`.
   - Headless Chrome barely runs `requestAnimationFrame`, so the test script should drive the game itself with `setInterval(() => { update(0.02); renderGame(performance.now()); }, 20)` while `currentScreen === 'game'`.
@@ -121,7 +122,8 @@ The game is published with Claude's **Artifact** tool.
 
 - **GitHub:** https://github.com/imginova/bbcn (a **public** repository; this is for Jake's son's use). Push to `main`. To move to another computer, clone it from there. The live link works from any computer once you're signed in to claude.ai.
 - **Keep personal details out of the repository.** Because it's public, no work email may appear in files or commits.
-  - This repo's local git config sets the author to `Jake Harris <3029091+jakeharris4u@users.noreply.github.com>`, GitHub's private noreply address. Check `git config user.email` before committing on a new computer.
+  - Commit as `imginova <107283216+imginova@users.noreply.github.com>`, the `imginova` account's private GitHub noreply address. Never use Jake's address or the email on the Claude account. The setting lives in this repo's local git config, which a clone doesn't copy, so run `git config user.email` before committing on a new computer and set it if it's empty.
+  - Commits up to and including "Point the handoff docs at the GitHub repository" were made as `Jake Harris <3029091+jakeharris4u@users.noreply.github.com>`.
   - The history was rewritten once, before the first push, to replace a work email, so older commit hashes quoted anywhere are out of date.
 - **History, oldest first** (see `git log` for hashes):
   1. First version of the game
@@ -132,3 +134,4 @@ The game is published with Claude's **Artifact** tool.
   6. Split into `index.html`, `style.css` and `js/*.js`, with learning comments and `README.md`
   7. Fixed opening `index.html` directly from disk (`[hidden]` rule, charset meta)
   8. Pointed these docs at GitHub
+  9. Moved to a new Claude account and Windows computer: new live link, commits as `imginova`

@@ -2,7 +2,7 @@
 
 A survival game in the style of Five Nights at Freddy's, drawn with ASCII art. You guard a security office from 12 AM to 6 AM: shut the doors, watch the cameras, wind Lenny's music box and make your power last.
 
-**Play it:** double-click `index.html` to open it in your browser, or use the shared link: https://claude.ai/artifact/5qmjeiJHMdgo8STTf2ZAFF
+**Play it:** double-click `index.html` to open it in your browser, or use the shared link: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG
 
 ## How this code is organized
 
