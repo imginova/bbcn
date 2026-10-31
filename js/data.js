@@ -33,6 +33,8 @@ const LENNY_FACE = '( ͡° ͜ʖ ͡°)';
 //             divided by PACE (config.js), so shorter hours make everyone faster.
 //             They were made 1.5x slower (4.8, 5.2, 6.4 became 7.2, 7.8, 9.6) when ■ and (: joined.
 //   pitch     the note of its footstep sound, so you can tell them apart by ear
+//   loudness  how loud its footsteps are (1 = normal). ◆ and ▲ were turned up on request;
+//             ● already has its big rumble at the door
 //   unseen    true = never drawn in the doorway; you only hear it arrive
 //   stalls    true = if BOTH doors are shut when it arrives, it waits at the door instead of
 //             leaving, then attacks whichever door you open first (see updateMob in game.js)
@@ -40,13 +42,13 @@ const LENNY_FACE = '( ͡° ͜ʖ ͡°)';
 //             'L' (left) or 'R' (right). The orb has two routes and picks one.
 const CREATURES = [
   { id: 'dia', sym: '◆', name: 'Diamond', door: 'Always the LEFT door', path: 'Stage → Dining → Backstage → West hall',
-    interval: 7.2 / PACE, pitch: 72,
+    interval: 7.2 / PACE, pitch: 72, loudness: 1.8,
     routes: [['stage', 'dining', 'backstage', 'whall', 'L']] },
   { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall',
-    interval: 7.8 / PACE, pitch: 118,
+    interval: 7.8 / PACE, pitch: 118, loudness: 1.8,
     routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
   { id: 'orb', sym: '●', name: 'Orb', door: 'Picks EITHER door', path: 'Invisible at the door: listen for the rumble',
-    interval: 9.6 / PACE, pitch: 48, unseen: true, stalls: true,
+    interval: 9.6 / PACE, pitch: 48, loudness: 1, unseen: true, stalls: true,
     routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
 ];
 

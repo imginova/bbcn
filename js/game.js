@@ -31,8 +31,9 @@ const lightKey = { L: false, R: false }, lightPointer = { L: false, R: false };
 const sideOf = m => m.route[m.route.length - 1];   // which door it is heading for: 'L' or 'R'
 const atDoor = m => m.step === m.route.length - 1;  // is it standing in that doorway right now?
 
-// Is a door light actually shining? You have to hold it, look at the office (camera down) and have power.
-const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && !G.powerOut;
+// Is a door light actually shining? You have to hold it, look at the office (camera down), have power,
+// and have that door OPEN: a shut door blocks the light, so you can't see or push back ■ through it.
+const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && !G.powerOut && !G.doors[side];
 const otherSide = side => side === 'L' ? 'R' : 'L';
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
@@ -173,7 +174,7 @@ function updateMob(m, dt) {
     }
   } else {
     // A normal move between rooms: footstep, louder the closer it is.
-    sfx.move(m.step / (m.route.length - 1), sideOf(m), m.c.pitch);
+    sfx.move(m.step / (m.route.length - 1), sideOf(m), m.c.pitch, m.c.loudness);
   }
   // Static on the camera you are watching if something walked in or out of it.
   if (G.cam && (G.camRoom === from || G.camRoom === m.route[m.step])) camStatic(0.35);
@@ -252,6 +253,8 @@ function updateSquare(dt) {
     lose(SQUARE, S.side);        // it was already close: that's it
     return;
   }
+  // It only makes a sound when it reaches CLOSE: your warning that the next move gets you.
+  if (S.stage === 3) sfx.creep(S.side);
   dirty = true;
 }
 

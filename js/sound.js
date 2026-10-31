@@ -124,19 +124,20 @@ const sfx = (() => {
     stat() { noise(0.3, { vol: 0.09, freq: 2600, type: 'highpass' }); },   // camera static
 
     // ----- the shapes -----
-    // Heavy footsteps when ◆ or ▲ steps into a doorway: two deep thuds.
+    // Heavy footsteps when ◆ or ▲ steps into a doorway: two deep thuds (turned up on request).
     step(side) {
       const pan = panOf(side);
-      tone(58, 0.2, { type: 'sine', vol: 0.75, pan });
-      noise(0.08, { vol: 0.3, freq: 250, pan });
-      tone(52, 0.2, { type: 'sine', vol: 0.75, delay: 0.26, pan });
-      noise(0.08, { vol: 0.3, freq: 250, delay: 0.26, pan });
+      tone(58, 0.25, { type: 'sine', vol: 1.0, pan });
+      noise(0.1, { vol: 0.55, freq: 250, pan });
+      tone(52, 0.25, { type: 'sine', vol: 1.0, delay: 0.26, pan });
+      noise(0.1, { vol: 0.55, freq: 250, delay: 0.26, pan });
     },
     // A shape changing rooms. progress goes from 0 (at the stage) to 1 (at your door):
     // quiet and centered far away, loud and to one side when close.
     // progress * progress makes the volume climb slowly at first, then fast near the end.
-    move(progress, side, pitch) {
-      const vol = 0.03 + 0.55 * progress * progress;
+    // loudness (from data.js) turns one shape up or down; Math.min keeps it from going over full volume.
+    move(progress, side, pitch, loudness = 1) {
+      const vol = Math.min(1, (0.03 + 0.55 * progress * progress) * loudness);
       const pan = panOf(side) * progress;
       tone(pitch, 0.18, { type: 'sine', vol, slide: -pitch * 0.3, pan });
       noise(0.08, { vol: vol * 0.6, freq: 250 + 600 * progress, pan });
@@ -155,6 +156,12 @@ const sfx = (() => {
 
     // ----- the door lights and ■ -----
     light() { tone(2600, 0.03, { vol: 0.05 }); noise(0.05, { vol: 0.05, freq: 4000, type: 'highpass' }); },
+    // ■ reaching CLOSE: a loud dragging scrape plus a buzzy low "square" note, from its door's side.
+    creep(side) {
+      const pan = panOf(side);
+      noise(0.35, { vol: 0.55, freq: 900, pan });
+      tone(98, 0.3, { type: 'square', vol: 0.2, slide: -20, pan });
+    },
     // ■ being pushed back one stage by the light: a short scrape from its side.
     shove(side) { noise(0.22, { vol: 0.35, freq: 700, pan: panOf(side) }); tone(140, 0.2, { type: 'sawtooth', vol: 0.12, slide: -60, pan: panOf(side) }); },
 

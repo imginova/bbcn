@@ -55,11 +55,12 @@ function renderGame(now) {
     $(btn).disabled = G.powerOut;
     $(label).textContent = G.powerOut ? 'NO POWER' : G.doors[side] ? 'CLOSED' : 'OPEN';
   }
-  // The door lights only work while you're looking at the office (camera down).
+  // The door lights only work while you're looking at the office (camera down) with that door open.
   for (const [side, btn, label] of [['L', 'btnLightL', 'stLightL'], ['R', 'btnLightR', 'stLightR']]) {
     $(btn).classList.toggle('on', lightOn(side));
     $(btn).disabled = G.powerOut;
-    $(label).textContent = G.powerOut ? 'NO POWER' : G.cam ? 'CAM UP' : lightOn(side) ? 'ON' : 'HOLD';
+    $(label).textContent = G.powerOut ? 'NO POWER' : G.cam ? 'CAM UP' : G.doors[side] ? 'DOOR SHUT'
+      : lightOn(side) ? 'ON' : 'HOLD';
   }
   $('btnCam').classList.toggle('on', G.cam);
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
@@ -96,7 +97,7 @@ function doorGrid(side, now) {
   }
 
   // The door light shows the ■ square if it's at this door, bigger the closer it is.
-  // It shows even through a closed door: doors don't stop the square, so the light has to reveal it.
+  // (lightOn is false while the door is shut, so you never see it through a closed door.)
   const S = G.square;
   if (lightOn(side) && S.side === side && S.stage > 0) {
     const [r0, c0, w, h] = SQUARE_SIZES[S.stage];
