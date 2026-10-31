@@ -24,6 +24,18 @@ while (mods.length < SETUP.length) mods.push(false);
 
 let best = store.get('best', null);   // hardest night survived: { sum, levels, mods } or null
 
+// The challenges (from PRESETS) you've survived, by name. They get a ✓ on the custom night screen.
+// .filter() drops any saved name that no longer matches a challenge (in case one gets renamed).
+let cleared = (store.get('cleared', []) || []).filter(name => PRESETS.some(p => p.name === name));
+
+// Which challenge matches tonight's levels and modifiers EXACTLY, or null if none does.
+// (Picking a challenge and then changing a level doesn't count.) A modifier only matters
+// for threats that are switched on, just like in the score.
+function matchingPreset() {
+  return PRESETS.find(p => SETUP.every((c, i) =>
+    p.levels[i] === levels[i] && (levels[i] === 0 || p.mods.includes(c.id) === mods[i]))) || null;
+}
+
 // A night's score: every level added up, plus MOD_BONUS for each ticked modifier
 // (only when that threat is switched on: a modifier on a level-0 threat does nothing).
 const nightScore = () => SETUP.reduce((total, c, i) => total + levels[i] + (mods[i] && levels[i] > 0 ? MOD_BONUS : 0), 0);
@@ -500,7 +512,14 @@ function win() {
     best = { sum, levels: levels.slice(), mods: mods.slice() };
     store.set('best', best);
   }
-  showWin(sum, isBest);
+  // Was tonight one of the challenges? Then it earns its ✓ (if it didn't have one already).
+  const challenge = matchingPreset();
+  const firstTime = !!challenge && !cleared.includes(challenge.name);
+  if (firstTime) {
+    cleared.push(challenge.name);
+    store.set('cleared', cleared);
+  }
+  showWin(sum, isBest, challenge, firstTime);
 }
 
 // A shape (c, from data.js) got you through door `side`. `dark` is true when the power had run out.

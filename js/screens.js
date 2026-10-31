@@ -56,7 +56,8 @@ function hideScare() {
 }
 
 // ---------- 6 AM ----------
-function showWin(sum, isBest) {
+// `challenge` is the PRESETS entry tonight matched (or null); `firstTime` says it just earned its ✓.
+function showWin(sum, isBest, challenge, firstTime) {
   const powerLeft = Math.max(0, Math.ceil(G.power));
   $('winMsg').textContent = `You kept them out until morning with ${powerLeft}% power left.`;
   // A ★ marks each threat that had its modifier on (worth +MOD_BONUS).
@@ -64,6 +65,9 @@ function showWin(sum, isBest) {
     SETUP.map((c, i) => `<span>${symHtml(c)} ${levels[i] === 0 ? 'off' : 'level ' + levels[i]}${mods[i] && levels[i] > 0 ? ' ★' : ''}</span>`).join('') +
     `<span class="dim">total ${sum} / ${MAX_SCORE}</span>`;
   $('winBest').innerHTML = isBest ? '<b>New best.</b> This is the hardest night you have survived.' : bestText();
+  if (challenge) {
+    $('winBest').innerHTML += `<br><span class="tick">✓</span> ${firstTime ? 'Challenge complete' : 'Challenge beaten again'}: <b>${challenge.name}</b>`;
+  }
   show('win');
 }
 
@@ -87,8 +91,9 @@ function buildSetup() {
     </div>`).join('');
   // Each challenge button shows the score it's worth (levels plus +MOD_BONUS per modifier).
   const presetScore = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
-  $('presets').innerHTML = '<span class="lab">Challenges</span>' +
-    PRESETS.map((p, i) => `<button type="button" data-preset="${i}">${p.name} <span class="dim">${presetScore(p)}</span></button>`).join('');
+  // The empty <span class="tick"> gets its ✓ in renderSetup() once that challenge is beaten.
+  $('presets').innerHTML = '<span class="lab" id="presetsLab">Challenges</span>' +
+    PRESETS.map((p, i) => `<button type="button" data-preset="${i}"><span class="tick" id="tick${i}"></span>${p.name} <span class="dim">${presetScore(p)}</span></button>`).join('');
 }
 
 // Update the numbers, bars, checkboxes, score and selected row on the custom night screen.
@@ -105,6 +110,13 @@ function renderSetup() {
     box.checked = mods[i];
     box.disabled = levels[i] === 0;
   });
+  // A ✓ on every challenge you've survived, and how many that is.
+  PRESETS.forEach((p, i) => {
+    const done = cleared.includes(p.name);
+    $('tick' + i).textContent = done ? '✓ ' : '';
+    $('tick' + i).parentElement.classList.toggle('done', done);
+  });
+  $('presetsLab').textContent = `Challenges ${cleared.length}/${PRESETS.length}`;
   $('scoreLine').innerHTML = `Tonight's score: <b>${nightScore()} / ${MAX_SCORE}</b>`;
   $('bestLine').innerHTML = bestText();
 }

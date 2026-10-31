@@ -183,6 +183,9 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
 .presets button { padding: 6px 10px; font-size: 12px; }
+/* A beaten challenge: green ✓ and a green border (the same green as Lenny). */
+.tick { color: var(--c-len); font-weight: 600; }
+.presets button.done { border-color: var(--c-len); }
 .score b { color: var(--fg); font-weight: 600; }
 .best { color: var(--dim); }
 .best b { color: var(--fg); font-weight: 600; }
