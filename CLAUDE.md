@@ -117,15 +117,18 @@ The game is published with Claude's **Artifact** tool.
 - **The live link has only been checked by Jake.** Claude's test browser wasn't signed in to claude.ai.
 - A best score saved before Lenny existed shows `–` for his level and is totaled out of 80.
 
-## Git history
+## Git and GitHub
 
-| Commit | What changed |
-|---|---|
-| `b53475c` | First version of the game |
-| `bf1814a` | Doors no longer lower the camera; movement sounds get louder with distance |
-| `4d6bc5a` | ● hidden at doors with a rumble cue; Lenny's music box on CAM 7 |
-| `0493a4d` | No idle power drain; 0.20% per door or camera; 3-bar usage meter (committed by Jake) |
-| `1cff9ed` | This handoff guide |
-| (next) | Split the single file into `index.html`, `style.css` and `js/*.js`, with learning comments and `README.md`; gameplay unchanged |
-
-The repository has **no remote**, so nothing is on GitHub or anywhere else. To move the project to another computer, either copy this whole folder, including the hidden `.git` folder, or create a GitHub repository and push to it. The live link works from any computer once you're signed in to claude.ai.
+- **GitHub:** https://github.com/imginova/bbcn (a **public** repository; this is for Jake's son's use). Push to `main`. To move to another computer, clone it from there. The live link works from any computer once you're signed in to claude.ai.
+- **Keep personal details out of the repository.** Because it's public, no work email may appear in files or commits.
+  - This repo's local git config sets the author to `Jake Harris <3029091+jakeharris4u@users.noreply.github.com>`, GitHub's private noreply address. Check `git config user.email` before committing on a new computer.
+  - The history was rewritten once, before the first push, to replace a work email, so older commit hashes quoted anywhere are out of date.
+- **History, oldest first** (see `git log` for hashes):
+  1. First version of the game
+  2. Doors no longer lower the camera; movement sounds get louder with distance
+  3. ● hidden at doors with a rumble cue; Lenny's music box on CAM 7
+  4. No idle power drain; 0.20% per door or camera; 3-bar usage meter (committed by Jake)
+  5. This handoff guide
+  6. Split into `index.html`, `style.css` and `js/*.js`, with learning comments and `README.md`
+  7. Fixed opening `index.html` directly from disk (`[hidden]` rule, charset meta)
+  8. Pointed these docs at GitHub
