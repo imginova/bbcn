@@ -108,8 +108,16 @@ for (const side of ['L', 'R']) {
 }
 
 // Clicking (: in the office catches it. It's two cells ("(" and ":"), each with class "smi".
-$('officeArt').addEventListener('click', e => {
-  if (e.target.closest('.smi')) catchSmiley();
+// We listen for "pointerdown" (the moment the mouse button or finger goes DOWN), not "click".
+// Why: render.js redraws the office about 15 times a second, replacing (: with a fresh copy.
+// A "click" only counts if the button goes down AND up on the same element, so a redraw in
+// between made the click land on the whole office instead, and (: was never caught.
+$('officeArt').addEventListener('pointerdown', e => {
+  if (e.target.closest('.smi')) {
+    sfx.init();
+    catchSmiley();
+    e.preventDefault();
+  }
 });
 
 // ---------- keyboard ----------
