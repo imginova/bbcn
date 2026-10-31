@@ -39,11 +39,13 @@ function renderGame(now) {
     // Once Lenny is out he flickers on your desk monitor (shown 3 frames out of 4).
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
     // Smiley hiding in its spot, drawn in brown with a glow (the "smi" class in style.css) so it stands out.
-    // The same class is what input.js listens for when you click it.
+    // The same class is what input.js listens for when you click it; "smi-0" or "smi-1" says WHICH one
+    // (there are two with the Twins modifier).
     if (G.smiley.active) {
-      const [r, c] = G.smiley.spot;
-      og[r][c] = { ch: '(', cls: 'smi' };
-      og[r][c + 1] = { ch: ':', cls: 'smi' };
+      G.smiley.spots.forEach(([r, c], i) => {
+        og[r][c] = { ch: '(', cls: 'smi smi-' + i };
+        og[r][c + 1] = { ch: ':', cls: 'smi smi-' + i };
+      });
     }
     $('officeArt').innerHTML = toHtml(og);
   }
@@ -65,10 +67,14 @@ function renderGame(now) {
   $('btnCam').classList.toggle('on', G.cam);
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
   $('btnCam').disabled = G.powerOut;
+  // When the box runs low, the Camera button names the camera it's on and that map button flashes.
   const boxLow = !G.lenny.out && G.lenny.wind < BOX_LOW;
-  $('stCam').textContent = G.powerOut ? 'NO POWER' : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ' · WIND CAM 7!' : '');
+  const boxCam = ROOMS[G.lenny.room].cam;
+  $('stCam').textContent = G.powerOut ? 'NO POWER' : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ` · WIND CAM ${boxCam}!` : '');
   $('stCam').classList.toggle('alert', boxLow && !G.powerOut);
-  $('camPrize').classList.toggle('alert', boxLow);
+  for (const b of document.querySelectorAll('#map button')) {
+    b.classList.toggle('alert', boxLow && b.dataset.room === G.lenny.room);
+  }
 }
 
 // One door of the office as a grid: 12 wide (10 inside the frame) and 16 tall.
@@ -116,8 +122,8 @@ function doorGrid(side, now) {
   return g;
 }
 
-// The camera screen: the room picture (or static), any shapes in it, the wind bar on CAM 7,
-// and which map button is highlighted.
+// The camera screen: the room picture (or static), any shapes in it, the music box and its wind bar
+// (on CAM 7, or wherever it wandered), and which map button is highlighted.
 function renderFeed(now) {
   const room = G.camRoom;
   $('feedName').textContent = `CAM ${ROOMS[room].cam} · ${ROOMS[room].name}`;
@@ -136,11 +142,13 @@ function renderFeed(now) {
       stamp(g, r, c - 1, m.c, 5, 3);                         // a small 5 x 3 version of the shape
     }
     if (room === 'prize') prizeArt(g, G.lenny);
+    // With the Wanderer modifier the box can be on another camera: draw the small version there.
+    else if (room === G.lenny.room) miniBox(g, ...BOX_SPOTS[room], G.lenny);
   }
   $('feed').innerHTML = toHtml(g);
 
-  // The wind bar and button only appear on CAM 7.
-  const onBox = room === 'prize';
+  // The wind bar and button only appear on the camera the music box is on (CAM 7 unless it wandered).
+  const onBox = room === G.lenny.room;
   $('wind').hidden = !onBox;
   if (onBox) {
     const w = Math.round(G.lenny.wind), seg = Math.round(w / 5);   // 20 bars, one per 5%

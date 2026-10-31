@@ -18,7 +18,16 @@ let levels = (store.get('levels', []) || []).slice(0, SETUP.length);
 while (levels.length < SETUP.length) levels.push(5);
 levels = levels.map(clampLevel);
 
-let best = store.get('best', null);   // hardest night survived: { sum, levels } or null
+// Which modifiers are ticked, in the same order as levels (true / false). Missing ones start unticked.
+let mods = (store.get('mods', []) || []).slice(0, SETUP.length).map(Boolean);
+while (mods.length < SETUP.length) mods.push(false);
+
+let best = store.get('best', null);   // hardest night survived: { sum, levels, mods } or null
+
+// A night's score: every level added up, plus MOD_BONUS for each ticked modifier
+// (only when that threat is switched on: a modifier on a level-0 threat does nothing).
+const nightScore = () => SETUP.reduce((total, c, i) => total + levels[i] + (mods[i] && levels[i] > 0 ? MOD_BONUS : 0), 0);
+const MAX_SCORE = SETUP.length * (MAX_LEVEL + MOD_BONUS);   // 6 x 25 = 150
 
 // ---------- the current night ----------
 let G = null;        // all the state of the night in progress (built by newGame)
@@ -36,6 +45,9 @@ const atDoor = m => m.step === m.route.length - 1;  // is it standing in that do
 const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && !G.powerOut && !G.doors[side];
 const otherSide = side => side === 'L' ? 'R' : 'L';
 
+// Is a threat's modifier active tonight? modOn('dia') asks about the ◆ Diamond, and so on.
+const modOn = id => G.mod[id];
+
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
 const hourLabel = h => (h === 0 ? 12 : h) + ' AM';
@@ -52,6 +64,10 @@ function newGame() {
     over: false, paused: false,
     staticUntil: 0,                // camera shows static until this time (milliseconds)
 
+    // Tonight's modifiers by id, e.g. { dia: true, tri: false, ... }. A threat at level 0 never gets one.
+    // Object.fromEntries turns a list of [key, value] pairs into an object.
+    mod: Object.fromEntries(SETUP.map((c, i) => [c.id, mods[i] && levels[i] > 0])),
+
     // One "mob" (moving object) per shape. Each starts on the stage at step 0 of a route.
     mobs: CREATURES.map((c, i) => ({
       c,                           // its description from data.js
@@ -61,7 +77,9 @@ function newGame() {
       step: 0,                     // how far along the route it is
       timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       deadline: 0,                 // when standing in a doorway: the moment it gets you
-      stalled: false,              // the orb only: waiting at the door because both doors were shut
+      stalled: false,              // the orb only: waiting at the door because its way in was shut
+      stallSides: [],              // which shut doors it's waiting for you to open
+      lurkT: 0,                    // ● Patient: countdown to its next soft growl while waiting
     })),
 
     lenny: {
@@ -71,6 +89,8 @@ function newGame() {
       outTimer: 0,                 // countdown from "out" to game over
       warnT: 0,                    // countdown to the next warning chime
       tickT: 0,                    // countdown to the next winding click
+      room: 'prize',               // which camera the box is on (always CAM 7 unless Wanderer is ticked)
+      moveT: WANDER_TIME * (0.8 + Math.random() * 0.4),   // Wanderer: countdown to the box's next move
     },
 
     square: {
@@ -79,12 +99,13 @@ function newGame() {
       stage: 0,                    // 0 = away, 1 = far, 2 = medium, 3 = close
       timer: SQUARE.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       pushT: 0,                    // how long the light has been shining on it without a break
+      shutT: 0,                    // ■ Bold: how long its door has been shut while it's close
     },
 
     smiley: {
       level: levels[SETUP.indexOf(SMILEY)],
       active: false,               // is (: hiding in the office right now?
-      spot: null,                  // which of SMILEY_SPOTS it is in
+      spots: [],                   // which of SMILEY_SPOTS it's in (two of them with the Twins modifier)
       deadline: 0,                 // the moment it gets you if you haven't clicked it
     },
   };
@@ -125,10 +146,18 @@ function powerUnits() {
 
 // One shape's turn.
 function updateMob(m, dt) {
-  // Stalled (the orb found both doors shut): wait until you open one, then attack THAT door.
+  // Stalled (the orb found its way in shut): wait until you open one of those doors, then attack THAT door.
   if (m.stalled) {
-    const opened = !G.doors.L ? 'L' : !G.doors.R ? 'R' : null;   // null = both still shut
-    if (!opened) return;
+    // .find() gives the first side in the list whose door is open, or undefined if they're all still shut.
+    const opened = m.stallSides.find(side => !G.doors[side]);
+    if (!opened) {
+      // ● Patient: a soft growl every few seconds, so you don't forget it's waiting there.
+      if (modOn('orb')) {
+        m.lurkT -= dt;
+        if (m.lurkT <= 0) { sfx.lurk(sideOf(m)); m.lurkT = LURK_EVERY; }
+      }
+      return;
+    }
     m.stalled = false;
     // Swap to the route that ends at the opened door. Both orb routes are the same length,
     // so it stays standing in a doorway, just on the other side if needed.
@@ -146,10 +175,24 @@ function updateMob(m, dt) {
     return;
   }
 
+  // ◆ Charger: it can't move at all while you're watching its room on camera,
+  // but while you're not, its countdown runs twice as fast (the extra "m.timer -= dt").
+  if (m.c.id === 'dia' && modOn('dia')) {
+    if (G.cam && G.camRoom === m.route[m.step]) return;
+    m.timer -= dt;
+  }
+
   // Count down to its next chance to move.
   m.timer -= dt;
   if (m.timer > 0) return;
   m.timer = m.c.interval * (0.85 + Math.random() * 0.3);   // a bit of randomness so it's less predictable
+
+  // ▲ Trickster: sometimes it plays its "trying to get in" sound from far away. The real thing always
+  // shows up in the doorway, so a careful player can tell. (Not from the hall right next to the door,
+  // so a fake never plays at the same moment as a real arrival.)
+  if (m.c.id === 'tri' && modOn('tri') && m.step < m.route.length - 2 && Math.random() < TRICK_CHANCE) {
+    sfx.arrive(sideOf(m), m.c.pitch);
+  }
 
   // Roll the dice. Math.random() * 20 is a number from 0 to just under 20.
   // At level 5 it moves when the roll is under 5: a 5 in 20 (25%) chance. At level 20 it always moves.
@@ -161,9 +204,11 @@ function updateMob(m, dt) {
   if (atDoor(m)) {
     // It just reached a doorway.
     if (m.c.stalls && G.doors.L && G.doors.R) {
-      // Both doors shut: the orb doesn't give up. It rumbles and waits (see the top of updateMob).
-      m.stalled = true;
-      sfx.rumble(sideOf(m));
+      // Both doors shut: the orb doesn't give up. It rumbles and waits for either one (see the top of updateMob).
+      stall(m, ['L', 'R']);
+    } else if (m.c.stalls && modOn('orb') && G.doors[sideOf(m)]) {
+      // ● Patient: even with just its own door shut, it waits behind that door instead of leaving.
+      stall(m, [sideOf(m)]);
     } else if (G.doors[sideOf(m)]) {
       // Its door is already shut: it gives up at once.
       bounce(m);
@@ -181,6 +226,14 @@ function updateMob(m, dt) {
   dirty = true;
 }
 
+// The orb starts waiting in the doorway until one of `sides` opens.
+function stall(m, sides) {
+  m.stalled = true;
+  m.stallSides = sides;
+  m.lurkT = LURK_EVERY;
+  sfx.rumble(sideOf(m));
+}
+
 // A shape hit a closed door: knock, then back to the stage (the orb may pick a new side).
 function bounce(m) {
   sfx.knock(sideOf(m));
@@ -190,7 +243,8 @@ function bounce(m) {
   if (G.cam && G.camRoom === 'stage') camStatic(0.3);
 }
 
-// Lenny's music box: it unwinds all the time, and winds up while you hold W on CAM 7.
+// Lenny's music box: it unwinds all the time, and winds up while you hold W on its camera
+// (CAM 7, unless the Wanderer modifier has moved it).
 function updateLenny(dt) {
   const L = G.lenny;
   if (L.out) {
@@ -198,7 +252,8 @@ function updateLenny(dt) {
     if (L.outTimer <= 0) loseLenny();
     return;
   }
-  const winding = (windKey || windPointer) && G.cam && G.camRoom === 'prize' && !G.powerOut;
+  const winding = (windKey || windPointer) && G.cam && G.camRoom === L.room && !G.powerOut;
+  if (modOn('len')) wanderBox(L, dt, winding);
   // At level 0 Lenny is switched off, so the box never unwinds (you can still wind it, harmlessly).
   const change = winding ? WIND_RATE : L.level === 0 ? 0 : -boxDrain(L.level);
   L.wind = Math.max(0, Math.min(100, L.wind + change * dt));   // keep it between 0 and 100
@@ -218,13 +273,42 @@ function updateLenny(dt) {
   }
 }
 
+// Lenny Wanderer: every so often the box moves to another camera. It only moves while it's well
+// wound and you aren't winding it, so it never runs off right when you need it. A chime plays when it moves.
+function wanderBox(L, dt, winding) {
+  L.moveT -= dt;
+  if (L.moveT > 0) return;
+  if (winding || L.wind < BOX_LOW) { L.moveT = 3; return; }   // not now: try again in 3 seconds
+  const from = L.room;
+  L.room = pick(BOX_ROOMS.filter(room => room !== from));     // any box camera except the one it's on
+  L.moveT = WANDER_TIME * (0.8 + Math.random() * 0.4);
+  sfx.boxMove();
+  if (G.cam && (G.camRoom === from || G.camRoom === L.room)) camStatic(0.3);
+  dirty = true;
+}
+
 // ■ Square: creeps to a door in stages (far, medium, close), then gets you on its next move.
 // Only the door light helps: while it shines on the square, the square can't move, and every
 // lightPush(level) seconds of steady light shove it back one stage. Off the door entirely at stage 0.
 function updateSquare(dt) {
   const S = G.square;
 
-  if (S.stage > 0 && lightOn(S.side)) {
+  if (S.stage === 3 && modOn('sqr')) {
+    // ■ Bold: once it's CLOSE, the light doesn't scare it any more. Instead, keep its door shut
+    // for BOLD_SHUT seconds to drive it all the way back to far. It can't move while that door is shut.
+    S.pushT = 0;
+    if (G.doors[S.side]) {
+      S.shutT += dt;
+      if (S.shutT >= BOLD_SHUT) {
+        S.shutT = 0;
+        S.stage = 1;
+        sfx.shove(S.side);
+        dirty = true;
+      }
+      return;
+    }
+    S.shutT = 0;   // door opened too soon: start counting again next time
+  } else if (S.stage > 0 && lightOn(S.side)) {
     S.pushT += dt;
     if (S.pushT >= lightPush(S.level)) {
       S.pushT = 0;
@@ -265,21 +349,30 @@ function updateSmiley() {
 }
 
 // Lowering the camera might wake Smiley. It hides in a random spot and giggles from that direction.
+// With the Twins modifier, two of them hide in two different spots, and you get 50% more time.
 function maybeWakeSmiley() {
   const S = G.smiley;
   if (S.active || G.powerOut || Math.random() >= smileyChance(S.level)) return;
+  const twins = modOn('smi');
+  const free = SMILEY_SPOTS.slice();   // a copy, so taking spots out doesn't change SMILEY_SPOTS itself
+  S.spots = [];
+  while (S.spots.length < (twins ? 2 : 1)) {
+    S.spots.push(free.splice(Math.floor(Math.random() * free.length), 1)[0]);   // take out one random spot
+  }
   S.active = true;
-  S.spot = pick(SMILEY_SPOTS);
-  S.deadline = G.t + smileyTime(S.level);
-  sfx.giggle((S.spot[1] / 36) * 1.4 - 0.7);   // column 0..36 of the office becomes a pan of -0.7..+0.7
+  S.deadline = G.t + smileyTime(S.level) * (twins ? 1.5 : 1);
+  // One giggle per (:, from its side of the office: column 0..36 becomes a pan of -0.7..+0.7.
+  for (const [, col] of S.spots) sfx.giggle((col / 36) * 1.4 - 0.7);
   dirty = true;
 }
 
-// The player clicked (: in time.
-function catchSmiley() {
-  if (!G || G.over || G.paused || !G.smiley.active) return;
-  G.smiley.active = false;
+// The player clicked (: number i in time (0, or 1 for the second twin). Once all are clicked, it's over.
+function catchSmiley(i = 0) {
+  const S = G && G.smiley;
+  if (!S || G.over || G.paused || !S.active || i >= S.spots.length) return;
+  S.spots.splice(i, 1);
   sfx.pop();
+  if (S.spots.length === 0) S.active = false;
   dirty = true;
 }
 
@@ -364,11 +457,11 @@ function win() {
   G.over = true;
   sfx.humOff();
   sfx.chime();
-  // Add up all the levels: reduce() walks the list keeping a running total.
-  const sum = levels.reduce((total, lv) => total + lv, 0);
+  // The score: all the levels added up, plus the modifier bonuses (see nightScore at the top).
+  const sum = nightScore();
   const isBest = !best || sum > best.sum;
   if (isBest) {
-    best = { sum, levels: levels.slice() };
+    best = { sum, levels: levels.slice(), mods: mods.slice() };
     store.set('best', best);
   }
   showWin(sum, isBest);

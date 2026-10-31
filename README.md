@@ -14,7 +14,7 @@ Each file has one job. Every file starts with a comment explaining that job, and
 | `style.css` | **Looks**: colors, fonts, sizes and layout. |
 | `js/helpers.js` | Tiny tools every file uses: `$` to find things on the page, `store` to save things, `pick` for a random choice. |
 | `js/config.js` | **The numbers you can tweak**: night length, power drain, how difficulty levels work. |
-| `js/data.js` | **What exists**: the rooms, the cameras and the six threats with their routes. |
+| `js/data.js` | **What exists**: the rooms, the cameras, the six threats with their routes and ★ modifiers, and the challenge presets. |
 | `js/sound.js` | Every sound effect, built in code from notes and noise (there are no sound files). |
 | `js/art.js` | The ASCII pictures, and the tools that draw shapes into them. |
 | `js/game.js` | **The rules**: moving, doors, power, the music box, winning and losing. |

@@ -172,6 +172,18 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .lv b { font-family: var(--font-display); font-size: 30px; font-weight: 400; line-height: 1; }
 .lv .bar { font-size: 11px; color: var(--dim); letter-spacing: -.02em; white-space: pre; }
 .setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* The ★ modifier checkbox under each threat's description. */
+.lvrow .mod { display: block; margin-top: 6px; cursor: pointer; font-size: 12px; letter-spacing: .04em; }
+.lvrow .mod input { accent-color: var(--fg); margin: 0 4px 0 0; vertical-align: -2px; cursor: pointer; }
+.lvrow .mod input:disabled, .lvrow .mod input:disabled ~ * { cursor: not-allowed; }
+.lvrow .mod:has(input:checked) { color: var(--fg); font-weight: 600; }
+.lvrow .mod:has(input:disabled) { opacity: .45; }
+.lvrow .mod small { display: block; font-weight: 400; }
+/* The row of challenge buttons. */
+.presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
+.presets button { padding: 6px 10px; font-size: 12px; }
+.score b { color: var(--fg); font-weight: 600; }
 .best { color: var(--dim); }
 .best b { color: var(--fg); font-weight: 600; }
 

@@ -39,9 +39,9 @@ const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
 
 // ---------- Lenny's music box ----------
 // How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
-// Multiplied by PACE (2), that's 1.2 at level 1 (about 83s from full)
-// up to 8.0 at level 20 (about 12s from full).
-const boxDrain = level => (0.6 + (level - 1) * (3.4 / 19)) * PACE;
+// Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1
+// (about 110s from full) up to 6.0 at level 20 (about 17s from full).
+const boxDrain = level => (0.6 + (level - 1) * (3.4 / 19)) * PACE * 0.75;
 const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
 const BOX_LOW = 30;        // below this %, the camera button and CAM 7 start warning you
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you
@@ -55,5 +55,15 @@ const SQUARE_SWAP = 0.5;   // chance that a square at FAR switches doors instead
 // ---------- (: Smiley ----------
 // Chance that lowering the camera wakes Smiley: 2.5% at level 1, up to 50% at level 20.
 const smileyChance = level => level / MAX_LEVEL * 0.5;
-// Seconds you get to find and click it: 5s at level 1, down to 2.5s at level 20.
-const smileyTime = level => 5 - (level - 1) * (2.5 / 19);
+// Seconds you get to find and click it: 6.25s at level 1, down to about 3.1s at level 20.
+// (It was 5 to 2.5; everything was multiplied by 1.25 to make Smiley a bit easier, still level-based.)
+const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
+
+// ---------- modifiers ----------
+// Ticking a threat's modifier on the custom night screen adds this much to the night's score
+// (only if that threat's level is above 0, since a switched-off threat's modifier does nothing).
+const MOD_BONUS = 5;
+const TRICK_CHANCE = 0.35;  // ▲ Trickster: chance, on each of its movement ticks, to fake its doorway sound
+const BOLD_SHUT = 2;        // ■ Bold: seconds its door must stay shut to drive a close square back to far
+const WANDER_TIME = 25;     // Lenny Wanderer: about how many seconds between the box's moves
+const LURK_EVERY = 4;       // ● Patient: seconds between the soft growls while it waits behind a door

@@ -57,8 +57,10 @@
     <section id="scr-setup" class="setup" hidden>
       <p class="eyebrow">Before your shift</p>
       <h2>CUSTOM NIGHT</h2>
-      <p class="sub">Set each one from level 0 to 20. Level 0 switches it off for the night. Shapes at 1 barely move; at 20 they move at every chance and give you less time at the door. Lenny's level sets how fast his music box unwinds, and Smiley's sets how often it wakes up.</p>
+      <p class="sub">Set each one from level 0 to 20. Level 0 switches it off for the night. Shapes at 1 barely move; at 20 they move at every chance and give you less time at the door. Lenny's level sets how fast his music box unwinds, and Smiley's sets how often it wakes up. Tick ★ to add a threat's special modifier (+5 to your score), or try a ready-made challenge.</p>
       <div class="rows" id="rows"></div>
+      <div class="presets" id="presets"></div>
+      <p class="score" id="scoreLine"></p>
       <div class="setup-actions">
         <button id="btnStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
         <button id="btnAll20" type="button">All 20</button>
@@ -66,7 +68,7 @@
         <button id="btnBack" type="button">Back</button>
       </div>
       <p class="best" id="bestLine"></p>
-      <p class="keys">↑ ↓ pick a shape · ← → change its level · Enter starts · Esc goes back</p>
+      <p class="keys">↑ ↓ pick a shape · ← → change its level · Space ticks its ★ modifier · Enter starts · Esc goes back</p>
     </section>
 
     <!-- GAME -->
@@ -165,6 +167,7 @@
       <li><span class="face">( ͡° ͜ʖ ͡°)</span> sleeps in the music box on CAM 7. The box slowly unwinds; hold W (or the Wind button) while watching CAM 7 to wind it back up. When it gets low, the Camera button warns you. If it runs out, he comes for you and nothing can stop him.</li>
       <li><span class="sym s-sqr">■</span> creeps up to either door in three steps: far, medium, close. One more step and it gets you, and doors don't stop it. You hear a loud scrape when it gets close. Hold a door light (Q or E) to see it; keep holding and it gets pushed further back. A shut door blocks the light. From far away it may sneak over to the other door.</li>
       <li><span class="smi-face s-smi">(:</span> hides in your office. If you hear a giggle after lowering the camera, find (: somewhere in the office and click it quickly.</li>
+      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound (the real one is always in the doorway); ● Patient waits growling behind a shut door; Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Bold ignores the light once close (shut that door for 2 seconds instead); (: Twins hides two at once.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
       <li>Doors, door lights and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>
@@ -175,7 +178,7 @@
         <tr><td>Catch (:</td><td>Click it in the office</td></tr>
         <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Pick a camera</td><td>1 to 7, or click a room on the map</td></tr>
-        <tr><td>Wind the music box</td><td>Hold W, or hold the Wind button, while on CAM 7</td></tr>
+        <tr><td>Wind the music box</td><td>Hold W, or hold the Wind button, while on CAM 7 (or wherever the box wandered)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>
       </table>

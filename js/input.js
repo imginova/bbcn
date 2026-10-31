@@ -59,8 +59,27 @@ $('rows').addEventListener('click', e => {
     if (e.detail) step.blur();
     return;
   }
+  // A modifier checkbox: let go of keyboard focus after a mouse click, so Space keeps working (see keydown).
+  if (e.target.matches('[data-mod]')) {
+    if (e.detail) e.target.blur();
+    return;
+  }
   const row = e.target.closest('.lvrow');
   if (row) { sel = Number(row.dataset.i); renderSetup(); }
+});
+
+// Ticking or unticking a modifier checkbox fires a "change" event.
+$('rows').addEventListener('change', e => {
+  if (e.target.matches('[data-mod]')) setMod(Number(e.target.dataset.mod), e.target.checked);
+});
+
+// The challenge buttons under the rows. data-preset="2" means PRESETS[2].
+$('presets').addEventListener('click', e => {
+  const b = e.target.closest('[data-preset]');
+  if (!b) return;
+  sfx.init();
+  applyPreset(PRESETS[Number(b.dataset.preset)]);
+  if (e.detail) b.blur();
 });
 
 // Clicking the dark area around the How to play panel closes it.
@@ -112,10 +131,12 @@ for (const side of ['L', 'R']) {
 // Why: render.js redraws the office about 15 times a second, replacing (: with a fresh copy.
 // A "click" only counts if the button goes down AND up on the same element, so a redraw in
 // between made the click land on the whole office instead, and (: was never caught.
+// With the Twins modifier there are two; the "smi-1" class marks the second one.
 $('officeArt').addEventListener('pointerdown', e => {
-  if (e.target.closest('.smi')) {
+  const cell = e.target.closest('.smi');
+  if (cell) {
     sfx.init();
-    catchSmiley();
+    catchSmiley(cell.classList.contains('smi-1') ? 1 : 0);
     e.preventDefault();
   }
 });
@@ -127,8 +148,9 @@ $('officeArt').addEventListener('pointerdown', e => {
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;   // leave shortcuts like Ctrl+R alone
   const k = e.key;
-  const onButton = e.target instanceof HTMLButtonElement;
-  if ((k === ' ' || k === 'Enter') && onButton) return;   // let a focused button handle its own Space/Enter
+  // Let a focused button or checkbox handle its own Space/Enter.
+  const onButton = e.target instanceof HTMLButtonElement || e.target instanceof HTMLInputElement;
+  if ((k === ' ' || k === 'Enter') && onButton) return;
   sfx.init();
   if (k === 'm' || k === 'M') { toggleMute(); return; }
 
@@ -156,6 +178,7 @@ document.addEventListener('keydown', e => {
     else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); sel = (sel + 1) % SETUP.length; renderSetup(); }
     else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); changeLevel(sel, -1); }
     else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); changeLevel(sel, 1); }
+    else if (k === ' ') { e.preventDefault(); if (levels[sel] > 0) setMod(sel, !mods[sel]); }   // Space ticks the modifier
     else if (k === 'Enter') { e.preventDefault(); startNight(); }
     else if (k === 'Escape') show('title');
     else if (k === 'h' || k === 'H') openHowto();

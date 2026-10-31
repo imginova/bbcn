@@ -152,6 +152,12 @@ const sfx = (() => {
       tone(42, 1.1, { type: 'sawtooth', vol: 0.6, slide: -14, pan });
       tone(330, 0.9, { type: 'square', vol: 0.12, slide: -240, pan });
     },
+    // ● Patient waiting behind a shut door: a soft, low growl from its side every few seconds.
+    lurk(side) {
+      const pan = panOf(side);
+      noise(0.7, { vol: 0.35, freq: 120, pan });
+      tone(40, 0.7, { type: 'sawtooth', vol: 0.18, slide: -8, pan });
+    },
     // Three knocks: a shape hit a closed door and went back to the stage.
     knock(side) {
       for (let i = 0; i < 3; i++) noise(0.12, { vol: 0.6, freq: 320, delay: i * 0.16, pan: panOf(side) });
@@ -181,6 +187,10 @@ const sfx = (() => {
     boxWarn() {
       tone(1568, 0.25, { type: 'triangle', vol: 0.12 });
       tone(1175, 0.3, { type: 'triangle', vol: 0.12, delay: 0.2 });
+    },
+    // Wanderer: the box just moved to another camera. A quick music-box twinkle, going up then down.
+    boxMove() {
+      [1319, 1568, 1976, 1568].forEach((f, i) => tone(f, 0.18, { type: 'triangle', vol: 0.12, delay: i * 0.09 }));
     },
     // The box running out: a tinny tune that speeds up and gets louder, right before Lenny arrives.
     boxTune() {

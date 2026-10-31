@@ -179,9 +179,19 @@ const SLOTS = {
 
 // Change the music box picture (on CAM 7) to match how wound it is:
 // asleep when well wound, eyes peeking when halfway, face showing when low, empty when he's out.
+// With the Wanderer modifier the box may be on another camera; then CAM 7 shows an empty spot.
 function prizeArt(g, lenny) {
   // put() writes a line of text into the box area (row r, starting at column 14 of the framed grid).
   const put = (r, text, cls = '') => Array.from(text).forEach((ch, k) => { g[r + 1][14 + k] = { ch, cls }; });
+  if (lenny.room !== 'prize') {
+    // The box picture is on lines 4 to 8 of ROOM_ART.prize: wipe them, with a hint in the middle.
+    put(4, '            ');
+    put(5, '            ');
+    put(6, '  (empty)   ', 'dim');
+    put(7, '            ');
+    put(8, '            ');
+    return;
+  }
   if (lenny.out) {
     put(4, ' /        \\ ');
     put(5, '|          |');
@@ -196,6 +206,20 @@ function prizeArt(g, lenny) {
     put(5, '|          |');
     stampFace(g, 6, 16, ' s-len');
   }
+}
+
+// ---------- Lenny's wandering music box ----------
+// Where the small music box sits on the other cameras it can wander to (Wanderer modifier),
+// as [row, column] of its top-left corner in the framed camera grid. They're clear of SLOTS above.
+const BOX_SPOTS = { dining: [4, 1], backstage: [5, 32], supply: [5, 32] };
+
+// Draw a small 6-wide music box at row r, column c. Its face shows how wound it is, like prizeArt.
+function miniBox(g, r, c, lenny) {
+  const face = lenny.out ? '|    |' : lenny.wind >= 60 ? '|zzzz|' : lenny.wind >= BOX_LOW ? '|.  .|' : '|0  0|';
+  const lines = [lenny.out ? '/    \\' : '.----.', face, "'----'"];
+  lines.forEach((line, k) => Array.from(line).forEach((ch, j) => {
+    if (g[r + k] && g[r + k][c + j]) g[r + k][c + j] = { ch, cls: lenny.wind < BOX_LOW ? 's-len' : '' };
+  }));
 }
 
 // ---------- the square in a lit doorway ----------
