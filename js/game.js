@@ -152,6 +152,7 @@ function updateMob(m, dt) {
 
   // Roll the dice. Math.random() * 20 is a number from 0 to just under 20.
   // At level 5 it moves when the roll is under 5: a 5 in 20 (25%) chance. At level 20 it always moves.
+  // At level 0 the roll is never under 0, so it never moves: that's how "off" works.
   if (Math.random() * MAX_LEVEL >= m.level) return;
 
   const from = m.route[m.step];
@@ -197,7 +198,8 @@ function updateLenny(dt) {
     return;
   }
   const winding = (windKey || windPointer) && G.cam && G.camRoom === 'prize' && !G.powerOut;
-  const change = winding ? WIND_RATE : -boxDrain(L.level);
+  // At level 0 Lenny is switched off, so the box never unwinds (you can still wind it, harmlessly).
+  const change = winding ? WIND_RATE : L.level === 0 ? 0 : -boxDrain(L.level);
   L.wind = Math.max(0, Math.min(100, L.wind + change * dt));   // keep it between 0 and 100
 
   if (winding && L.wind < 100) {
@@ -292,7 +294,11 @@ function powerOutStart() {
   G.doors.L = G.doors.R = false;
   G.cam = false;
   G.outTimer = 5 + Math.random() * 8;                     // 5 to 13 seconds of darkness
-  G.outBy = pick(G.mobs.filter(m => !m.c.unseen));        // ◆ or ▲, never the invisible orb
+  // ◆ or ▲ (never the invisible orb), preferring one that's switched on. If both are at level 0,
+  // one of them still comes: running out of power is always deadly.
+  const visible = G.mobs.filter(m => !m.c.unseen);
+  const active = visible.filter(m => m.level > 0);
+  G.outBy = pick(active.length ? active : visible);
   G.smiley.active = false;                                // in the dark there's nothing to find
   sfx.humOff();
   sfx.powerDown();

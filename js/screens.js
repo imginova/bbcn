@@ -60,7 +60,7 @@ function showWin(sum, isBest) {
   const powerLeft = Math.max(0, Math.ceil(G.power));
   $('winMsg').textContent = `You kept them out until morning with ${powerLeft}% power left.`;
   $('winLevels').innerHTML =
-    SETUP.map((c, i) => `<span>${symHtml(c)} level ${levels[i]}</span>`).join('') +
+    SETUP.map((c, i) => `<span>${symHtml(c)} ${levels[i] === 0 ? 'off' : 'level ' + levels[i]}</span>`).join('') +
     `<span class="dim">total ${sum} / ${SETUP.length * MAX_LEVEL}</span>`;
   $('winBest').innerHTML = isBest ? '<b>New best.</b> This is the hardest night you have survived.' : bestText();
   show('win');
@@ -86,7 +86,8 @@ function buildSetup() {
 function renderSetup() {
   document.querySelectorAll('.lvrow').forEach((row, i) => row.classList.toggle('sel', i === sel));
   levels.forEach((lv, i) => {
-    $('lv' + i).textContent = 'LEVEL ' + String(lv).padStart(2, '0');   // 5 shows as "05"
+    // 5 shows as "LEVEL 05"; 0 means switched off, so it just says OFF.
+    $('lv' + i).textContent = lv === 0 ? 'OFF' : 'LEVEL ' + String(lv).padStart(2, '0');
     $('bar' + i).textContent = '|'.repeat(lv) + '.'.repeat(MAX_LEVEL - lv);
   });
   $('bestLine').innerHTML = bestText();

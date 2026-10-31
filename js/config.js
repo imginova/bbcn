@@ -25,10 +25,10 @@ const UNIT_DRAIN = 0.40;   // % per second for EACH closed door, door light or t
                            // (both doors + camera = 1.20% per second)
 
 // ---------- difficulty levels (custom night) ----------
-const MIN_LEVEL = 1;
+const MIN_LEVEL = 0;       // level 0 switches a threat off for the night: it never moves, unwinds or wakes
 const MAX_LEVEL = 20;
 
-// Keeps any number inside 1..20 and makes it a whole number.
+// Keeps any number inside 0..20 and makes it a whole number.
 // Used whenever we load or change a level, so a bad value can never sneak in.
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
