@@ -80,6 +80,8 @@ function newGame() {
       stalled: false,              // the orb only: waiting at the door because its way in was shut
       stallSides: [],              // which shut doors it's waiting for you to open
       lurkT: 0,                    // ● Patient: countdown to its next soft growl while waiting
+      lingerT: 0,                  // how long it has been knocking at a shut door
+      waited: false,               // ● Patient: has it already waited behind a door this visit?
     })),
 
     lenny: {
@@ -99,7 +101,6 @@ function newGame() {
       stage: 0,                    // 0 = away, 1 = far, 2 = medium, 3 = close
       timer: SQUARE.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       pushT: 0,                    // how long the light has been shining on it without a break
-      shutT: 0,                    // ■ Bold: how long its door has been shut while it's close
     },
 
     smiley: {
@@ -107,6 +108,7 @@ function newGame() {
       active: false,               // is (: hiding in the office right now?
       spots: [],                   // which of SMILEY_SPOTS it's in (two of them with the Twins modifier)
       deadline: 0,                 // the moment it gets you if you haven't clicked it
+      tickT: SMILEY_TICK,          // countdown to its next chance to wake up on its own
     },
   };
 }
@@ -128,7 +130,7 @@ function update(dt) {
     }
     updateSquare(dt);
     if (G.over) return;
-    updateSmiley();
+    updateSmiley(dt);
   } else {
     // Power is out: just wait for the shape in the dark.
     G.outTimer -= dt;
@@ -168,10 +170,34 @@ function updateMob(m, dt) {
     return;
   }
 
-  // Standing in a doorway: shut door = it goes away; open door when time runs out = game over.
+  // Standing in a doorway.
+  // Door shut: it keeps knocking for linger(level) seconds, THEN gives up and goes back to the stage.
+  //   So a door has to stay shut for a moment, which is what makes doors cost real power.
+  // Door open: when its reaction-window deadline passes, it gets you. If you opened the door while
+  //   it was still knocking, that counts as a fresh attack: shut it again in time, and it knocks again.
   if (atDoor(m)) {
-    if (G.doors[sideOf(m)]) bounce(m);
-    else if (G.t >= m.deadline) lose(m.c, sideOf(m));
+    const side = sideOf(m);
+    if (G.doors[side] && m.c.stalls && modOn('orb') && !m.waited) {
+      // ● Patient: the first time you shut it out, it doesn't knock and leave. It waits behind the door
+      // (growling). Open the door and it attacks once more; shut it again in time and THEN it gives up.
+      m.waited = true;
+      stall(m, [side]);
+      return;
+    }
+    if (G.doors[side]) {
+      if (m.lingerT === 0) sfx.knock(side);   // the first moment it finds the door shut
+      m.lingerT += dt;
+      if (m.lingerT >= linger(m.level)) bounce(m);
+      return;
+    }
+    if (m.lingerT > 0) {
+      // You opened up too soon: it's still right there.
+      m.lingerT = 0;
+      m.deadline = G.t + reactWindow(m.level);
+      if (m.c.unseen) sfx.rumble(side); else sfx.arrive(side, m.c.pitch);
+      dirty = true;
+    }
+    if (G.t >= m.deadline) lose(m.c, side);
     return;
   }
 
@@ -187,10 +213,11 @@ function updateMob(m, dt) {
   if (m.timer > 0) return;
   m.timer = m.c.interval * (0.85 + Math.random() * 0.3);   // a bit of randomness so it's less predictable
 
-  // ▲ Trickster: sometimes it plays its "trying to get in" sound from far away. The real thing always
-  // shows up in the doorway, so a careful player can tell. (Not from the hall right next to the door,
-  // so a fake never plays at the same moment as a real arrival.)
-  if (m.c.id === 'tri' && modOn('tri') && m.step < m.route.length - 2 && Math.random() < TRICK_CHANCE) {
+  // ▲ Trickster: while you're looking at the cameras (so you can't see the doorway), it sometimes plays
+  // its "trying to get in" sound from far away. The real thing always shows up in the doorway, so
+  // lowering the camera to look tells you the truth, but that costs time (and might wake Smiley).
+  // (Not from the hall right next to the door, so a fake never plays at the same moment as a real arrival.)
+  if (m.c.id === 'tri' && modOn('tri') && G.cam && m.step < m.route.length - 2 && Math.random() < TRICK_CHANCE) {
     sfx.arrive(sideOf(m), m.c.pitch);
   }
 
@@ -208,11 +235,12 @@ function updateMob(m, dt) {
       stall(m, ['L', 'R']);
     } else if (m.c.stalls && modOn('orb') && G.doors[sideOf(m)]) {
       // ● Patient: even with just its own door shut, it waits behind that door instead of leaving.
+      m.waited = true;
       stall(m, [sideOf(m)]);
     } else if (G.doors[sideOf(m)]) {
-      // Its door is already shut: it gives up at once.
-      bounce(m);
-      return;
+      // Its door is already shut: it starts knocking (see "Standing in a doorway" above) and only
+      // leaves once the door has stayed shut long enough.
+      m.deadline = G.t + reactWindow(m.level);
     } else {
       m.deadline = G.t + reactWindow(m.level);
       if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.arrive(sideOf(m), m.c.pitch);
@@ -234,9 +262,12 @@ function stall(m, sides) {
   sfx.rumble(sideOf(m));
 }
 
-// A shape hit a closed door: knock, then back to the stage (the orb may pick a new side).
+// A shape gave up at a closed door: footsteps walking away, then back to the stage
+// (the orb may pick a new side). Now it's safe to open that door again.
 function bounce(m) {
-  sfx.knock(sideOf(m));
+  sfx.leave(sideOf(m));
+  m.lingerT = 0;
+  m.waited = false;
   m.route = pick(m.c.routes);
   m.step = 0;
   m.timer = m.c.interval * (1 + Math.random() * 0.5);
@@ -293,24 +324,10 @@ function wanderBox(L, dt, winding) {
 function updateSquare(dt) {
   const S = G.square;
 
-  if (S.stage === 3 && modOn('sqr')) {
-    // ■ Bold: once it's CLOSE, the light doesn't scare it any more. Instead, keep its door shut
-    // for BOLD_SHUT seconds to drive it all the way back to far. It can't move while that door is shut.
-    S.pushT = 0;
-    if (G.doors[S.side]) {
-      S.shutT += dt;
-      if (S.shutT >= BOLD_SHUT) {
-        S.shutT = 0;
-        S.stage = 1;
-        sfx.shove(S.side);
-        dirty = true;
-      }
-      return;
-    }
-    S.shutT = 0;   // door opened too soon: start counting again next time
-  } else if (S.stage > 0 && lightOn(S.side)) {
+  if (S.stage > 0 && lightOn(S.side)) {
     S.pushT += dt;
-    if (S.pushT >= lightPush(S.level)) {
+    // ■ Bold: it takes BOLD_SLOW times as much light to push it back each stage.
+    if (S.pushT >= lightPush(S.level) * (modOn('sqr') ? BOLD_SLOW : 1)) {
       S.pushT = 0;
       sfx.shove(S.side);
       S.stage--;
@@ -343,16 +360,31 @@ function updateSquare(dt) {
 }
 
 // (: Smiley: once it has woken up, you have until its deadline to click it.
-function updateSmiley() {
+// It can also wake up on its own: every SMILEY_TICK seconds it gets a smaller roll of the dice,
+// so you can't keep it asleep forever just by never using the camera.
+function updateSmiley(dt) {
   const S = G.smiley;
-  if (S.active && G.t >= S.deadline) loseSmiley();
+  if (S.active) {
+    if (G.t >= S.deadline) loseSmiley();
+    return;
+  }
+  S.tickT -= dt;
+  if (S.tickT <= 0) {
+    S.tickT = SMILEY_TICK;
+    if (Math.random() < smileyChance(S.level) * SMILEY_SOLO) wakeSmiley();
+  }
 }
 
-// Lowering the camera might wake Smiley. It hides in a random spot and giggles from that direction.
-// With the Twins modifier, two of them hide in two different spots, and you get 50% more time.
+// Lowering the camera might wake Smiley (your full smileyChance roll).
 function maybeWakeSmiley() {
+  if (Math.random() < smileyChance(G.smiley.level)) wakeSmiley();
+}
+
+// Smiley wakes up: it hides in a random spot and giggles from that direction.
+// With the Twins modifier, two of them hide in two different spots, and you get 50% more time.
+function wakeSmiley() {
   const S = G.smiley;
-  if (S.active || G.powerOut || Math.random() >= smileyChance(S.level)) return;
+  if (S.active || G.powerOut) return;
   const twins = modOn('smi');
   const free = SMILEY_SPOTS.slice();   // a copy, so taking spots out doesn't change SMILEY_SPOTS itself
   S.spots = [];

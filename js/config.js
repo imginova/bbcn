@@ -37,6 +37,11 @@ const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Numbe
 // (level - 1) goes from 0 to 19, so (level - 1) * (1.6 / 19) goes from 0 to 1.6.
 const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
 
+// Seconds a shape keeps knocking at a SHUT door before it gives up and leaves: 1.0s at level 1, up to
+// 2.0s at level 20. Open the door before then and it attacks again. This makes every save cost some
+// door power (before, shapes left the instant the door shut, so power never mattered).
+const linger = level => 1 + (level - 1) * (1 / 19);
+
 // ---------- Lenny's music box ----------
 // How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
 // Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1
@@ -55,6 +60,10 @@ const SQUARE_SWAP = 0.5;   // chance that a square at FAR switches doors instead
 // ---------- (: Smiley ----------
 // Chance that lowering the camera wakes Smiley: 2.5% at level 1, up to 50% at level 20.
 const smileyChance = level => level / MAX_LEVEL * 0.5;
+// It can also wake up on its own: every SMILEY_TICK seconds it gets smileyChance x SMILEY_SOLO
+// (so 25% every 10 seconds at level 20, about 1% at level 1).
+const SMILEY_TICK = 10;
+const SMILEY_SOLO = 0.5;
 // Seconds you get to find and click it: 6.25s at level 1, down to about 3.1s at level 20.
 // (It was 5 to 2.5; everything was multiplied by 1.25 to make Smiley a bit easier, still level-based.)
 const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
@@ -63,7 +72,7 @@ const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
 // Ticking a threat's modifier on the custom night screen adds this much to the night's score
 // (only if that threat's level is above 0, since a switched-off threat's modifier does nothing).
 const MOD_BONUS = 5;
-const TRICK_CHANCE = 0.35;  // ▲ Trickster: chance, on each of its movement ticks, to fake its doorway sound
-const BOLD_SHUT = 2;        // ■ Bold: seconds its door must stay shut to drive a close square back to far
+const TRICK_CHANCE = 0.5;   // ▲ Trickster: chance, on each of its movement ticks WHILE THE CAMERA IS UP, to fake its doorway sound
+const BOLD_SLOW = 2;        // ■ Bold: it needs this many times as much light to be pushed back each stage
 const WANDER_TIME = 25;     // Lenny Wanderer: about how many seconds between the box's moves
 const LURK_EVERY = 4;       // ● Patient: seconds between the soft growls while it waits behind a door

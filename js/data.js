@@ -50,11 +50,11 @@ const CREATURES = [
     routes: [['stage', 'dining', 'backstage', 'whall', 'L']] },
   { id: 'tri', sym: '▲', name: 'Triangle', door: 'Always the RIGHT door', path: 'Stage → Dining → Supply → East hall',
     interval: 9.75 / PACE, pitch: 118, loudness: 1.8,
-    mod: { name: 'Trickster', desc: 'Sometimes fakes its "trying to get in" sound. The real one always shows in the doorway: look first' },
+    mod: { name: 'Trickster', desc: 'While you watch the cameras, it fakes its "trying to get in" sound. The real one always shows in the doorway: lower the camera and look' },
     routes: [['stage', 'dining', 'supply', 'ehall', 'R']] },
   { id: 'orb', sym: '●', name: 'Orb', door: 'Picks EITHER door', path: 'Invisible at the door: listen for the rumble',
     interval: 12.0 / PACE, pitch: 48, loudness: 1, unseen: true, stalls: true,
-    mod: { name: 'Patient', desc: 'Waits (growling) behind its shut door instead of leaving. Open it and it attacks: slam it again in time' },
+    mod: { name: 'Patient', desc: 'Shut it out and it waits (growling) instead of leaving. Open the door, let it attack once more, and slam it again in time' },
     routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']] },
 ];
 
@@ -72,7 +72,7 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // then 15.0 to make every threat a bit easier.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
   interval: 15.0 / PACE,
-  mod: { name: 'Bold', desc: 'Once close, the light can\'t scare it. Shut that door for 2 seconds to drive it back to far' } };
+  mod: { name: 'Bold', desc: 'Needs twice as much light to be pushed back each step, so start lighting it early' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
 // then you have a few seconds to find (: in the office and click it (see updateSmiley in game.js).
