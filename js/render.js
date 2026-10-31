@@ -38,7 +38,7 @@ function renderGame(now) {
     const og = grid(officeLines(now, G.powerOut, G.cam), 36);
     // Once Lenny is out he flickers on your desk monitor (shown 3 frames out of 4).
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
-    // Smiley hiding in its spot, drawn in bright purple (the "smi" class in style.css) so it stands out.
+    // Smiley hiding in its spot, drawn in brown with a glow (the "smi" class in style.css) so it stands out.
     // The same class is what input.js listens for when you click it.
     if (G.smiley.active) {
       const [r, c] = G.smiley.spot;

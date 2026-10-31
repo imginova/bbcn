@@ -56,8 +56,9 @@ const LENNY = { id: 'len', name: 'Lenny', door: 'Sleeps in the music box on CAM 
 // The Square creeps up to either door in three stages: far, medium, close. One more move
 // after "close" and it gets you. Closed doors don't stop it; only the door LIGHT pushes it back,
 // and the longer you hold the light on it, the further back it goes (see updateSquare in game.js).
+// interval works like the shapes' above. It was 6.0, then doubled to 12.0 because the square felt too fast.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
-  interval: 6.0 / PACE };
+  interval: 12.0 / PACE };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
 // then you have a few seconds to find (: in the office and click it (see updateSmiley in game.js).

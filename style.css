@@ -28,7 +28,7 @@
   --c-orb: #c8a6ff;
   --c-len: #a8ee7e;   /* the threat colors: --c-dia, --c-tri, --c-orb above and --c-sqr, --c-smi below */
   --c-sqr: #ff8a3d;
-  --c-smi: #cc66ff;   /* a strong purple, deeper than the orb's pale violet, so (: pops out of the amber office */
+  --c-smi: #b8662e;   /* a reddish brown: darker and redder than the amber, so (: still shows up in the office */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --art: min(16px, calc((100vw - 60px) / 37));
@@ -119,7 +119,7 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
 .s-smi { color: var(--c-smi); }
 /* Smiley's (: on menus and in the help. It's plain text, two characters wide. */
 .smi-face { display: inline-block; white-space: pre; font-weight: 600; }
-/* Smiley hiding in the office, in bright purple so it stands out from the amber.
+/* Smiley hiding in the office, in brown with a soft glow so it stands out from the amber.
    The invisible ::after box around it makes it easier to click than two tiny letters. */
 .smi { position: relative; cursor: pointer; color: var(--c-smi); font-weight: 600; text-shadow: 0 0 8px var(--c-smi); }
 .smi::after { content: ""; position: absolute; inset: -8px -4px; }
