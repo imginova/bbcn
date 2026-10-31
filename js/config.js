@@ -37,11 +37,6 @@ const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Numbe
 // (level - 1) goes from 0 to 19, so (level - 1) * (1.6 / 19) goes from 0 to 1.6.
 const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
 
-// Seconds a shape keeps knocking at a SHUT door before it gives up and leaves: 1.0s at level 1, up to
-// 2.0s at level 20. Open the door before then and it attacks again. This makes every save cost some
-// door power (before, shapes left the instant the door shut, so power never mattered).
-const linger = level => 1 + (level - 1) * (1 / 19);
-
 // ---------- Lenny's music box ----------
 // How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
 // Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1

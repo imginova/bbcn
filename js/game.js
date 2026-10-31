@@ -80,7 +80,6 @@ function newGame() {
       stalled: false,              // the orb only: waiting at the door because its way in was shut
       stallSides: [],              // which shut doors it's waiting for you to open
       lurkT: 0,                    // ● Patient: countdown to its next soft growl while waiting
-      lingerT: 0,                  // how long it has been knocking at a shut door
       waited: false,               // ● Patient: has it already waited behind a door this visit?
     })),
 
@@ -170,11 +169,7 @@ function updateMob(m, dt) {
     return;
   }
 
-  // Standing in a doorway.
-  // Door shut: it keeps knocking for linger(level) seconds, THEN gives up and goes back to the stage.
-  //   So a door has to stay shut for a moment, which is what makes doors cost real power.
-  // Door open: when its reaction-window deadline passes, it gets you. If you opened the door while
-  //   it was still knocking, that counts as a fresh attack: shut it again in time, and it knocks again.
+  // Standing in a doorway: shut door = it knocks and goes away at once; open door when time runs out = game over.
   if (atDoor(m)) {
     const side = sideOf(m);
     if (G.doors[side] && m.c.stalls && modOn('orb') && !m.waited) {
@@ -184,20 +179,8 @@ function updateMob(m, dt) {
       stall(m, [side]);
       return;
     }
-    if (G.doors[side]) {
-      if (m.lingerT === 0) sfx.knock(side);   // the first moment it finds the door shut
-      m.lingerT += dt;
-      if (m.lingerT >= linger(m.level)) bounce(m);
-      return;
-    }
-    if (m.lingerT > 0) {
-      // You opened up too soon: it's still right there.
-      m.lingerT = 0;
-      m.deadline = G.t + reactWindow(m.level);
-      if (m.c.unseen) sfx.rumble(side); else sfx.arrive(side, m.c.pitch);
-      dirty = true;
-    }
-    if (G.t >= m.deadline) lose(m.c, side);
+    if (G.doors[side]) bounce(m);
+    else if (G.t >= m.deadline) lose(m.c, side);
     return;
   }
 
@@ -238,9 +221,9 @@ function updateMob(m, dt) {
       m.waited = true;
       stall(m, [sideOf(m)]);
     } else if (G.doors[sideOf(m)]) {
-      // Its door is already shut: it starts knocking (see "Standing in a doorway" above) and only
-      // leaves once the door has stayed shut long enough.
-      m.deadline = G.t + reactWindow(m.level);
+      // Its door is already shut: it gives up at once.
+      bounce(m);
+      return;
     } else {
       m.deadline = G.t + reactWindow(m.level);
       if (m.c.unseen) sfx.rumble(sideOf(m)); else sfx.arrive(sideOf(m), m.c.pitch);
@@ -262,11 +245,10 @@ function stall(m, sides) {
   sfx.rumble(sideOf(m));
 }
 
-// A shape gave up at a closed door: footsteps walking away, then back to the stage
-// (the orb may pick a new side). Now it's safe to open that door again.
+// A shape hit a closed door: knock, then back to the stage (the orb may pick a new side).
+// It's gone straight away, so you can open the door again right after the knocks.
 function bounce(m) {
-  sfx.leave(sideOf(m));
-  m.lingerT = 0;
+  sfx.knock(sideOf(m));
   m.waited = false;
   m.route = pick(m.c.routes);
   m.step = 0;

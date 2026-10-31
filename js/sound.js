@@ -158,12 +158,7 @@ const sfx = (() => {
       noise(0.7, { vol: 0.35, freq: 120, pan });
       tone(40, 0.7, { type: 'sawtooth', vol: 0.18, slide: -8, pan });
     },
-    // A shape giving up at a shut door: three quick footsteps getting quieter as it walks away.
-    // Hearing this means it's safe to open that door again.
-    leave(side) {
-      for (let i = 0; i < 3; i++) noise(0.08, { vol: 0.3 - i * 0.08, freq: 300, delay: i * 0.18, pan: panOf(side) * (1 - i * 0.3) });
-    },
-    // Three knocks: a shape found a closed door and is banging on it.
+    // Three knocks: a shape hit a closed door and went back to the stage.
     knock(side) {
       for (let i = 0; i < 3; i++) noise(0.12, { vol: 0.6, freq: 320, delay: i * 0.16, pan: panOf(side) });
     },
