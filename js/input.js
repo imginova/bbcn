@@ -33,11 +33,15 @@ onClick('btnR', () => toggleDoor('R'));
 onClick('btnCam', toggleCam);
 onClick('btnMask', toggleMask);
 onClick('btnResume', () => setPaused(false));
-onClick('btnQuit', () => { showPause(false); goSetup(); });
+onClick('btnQuit', () => { analytics.leave('quit'); showPause(false); goSetup(); });
 onClick('btnAgainWin', startNight);
 onClick('btnLevelsWin', goSetup);
 onClick('btnRetry', startNight);
 onClick('btnLevelsLose', goSetup);
+// The analytics consent banner and the Privacy button that reopens it (see analytics.js).
+onClick('btnAllow', () => analytics.choose(true));
+onClick('btnDecline', () => analytics.choose(false));
+onClick('btnPrivacy', analytics.openBanner);
 
 // Clicking the doors themselves works too.
 $('doorL').addEventListener('click', () => toggleDoor('L'));
@@ -266,4 +270,10 @@ window.addEventListener('blur', () => {
 // Switching to another tab pauses the game.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+});
+
+// Closing or leaving the page in the middle of a night: tell analytics the night was abandoned.
+// ("pagehide" fires when the page is closed, reloaded or navigated away from.)
+window.addEventListener('pagehide', () => {
+  if (currentScreen === 'game' && G && !G.over) analytics.leave('abandon');
 });

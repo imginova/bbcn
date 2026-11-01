@@ -53,6 +53,7 @@ function boot(data) {
   buildSetup();
   renderMute();
   show('title');
+  analytics.start();   // Google Analytics, only on the public website (see analytics.js)
   requestAnimationFrame(loop);
 }
 
