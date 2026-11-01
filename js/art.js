@@ -279,6 +279,57 @@ const SPRITES = {
      /   |   \
 `),
   },
+  ech: {   // Ξ Echo: a big-eared vent creature, all ears for your lures
+    scare: drawing(String.raw`
+  /\                 /\
+ /  \     _____     /  \
+|    \   /     \   /    |
+|     \ |  Ξ Ξ  | /     |
+ \     \|   v   |/     /
+  \     \  ===  /     /
+   '-----'-----'-----'
+`),
+  },
+  slk: {   // § Slink: a coiled, snaky thing with a § for a face
+    scare: drawing(String.raw`
+        .-------.
+     .-'  § §    '-.
+    /    .---.     \
+   |    ( vvv )     |
+    \    '---'     /
+  ~~~'-.________.-'~~~
+ ~~~~~/          \~~~~~
+~~~~~/            \~~~~~
+`),
+  },
+  pek: {   // ¥ Peeker: half a face peeking round the edge of your office
+    office: drawing(String.raw`
+ .---.
+( ¥ ¥|
+ '---'
+`),
+    scare: drawing(String.raw`
+      .-------.
+    .'         '.
+   /   ¥     ¥   \
+  |               |
+  |    \_____/    |
+   \             /
+    '._________.'
+`),
+  },
+  spm: {   // © Spammer: a grinning pop-up window
+    scare: drawing(String.raw`
+ ______________________
+|[X] *** WINNER! ***   |
+|----------------------|
+|    (  ©      ©  )    |
+|         ___          |
+|    \__/   \__/       |
+|  CLICK HERE TO DIE   |
+|______________________|
+`),
+  },
   vis: {   // Ψ Visitor: a pale, smiling face with Ψ eyes
     office: drawing(String.raw`
    .-----.
@@ -321,10 +372,49 @@ function sprite(g, r0, c0, lines, creature, extra = '') {
 // Where the drawings go, as [top row, left column]:
 //   the Ж Crawler on each camera of its route (clear of the shapes' SLOTS and the wandering box),
 //   the Ж Crawler and Ψ Visitor in your office, and the ¤ Flicker inside a lit doorway.
-const CRAWLER_SLOTS = { prize: [6, 5], supply: [5, 2], ehall: [4, 11] };
+const CRAWLER_SLOTS = {
+  prize: [6, 5], stage: [7, 16], dining: [6, 13],   // the shared start of its route
+  supply: [5, 2], ehall: [4, 11],                    // the east side
+  backstage: [5, 2], whall: [4, 26],                 // the west side
+};
 const CRAWLER_OFFICE = [5, 24];
 const VISITOR_OFFICE = [7, 9];
+const PEEKER_OFFICE = [8, 0];   // ¥ peeks round the left edge of the office, left of the monitor
 const FLICKER_DOOR = [5, 2];
+
+// ---------- the VENTS tab ----------
+// The vent map: six 9-wide boxes joined by tunnels (= across, | down), with V6 opening into your
+// office. VENT_SPOTS is each room's top-left corner. Every cell of a room gets the classes
+// "vroom vr-v1" (and so on) so input.js knows which room you clicked; the room you just lured
+// also gets "vlure", which makes it glow. Crawlers are drawn on the room's middle line.
+const VENT_SPOTS = { v1: [0, 0], v2: [0, 12], v3: [0, 24], v4: [5, 0], v5: [5, 12], v6: [5, 24] };
+//   crawlers  a list like [{ c: ECHO, room: 'v2' }, ...] (only the ones switched on tonight)
+//   lured     the room to highlight, or null
+function ventGrid(crawlers, lured) {
+  const g = grid([
+    '+-------+   +-------+   +-------+',
+    '|       |===|       |===|       |',
+    '|       |   |       |   |       |',
+    '+-------+   +-------+   +-------+',
+    '    |           |           |',
+    '+-------+   +-------+   +-------+',
+    '|       |===|       |===|       |=> YOU',
+    '|       |   |       |   |       |',
+    '+-------+   +-------+   +-------+',
+  ], 40, 'dim');
+  for (const id of VENT_ORDER) {
+    const [r0, c0] = VENT_SPOTS[id];
+    const cls = 'vroom vr-' + id + (lured === id ? ' vlure' : '');
+    for (let r = r0; r < r0 + 4; r++) for (let c = c0; c < c0 + 9; c++) g[r][c] = { ch: g[r][c].ch, cls };
+    Array.from(VENTS[id].name).forEach((ch, k) => { g[r0 + 1][c0 + 2 + k] = { ch, cls }; });
+    if (lured === id) Array.from(')))').forEach((ch, k) => { g[r0 + 1][c0 + 5 + k] = { ch, cls }; });
+    // The crawlers in this room, side by side (Echo first, then Slink).
+    crawlers.filter(v => v.room === id).forEach((v, k) => {
+      g[r0 + 2][c0 + 2 + k * 3] = { ch: v.c.sym, cls: `sym s-${v.c.id} ${cls}` };
+    });
+  }
+  return g;
+}
 
 // ---------- Smiley's hiding spots ----------
 // Where (: can appear in the office picture, as [row, column] of its "(".

@@ -69,9 +69,10 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // after "close" and it gets you. Closed doors don't stop it; only the door LIGHT pushes it back,
 // and the longer you hold the light on it, the further back it goes (see updateSquare in game.js).
 // interval works like the shapes' above. It was 6.0, then 12.0 because the square felt too fast,
-// then 15.0 to make every threat a bit easier, then 18.0 so Total Nightmare could be beaten.
+// then 15.0 to make every threat a bit easier, then 18.0 so Total Nightmare could be beaten,
+// then 24.0 so Absolute Nightmare could be.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
-  interval: 18.0 / PACE,
+  interval: 24.0 / PACE,
   mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer (up to close). Once you start lighting it, finish' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
@@ -81,12 +82,17 @@ const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your offi
 
 // ---------- the three newest threats (none of them are shapes) ----------
 
-// The Crawler Ж crawls from the prize corner to your office: CAM 7 → CAM 4 → CAM 6 → office.
+// The Crawler Ж crawls from the prize corner to your office: CAM 7 → CAM 1 → CAM 2, then EITHER
+// CAM 4 → CAM 6 (the east side) OR CAM 3 → CAM 5 (the west side), then into your office.
+// It picks a side each time it leaves the dining hall (see updateCrawler in game.js).
 // Click it on the camera it's on to push it back ONE camera; follow it there and keep clicking
 // until it's home on CAM 7. If it reaches your office, click it there before time runs out.
-// Its interval was 12.0; it was doubled because the Crawler was the deadliest threat on Total Nightmare.
-const CRAWLER = { id: 'crw', sym: 'Ж', name: 'Crawler', door: 'Crawls from CAM 7 to your office', path: 'CAM 7 → Supply → East hall → office. Click it on camera to push it back one room',
-  interval: 24.0 / PACE, route: ['prize', 'supply', 'ehall', 'office'],
+// Its interval was 12.0; it was doubled because the Crawler was the deadliest threat on Total Nightmare,
+// then raised to 30.0 so Absolute Nightmare could be beaten.
+const CRAWLER = { id: 'crw', sym: 'Ж', name: 'Crawler', door: 'Crawls from CAM 7 to your office', path: 'CAM 7 → Stage → Dining → Supply → East hall, or Backstage → West hall → office. Click it on camera to push it back one room',
+  interval: 30.0 / PACE,
+  routes: [['prize', 'stage', 'dining', 'supply', 'ehall', 'office'],
+           ['prize', 'stage', 'dining', 'backstage', 'whall', 'office']],
   mod: { name: 'Stubborn', desc: 'Takes two clicks to push it back each room' } };
 
 // The Flicker ¤ turns up at a door (you hear it buzz). A short flash of that door's light makes it
@@ -101,70 +107,204 @@ const VISITOR = { id: 'vis', sym: 'Ψ', name: 'Visitor', door: 'Appears in your 
   // (no interval: the Visitor uses its own random appearance timer, visitorWait in config.js)
   mod: { name: 'Double take', desc: 'Sometimes it only pretends to leave and comes straight back. A fake exit rises at the end: keep the mask on' } };
 
+// ---------- the vents (the monitor's VENTS tab) ----------
+// Six vent rooms between the far end of the building and your office. `next` lists the rooms each
+// one connects to, and `dist` is how many moves it is from your office (V6 opens into it).
+// The VENTS tab draws them like this (see ventLines in art.js):
+//     V1 = V2 = V3
+//     |    |    |
+//     V4 = V5 = V6 => YOU
+const VENTS = {
+  v1: { name: 'V1', next: ['v2', 'v4'], dist: 4 },
+  v2: { name: 'V2', next: ['v1', 'v3', 'v5'], dist: 3 },
+  v3: { name: 'V3', next: ['v2', 'v6'], dist: 2 },
+  v4: { name: 'V4', next: ['v1', 'v5'], dist: 3 },
+  v5: { name: 'V5', next: ['v4', 'v2', 'v6'], dist: 2 },
+  v6: { name: 'V6', next: ['v3', 'v5'], dist: 1 },
+};
+const VENT_ORDER = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'];   // keys 1 to 6 on the VENTS tab
+
+// The two vent crawlers both start in V1 and creep one vent closer at a time. From V6, their next
+// move is out of the vent and into your office. You push them back with AUDIO LURES: click a vent
+// room on the VENTS tab to play a sound there (free, but it needs a moment to recharge).
+//   Ξ Echo goes to a lure played in its room or a room next to it.
+//   § Slink goes to a lure in a room next to it, but a lure in its OWN room startles it one vent closer.
+// `vent: true` marks a vent crawler; `how` is what the game over screen says it did.
+const ECHO = { id: 'ech', sym: 'Ξ', name: 'Echo', door: 'Crawls through the vents', path: 'Watch it on the VENTS tab. Play a lure in or next to its room to pull it there',
+  vent: true, how: 'crawled out of the vent',
+  interval: 17.0 / PACE,   // (was 11.0, then 13.0; eased)
+  mod: { name: 'Wise', desc: 'Ignores a lure in the same room it just followed one to. Switch rooms' } };
+const SLINK = { id: 'slk', sym: '§', name: 'Slink', door: 'Crawls through the vents', path: 'Lure a room NEXT to it. A lure in its own room startles it one vent closer',
+  vent: true, how: 'crawled out of the vent',
+  interval: 18.0 / PACE,   // (was 12.0, then 14.0; eased)
+  mod: { name: 'Quick', desc: 'Moves 1.5 times as often while you are not looking at the VENTS tab' } };
+
+// The Peeker ¥ is a second mask threat. Unlike Ψ it can turn up at ANY time, even while the monitor
+// is up (then you have to drop the monitor first), but a short moment in the mask sends it away.
+const PEEKER = { id: 'pek', sym: '¥', name: 'Peeker', door: 'Peeks in, any time', path: 'Heard a sharp ting? Drop the monitor and put the mask on (a second is enough)',
+  // (no interval: like Ψ it uses its own random appearance timer, peekerWait in config.js)
+  mod: { name: 'Double', desc: 'Always comes back once more right after leaving: keep the mask on' } };
+
+// The Spammer © floods the monitor with ads while it's up. Close each ad with its [X];
+// ADS_MAX ads open at once crashes the system, and that's the end of you.
+const SPAMMER = { id: 'spm', sym: '©', name: 'Spammer', door: 'Pops up ads on your monitor', path: 'Close each ad with its [X]. Too many open at once crashes the system',
+  how: 'crashed your system',
+  interval: 8.0 / PACE,   // (was 6.0, eased for Absolute Nightmare)
+  mod: { name: 'Sneaky', desc: 'The [X] can be in any corner of the ad, not just the top right' } };
+
 // Everything that gets a level on the custom night screen, in order.
 // levels[0] is the Diamond's level, levels[3] is Lenny's, and so on.
 // The "..." spreads the CREATURES list out, so SETUP is
-// [Diamond, Triangle, Orb, Lenny, Square, Smiley, Crawler, Flicker, Visitor].
+// [Diamond, Triangle, Orb, Lenny, Square, Smiley, Crawler, Flicker, Visitor, Echo, Slink, Peeker, Spammer].
 // New threats go at the END, so levels saved by older versions still line up.
-const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR];
+const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR, ECHO, SLINK, PEEKER, SPAMMER];
+
+// ---------- modes ----------
+// Every night is played in one of three modes, picked on the custom night screen (or by a challenge).
+//   standard   the normal night: start with 100% power, survive until 6 AM
+//   generator  start with 0% power; hold the generator to charge, but while you hold it both doors
+//              open and you can't do anything else. Survive until 6 AM. Running dry isn't instant
+//              death here, everything just switches off until you charge again.
+//   tasks      finish every task on the monitor's TASKS tab to win (6 AM doesn't matter). A task only
+//              progresses while you stay on that tab, so lowering the monitor pauses it.
+const MODES = {
+  standard:  { name: 'Standard',  desc: 'Start with 100% power. Survive until 6 AM.' },
+  generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Survive until 6 AM.' },
+  tasks:     { name: 'Tasks',     desc: 'Finish every task on the monitor\'s TASKS tab to win. A task only fills while you stay on that tab.' },
+};
+const MODE_ORDER = ['standard', 'generator', 'tasks'];
+
+// Tasks mode: the jobs on the TASKS tab. Each night picks TASK_COUNT of them (config.js).
+const TASK_NAMES = [
+  'Reboot the cameras', 'Defrag the vent fans', 'Print the night report', 'Scan for viruses',
+  'Reset the door motors', 'Update the clock', 'Calibrate the mask', 'Order more pizza',
+  'Clean the keyboard', 'Back up the music box', 'Test the alarm', 'Count the animatronics',
+];
+
+// The Spammer's ads: what they say (one is picked at random for each).
+const AD_TEXT = [
+  'YOU ARE THE 1,000,000th NIGHT GUARD!', 'FREE POWER!!! (not really)', 'DOWNLOAD MORE RAM NOW',
+  'HOT PIZZA IN YOUR AREA', 'CONGRATULATIONS, YOU WON A ... MASK?', 'CLICK HERE FOR A FREE MUSIC BOX',
+  'DOCTORS HATE THIS ONE DOOR TRICK', 'YOUR VENTS ARE 87% INFECTED',
+];
 
 // Ready-made challenges for the custom night screen. Each one sets every level
-// (in SETUP order: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ) and which modifiers are ticked (by id).
+// (in SETUP order: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ Ξ § ¥ ©), which modifiers are ticked (by id), and its
+// `mode` (a challenge without one is a Standard night). The custom night screen shows them in
+// three groups, one per mode.
 // "6/20" is the first six threats at level 20 with no modifiers (like FNAF's 4/20 mode), and
-// Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with all nine
-// (Total Nightmare is the maximum: every level 20 and every modifier, 225 points).
-// Challenges written before Ж ¤ Ψ existed list only six levels; the rest are padded in as 0 (off) below.
+// Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with the
+// first nine. "13/20" and "Absolute Nightmare" are the same with all thirteen; Absolute Nightmare
+// (every threat at 20, every modifier, 325 points) is the maximum, in every mode.
+// Short `levels` lists are padded with 0 (off) below, so old challenges keep working.
 //
-// `bot` is how many of 500 nights a test bot survived (reacting after about a second, one action
-// at a time). The list is SORTED by it below: the most wins first. Challenges that tied have a
-// list instead, [normal bot, then 5 slower bots]: each slower bot has the same reactions but moves
-// its "cursor" more slowly and plays worse, and the first one that tells them apart decides the
-// order. Warm-up is always first. If you retest a challenge, just change its numbers.
+// `tries` is how many attempts a NOVICE needed to beat the challenge, on average. The novices are
+// test bots that play like a new player who has only read How to play: no muscle memory (slow,
+// uneven reactions of 1.5 to 2.3 seconds), a slow hand (a second between actions), and only the
+// strategy the help text teaches, but they LEARN: every loss makes them a little quicker, and they
+// learn to watch for whatever got them. 40 of them each retried a challenge until they won, giving up
+// after 60 tries (so 60 means "they never won"). The list is SORTED by it below: fewest
+// tries first. A few challenges have fixed places (see PINNED below). If you retest a challenge,
+// just change its number.
+//
+// `v` is the challenge's VERSION. Your ✓ is saved together with it, so raising a challenge's `v`
+// takes away its ✓ and you have to beat it again. Raise it whenever a challenge gets harder, either
+// itself or because a threat in it got stronger. (Every `v` went to 2 when the Crawler's route
+// changed: all ✓ were reset then, on request.)
 const PRESETS = [
-  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],                   mods: [],                                           bot: [500, 500, 500, 500, 500, 500] },
-  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'],                               bot: [500, 500, 500, 460, 352, 289] },
-  { name: 'Face off',        levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'],                               bot: [500, 500, 500, 497, 411, 307] },
-  { name: 'Masquerade',      levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'],                                      bot: [500, 497, 478, 469, 258, 300] },
-  { name: 'Strobe',          levels: [0, 10, 0, 8, 14, 0, 0, 20, 0],      mods: ['flk'],                                      bot: [500, 500, 500, 498, 485, 493] },
-  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'],                                      bot: [500, 487, 458, 318, 173, 106] },
-  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'],                                      bot: [500, 500, 500, 500, 481, 493] },
-  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'],                                      bot: [500, 500, 498, 493, 356, 442] },
-  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'],                                      bot: [500, 500, 500, 491, 353, 377] },
-  { name: 'Night crawlers',  levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'],                               bot: [500, 500, 500, 500, 249, 153] },
-  { name: 'Crawl space',     levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'],                                      bot: [500, 500, 500, 500, 406, 328] },
-  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 bot: [500, 500, 500, 453, 127, 104] },
-  { name: 'Waiting game',    levels: [10, 10, 20, 0, 12, 8, 0, 8, 0],     mods: ['orb', 'smi'],                               bot: [500, 500, 496, 457, 243, 188] },
-  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      bot: [500, 500, 500, 490, 258, 143] },
-  { name: 'Channel surfing', levels: [14, 0, 0, 16, 0, 10, 14, 0, 0],     mods: ['len', 'crw'],                               bot: [500, 500, 500, 498, 295, 135] },
-  { name: 'Mixed bag',       levels: [10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                        bot: 499 },
-  { name: 'New faces',       levels: [0, 0, 0, 0, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        bot: [500, 500, 500, 500, 370, 246] },
-  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                               bot: 418 },
-  { name: 'Light show',      levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               bot: 331 },
-  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        bot: 497 },
-  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           bot: 489 },
-  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'],   bot: 477 },
-  { name: '9/20',            levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                           bot: 429 },
-  { name: 'Total Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'], bot: 52 },
+  { name: 'Warm-up',         v: 2, levels: [4, 4, 3, 3, 0, 0],                   mods: [],                                           tries: 1 },
+  { name: 'Hide & seek',     v: 4, levels: [0, 0, 10, 10, 10, 18],               mods: ['orb', 'len', 'smi'],                        tries: 1.02 },
+  { name: 'Face off',        v: 2, levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'],                               tries: 1 },
+  { name: 'Masquerade',      v: 3, levels: [0, 0, 12, 8, 0, 16, 0, 0, 20, 0, 0, 10, 0],   mods: ['vis'],                                      tries: 1.18 },
+  { name: 'Strobe',          v: 2, levels: [0, 10, 0, 8, 14, 0, 0, 20, 0],      mods: ['flk'],                                      tries: 1 },
+  { name: 'Double trouble',  v: 2, levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'],                                      tries: 1.27 },
+  { name: 'Lights out',      v: 2, levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'],                                      tries: 1 },
+  { name: 'Prank call',      v: 2, levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'],                                      tries: 1.13 },
+  { name: "Don't blink",     v: 2, levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'],                                      tries: 1.23 },
+  { name: 'Night crawlers',  v: 2, levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'],                               tries: 1.02 },
+  { name: 'Crawl space',     v: 3, levels: [8, 0, 0, 10, 0, 0, 18, 0, 0, 8, 0, 0, 0],    mods: ['crw'],                                      tries: 1 },
+  { name: 'Shape party',     v: 2, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 tries: 1.05 },
+  { name: 'Waiting game',    v: 2, levels: [10, 10, 20, 0, 12, 8, 0, 8, 0],     mods: ['orb', 'smi'],                               tries: 1.1 },
+  { name: 'Music lover',     v: 3, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      tries: 1 },
+  { name: 'Channel surfing', v: 4, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0, 0, 0, 0, 10], mods: ['len', 'crw'],                               tries: 1.08 },
+  { name: 'Mixed bag',       v: 3, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                tries: 4.78 },
+  { name: 'New faces',       v: 2, levels: [0, 0, 0, 0, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        tries: 1 },
+  { name: 'Graveyard shift', v: 4, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                       tries: 8.63 },
+  { name: 'Light show',      v: 2, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               tries: 1.7 },
+  { name: 'Overtime',        v: 3, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        tries: 3.1 },
+  { name: '6/20',            v: 2, levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           tries: 2.6 },
+  { name: 'Nightmare',       v: 3, levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'],   tries: 5.3 },
+  { name: '9/20',            v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                           tries: 6.18 },
+  { name: 'Total Nightmare', v: 3, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'], tries: 21.6 },
+
+  // ---- the vents, ¥ and © drop (Standard) ----
+  // In SETUP order: ◆  ▲  ●  Len ■  (:  Ж  ¤  Ψ  Ξ  §  ¥  ©
+  { name: 'Ventilation',     levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.78 },
+  { name: 'Peekaboo',        levels: [0, 0, 0, 0, 0, 10, 0, 0, 12, 0, 0, 18, 0],    mods: ['pek'],                                      tries: 1 },
+  { name: 'Pop-up panic',    levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
+  { name: 'Crowded vents',   levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
+  { name: 'Fresh meat',      levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 5.43 },
+  { name: '13/20',           levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 16.18 },
+  { name: 'Absolute Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 60 },
+
+  // ---- Generator mode ----
+  { name: 'Power plant',     v: 2, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
+  { name: 'Brownout',        v: 2, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.33 },
+  { name: 'Static charge',   v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1 },
+  { name: 'Dead battery',    v: 2, mode: 'generator', levels: [0, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 10],  mods: ['len'],             tries: 1 },
+  { name: 'Overload',        v: 2, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 2.5 },
+  { name: 'Running on fumes', v: 2, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 99 },
+  { name: 'Ghost in the wires', v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 99 },
+  { name: 'Spam generator',  v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 99 },
+  { name: 'Crank it',        v: 2, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 99 },
+  { name: 'Full circuit',    v: 2, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 99 },
+  { name: '13/20 (Generator)', v: 2, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 22.4 },
+  { name: 'Absolute Nightmare (Generator)', v: 2, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
+
+  // ---- Tasks mode ----
+  { name: 'Night school',    mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
+  { name: 'Busy work',       mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
+  { name: 'Multitasking',    mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
+  { name: 'Deadline',        mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.08 },
+  { name: 'Paperwork',       mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 10.43 },
+  { name: 'Inbox zero',      mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 99 },
+  { name: 'Vent duty',       mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 99 },
+  { name: 'Office party',    mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 99 },
+  { name: 'Door duty',       mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 99 },
+  { name: 'Crunch time',     mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 99 },
+  { name: '13/20 (Tasks)',   mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 60 },
+  { name: 'Absolute Nightmare (Tasks)', mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
 ];
-// Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention.
-PRESETS.forEach(p => { while (p.levels.length < SETUP.length) p.levels.push(0); });
+// Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention,
+// and give it a mode: a challenge that doesn't say is a standard night.
+PRESETS.forEach(p => {
+  while (p.levels.length < SETUP.length) p.levels.push(0);
+  p.mode = p.mode || 'standard';
+});
+
+// The name a challenge's ✓ is saved under: its name plus its version, like "Warm-up v2".
+// (Version 1 is saved as just the name, the way ✓ were saved before versions existed.)
+const clearKey = p => (p.v || 1) > 1 ? `${p.name} v${p.v}` : p.name;
 
 // The points a challenge is worth: all its levels, plus MOD_BONUS for each modifier on a switched-on threat.
 const presetPoints = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
 
-// Sort: Warm-up always comes first. After that, most bot wins first. On a tie, the slower bots'
-// wins decide, one bot at a time; if those are all equal too, fewest points first.
+// A few challenges have a fixed place, whatever the bots say: Warm-up is always first, and the
+// Standard list ends with Light show, Total Nightmare and Absolute Nightmare. Light show isn't the
+// hardest, but it teaches a skill (sharing the door lights between ■ and ¤) that the max modes need,
+// so it goes right before them. Each mode's Absolute Nightmare (every threat at 20 with every
+// modifier, the maximum score) is the last of its group. Everything else gets 0 and is sorted by the bots.
+const PINNED = {
+  'Warm-up': -1, 'Light show': 1, 'Total Nightmare': 2, 'Absolute Nightmare': 3,
+  'Absolute Nightmare (Generator)': 3, 'Absolute Nightmare (Tasks)': 3,
+};
+
+// Sort: pinned places first (see PINNED). Then fewest novice tries first; on a tie, fewest points first.
 // sort() takes a compare function that returns a negative number to put `a` first, and a positive
 // number to put `b` first. (If it returns 0, the two keep the order they have above.)
-const botList = p => [].concat(p.bot);   // turns a single number into a list of one, so both kinds work
 function compareChallenges(a, b) {
-  if (a.name === 'Warm-up') return -1;
-  if (b.name === 'Warm-up') return 1;
-  const x = botList(a), y = botList(b);
-  for (let i = 0; i < Math.max(x.length, y.length); i++) {
-    const diff = (y[i] ?? 0) - (x[i] ?? 0);   // `?? 0` stands in for a missing number
-    if (diff) return diff;
-  }
-  return presetPoints(a) - presetPoints(b);
+  const pin = (PINNED[a.name] ?? 0) - (PINNED[b.name] ?? 0);
+  if (pin) return pin;
+  return (a.tries - b.tries) || (presetPoints(a) - presetPoints(b));
 }
 PRESETS.sort(compareChallenges);

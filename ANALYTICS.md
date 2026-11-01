@@ -73,7 +73,7 @@ Every event also carries `player_id` and `night_number` when the player has allo
 | Event | When | Details |
 |---|---|---|
 | `night_start` | a night begins | `score`, `levels` (`"5,5,5,5,5,5,5,5,5"` in ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ order), `mods` (ids like `dia,sqr`), `challenge` (name, or `custom`) |
-| `death` | something got you | the above plus `killer` (`dia` `tri` `orb` `len` `sqr` `smi` `crw` `flk` `vis`), `side` (`L`, `R` or `office`), `hour` (0–5), `seconds`, `power`, `power_out` (`yes`/`no`) |
+| `death` | something got you | the above plus `killer` (`dia` `tri` `orb` `len` `sqr` `smi` `crw` `flk` `vis` `ech` `slk` `pek` `spm`), `side` (`L`, `R` or `office`; the vent crawlers, ¥ and © count as `office`), `hour` (0–5; a long Tasks night can reach 6), `seconds`, `power`, `power_out` (`yes`/`no`) |
 | `night_win` | 6 AM reached | `score`, `levels`, `mods`, `challenge`, `seconds`, `power`, `is_best` |
 | `challenge_complete` | a win that matches a challenge | `challenge`, `first_time`, `attempts` (tries at that challenge on this device) |
 | `night_quit` | "Quit to setup" mid-night | same details as `night_start` plus `seconds` |

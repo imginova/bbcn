@@ -1,6 +1,6 @@
 # Bare Bones Custom Night
 
-A survival game in the style of Five Nights at Freddy's, drawn with ASCII art. You guard a security office from 12 AM to 6 AM: shut the doors, check the door lights, watch the cameras, wind Lenny's music box, catch the hiding (:, chase Ж back to CAM 7, flash ¤ away, wear the mask for Ψ and make your power last.
+A survival game in the style of Five Nights at Freddy's, drawn with ASCII art. You guard a security office from 12 AM to 6 AM: shut the doors, check the door lights, watch the cameras, wind Lenny's music box, catch the hiding (:, chase Ж back to CAM 7, flash ¤ away, wear the mask for Ψ and ¥, lure Ξ and § away through the vents, close ©'s pop-up ads and make your power last. Play a Standard night, a Generator night (start empty and charge by hand) or a Tasks night (finish the jobs on your monitor).
 
 **Play it:** https://imginova.github.io/bbcn/ (the public website), or double-click `index.html` to open it in your browser, or use the private shared link: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG
 
@@ -17,7 +17,7 @@ Each file has one job. Every file starts with a comment explaining that job, and
 | `js/helpers.js` | Tiny tools every file uses: `$` to find things on the page, `store` to save things, `pick` for a random choice. |
 | `js/analytics.js` | Counts how the game is going with Google Analytics (public website only) and shows the privacy banner where the law needs one. |
 | `js/config.js` | **The numbers you can tweak**: night length, power drain, how difficulty levels work. |
-| `js/data.js` | **What exists**: the rooms, the cameras, the nine threats with their routes and ★ modifiers, and the challenge presets. |
+| `js/data.js` | **What exists**: the rooms, the cameras, the thirteen threats with their routes and ★ modifiers, the vent map, the three modes, and the challenge presets. |
 | `js/sound.js` | Every sound effect, built in code from notes and noise (there are no sound files). |
 | `js/art.js` | The ASCII pictures, and the tools that draw shapes into them. |
 | `js/game.js` | **The rules**: moving, doors, power, the music box, winning and losing. |

@@ -49,7 +49,7 @@
       <p class="eyebrow">Overnight guard post · 12 AM to 6 AM</p>
       <h1>BARE BONES CUSTOM NIGHT</h1>
       <p class="tag">Six hours, two doors, two lights, one mask, one battery. Four shapes wander this building after closing, something waits in the music box, something likes to hide, and three stranger things have moved in.</p>
-      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="sym s-sqr">■</span><span class="face">( ͡° ͜ʖ ͡°)</span><span class="smi-face s-smi">(:</span><span class="sym s-crw">Ж</span><span class="sym s-flk">¤</span><span class="sym s-vis">Ψ</span></p>
+      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="sym s-sqr">■</span><span class="face">( ͡° ͜ʖ ͡°)</span><span class="smi-face s-smi">(:</span><span class="sym s-crw">Ж</span><span class="sym s-flk">¤</span><span class="sym s-vis">Ψ</span><span class="sym s-ech">Ξ</span><span class="sym s-slk">§</span><span class="sym s-pek">¥</span><span class="sym s-spm">©</span></p>
       <div class="menu">
         <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
         <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
@@ -63,6 +63,14 @@
       <h2>CUSTOM NIGHT</h2>
       <p class="sub">Set each one from level 0 to 20. Level 0 switches it off for the night. Shapes at 1 barely move; at 20 they move at every chance and give you less time at the door. Lenny's level sets how fast his music box unwinds, and Smiley's sets how often it wakes up. Tick ★ to add a threat's special modifier (+5 to your score), or try a ready-made challenge.</p>
       <div class="rows" id="rows"></div>
+      <!-- The mode picker (see MODES in data.js). Picking a challenge sets the mode too. -->
+      <div class="modes" id="modes">
+        <span class="lab">Mode</span>
+        <button type="button" data-mode="standard">Standard</button>
+        <button type="button" data-mode="generator">Generator</button>
+        <button type="button" data-mode="tasks">Tasks</button>
+        <span class="dim" id="modeDesc"></span>
+      </div>
       <div class="presets" id="presets"></div>
       <p class="score" id="scoreLine"></p>
       <div class="setup-actions">
@@ -89,25 +97,46 @@
           <pre class="art" id="officeArt" aria-hidden="true"></pre>
           <pre class="art" id="doorR" data-door="R" aria-label="Right door"></pre>
         </div>
+        <!-- THE MONITOR: raised with the Camera button. Its tabs switch between its systems:
+             CAMS (the cameras and their map) and VENTS (the vent map, only when a vent crawler is on). -->
         <div class="cams" id="cams" hidden>
-          <div class="feed">
-            <div class="feed-head"><span id="feedName">CAM 1 · STAGE</span><span class="rec">REC</span></div>
-            <pre class="art" id="feed"></pre>
-            <div class="wind" id="wind" hidden>
-              <span class="bars" id="windBar"></span>
-              <button id="btnWind" type="button">Hold to wind <kbd>W</kbd></button>
+          <div class="tabs" id="tabs">
+            <button type="button" data-tab="cams">Cams <kbd>C</kbd></button>
+            <button type="button" data-tab="vents" id="tabVents">Vents <kbd>V</kbd></button>
+            <button type="button" data-tab="tasks" id="tabTasks">Tasks <kbd>T</kbd></button>
+          </div>
+          <div class="cam-pane" id="camPane">
+            <div class="feed">
+              <div class="feed-head"><span id="feedName">CAM 1 · STAGE</span><span class="rec">REC</span></div>
+              <pre class="art" id="feed"></pre>
+              <div class="wind" id="wind" hidden>
+                <span class="bars" id="windBar"></span>
+                <button id="btnWind" type="button">Hold to wind <kbd>W</kbd></button>
+              </div>
+            </div>
+            <div class="map" id="map">
+              <button type="button" data-room="stage" style="grid-area:stage">CAM 1<br>Stage</button>
+              <button type="button" data-room="prize" id="camPrize" style="grid-area:prize">CAM 7<br>Prize corner</button>
+              <button type="button" data-room="backstage" style="grid-area:backstage">CAM 3<br>Backstage</button>
+              <button type="button" data-room="dining" style="grid-area:dining">CAM 2<br>Dining</button>
+              <button type="button" data-room="supply" style="grid-area:supply">CAM 4<br>Supply</button>
+              <button type="button" data-room="whall" style="grid-area:whall">CAM 5<br>West hall</button>
+              <span class="you">YOU</span>
+              <button type="button" data-room="ehall" style="grid-area:ehall">CAM 6<br>East hall</button>
             </div>
           </div>
-          <div class="map" id="map">
-            <button type="button" data-room="stage" style="grid-area:stage">CAM 1<br>Stage</button>
-            <button type="button" data-room="prize" id="camPrize" style="grid-area:prize">CAM 7<br>Prize corner</button>
-            <button type="button" data-room="backstage" style="grid-area:backstage">CAM 3<br>Backstage</button>
-            <button type="button" data-room="dining" style="grid-area:dining">CAM 2<br>Dining</button>
-            <button type="button" data-room="supply" style="grid-area:supply">CAM 4<br>Supply</button>
-            <button type="button" data-room="whall" style="grid-area:whall">CAM 5<br>West hall</button>
-            <span class="you">YOU</span>
-            <button type="button" data-room="ehall" style="grid-area:ehall">CAM 6<br>East hall</button>
+          <!-- The vent map (drawn by ventGrid in art.js). Click a vent room to play an audio lure there. -->
+          <div class="feed" id="ventPane" hidden>
+            <div class="feed-head"><span>VENTS · click a room to play a lure</span><span id="lureState">LURE READY</span></div>
+            <pre class="art" id="ventMap"></pre>
           </div>
+          <!-- Tasks mode: the task list. Pick one and its bar fills while you stay on this tab. -->
+          <div class="feed tasks" id="taskPane" hidden>
+            <div class="feed-head"><span>TASKS · pick one, then stay on this tab</span><span id="taskCount"></span></div>
+            <div class="task-list" id="taskList"></div>
+          </div>
+          <!-- © Spammer's ads pop up here, on top of whatever tab is showing (see renderAds in render.js). -->
+          <div class="ads" id="ads"></div>
         </div>
         <!-- The mask: covers the whole view except two eye holes. An SVG is a drawing made of shapes;
              "evenodd" means the two ovals are cut OUT of the big rectangle, leaving holes.
@@ -126,8 +155,10 @@
         <button id="btnLightL" type="button" class="light"><span>Left light<kbd>Q</kbd></span><span class="state" id="stLightL">HOLD</span></button>
         <button id="btnMask" type="button"><span>Mask<kbd>W</kbd></span><span class="state" id="stMask">OFF</span></button>
         <button id="btnLightR" type="button" class="light"><span>Right light<kbd>E</kbd></span><span class="state" id="stLightR">HOLD</span></button>
+        <!-- Generator mode only: hold to charge (both doors open while you do). -->
+        <button id="btnGen" type="button" class="light gen" hidden><span>Generator<kbd>G</kbd></span><span class="state" id="stGen">HOLD TO CHARGE</span></button>
       </div>
-      <p class="keys hint">1–7 jump to a camera · hold Q / E for the door lights · W: mask in the office, hold to wind on CAM 7 · P pauses · M toggles sound</p>
+      <p class="keys hint">1–7 jump to a camera · C / V switch the monitor's tabs (on VENTS, 1–6 play a lure) · hold Q / E for the door lights · W: mask in the office, hold to wind on CAM 7 · P pauses · M toggles sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -142,7 +173,7 @@
     <!-- WIN -->
     <section id="scr-win" class="endcard" hidden>
       <p class="eyebrow">Shift complete</p>
-      <div class="big">6:00 AM</div>
+      <div class="big" id="winBig">6:00 AM</div>
       <p id="winMsg">You kept them out until morning.</p>
       <div class="lvls" id="winLevels"></div>
       <p class="best" id="winBest"></p>
@@ -190,10 +221,14 @@
       <li><span class="face">( ͡° ͜ʖ ͡°)</span> sleeps in the music box on CAM 7. The box slowly unwinds; hold W (or the Wind button) while watching CAM 7 to wind it back up. When it gets low, the Camera button warns you. If it runs out, he comes for you and nothing can stop him.</li>
       <li><span class="sym s-sqr">■</span> creeps up to either door in three steps: far, medium, close. One more step and it gets you, and doors don't stop it. You hear a loud scrape when it gets close. Hold a door light (Q or E) to see it; keep holding and it gets pushed further back. A shut door blocks the light. From far away it may sneak over to the other door.</li>
       <li><span class="smi-face s-smi">(:</span> hides in your office. If you hear a giggle (often right after lowering the camera, but it can wake up on its own too), find (: somewhere in the office and click it quickly.</li>
-      <li><span class="sym s-crw">Ж</span> crawls from CAM 7 through Supply and the East hall to your office. Click it on the camera it's on to push it back one room, then follow it and keep clicking until it's home on CAM 7. If it reaches your office, click it there quickly.</li>
+      <li><span class="sym s-crw">Ж</span> crawls from CAM 7 across the Stage and the Dining hall, then down either the east side (Supply, East hall) or the west side (Backstage, West hall) to your office. Click it on the camera it's on to push it back one room, then follow it and keep clicking until it's home on CAM 7. If it reaches your office, click it there quickly.</li>
       <li><span class="sym s-flk">¤</span> buzzes at one of your doors. Flash that door's light for a moment and it jumps to the other door; flash it there too and it leaves. Doors don't stop it, and a shut door blocks the light.</li>
       <li><span class="sym s-vis">Ψ</span> appears right in your office. Put the mask on (W, or the Mask button) and keep it on until it leaves. The mask covers your view except for two eye holes, and you can't use the cameras with it on, but doors, lights and clicking through the eye holes all still work.</li>
-      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Flinch lunges a step closer (up to close) if you let go of the light before it's gone; (: Twins hides two at once; Ж Stubborn takes two clicks per room; ¤ Ping-pong needs a third flash; Ψ Double take sometimes fakes leaving (the fake exit sound rises at the end) and comes right back.</li>
+      <li><span class="sym s-ech">Ξ</span> and <span class="sym s-slk">§</span> crawl through the vents toward your office. Watch them on the monitor's VENTS tab (V) and click a vent room to play an audio lure there (lures need no power, but take a moment to recharge). Ξ goes to a lure in its room or the room next to it. § only follows a lure in a room next to it: a lure in its own room startles it one vent closer! A loud bang means one has reached V6, right next to you: you have a few seconds to lure it away before its next move gets you.</li>
+      <li><span class="sym s-pek">¥</span> can peek in at any time, even while the monitor is up: listen for a sharp ting. Drop the monitor and put the mask on; about a second is enough to send it away.</li>
+      <li><span class="sym s-spm">©</span> pops up ads on your monitor while it's up. Close each one with its [X]. If four are open at once, the system crashes and it gets you.</li>
+      <li><b>Modes</b> (picked on the custom night screen): <b>Standard</b> is the normal night. In <b>Generator</b> you start with 0% power: hold G (or the Generator button) to charge, but while you hold it both doors fly open and you can't do anything else. At 0% everything just switches off until you charge again. In <b>Tasks</b> you win by finishing every task on the monitor's TASKS tab (T): pick one and it fills while you stay on that tab; lowering the monitor or switching tabs pauses it.</li>
+      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Flinch lunges a step closer (up to close) if you let go of the light before it's gone; (: Twins hides two at once; Ж Stubborn takes two clicks per room; ¤ Ping-pong needs a third flash; Ψ Double take sometimes fakes leaving (the fake exit sound rises at the end) and comes right back; Ξ Wise ignores a lure in the room it just followed one to; § Quick moves 1.5 times as often while you're not looking at the VENTS tab; ¥ Double always comes back once more right after leaving; © Sneaky can put an ad's [X] in any corner.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
       <li>Doors, door lights and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>
@@ -206,6 +241,11 @@
         <tr><td>Mask</td><td>W in the office, or the Mask button (not while on the cameras)</td></tr>
         <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Pick a camera</td><td>1 to 7, or click a room on the map</td></tr>
+        <tr><td>Monitor tabs</td><td>C for the cameras, V for the vents (or click the tabs)</td></tr>
+        <tr><td>Audio lure</td><td>On the VENTS tab: click a vent room, or press 1 to 6</td></tr>
+        <tr><td>Close an ad</td><td>Click its [X]</td></tr>
+        <tr><td>Generator (Generator mode)</td><td>Hold G, or hold the Generator button</td></tr>
+        <tr><td>Tasks (Tasks mode)</td><td>T opens the TASKS tab; click a task or press 1 to 8</td></tr>
         <tr><td>Wind the music box</td><td>Hold W (on the cameras), or hold the Wind button, while on CAM 7 (or wherever the box wandered)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>
