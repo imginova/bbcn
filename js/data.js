@@ -72,7 +72,7 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // then 15.0 to make every threat a bit easier.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
   interval: 15.0 / PACE,
-  mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer. Once you start lighting it, finish' } };
+  mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer (up to close). Once you start lighting it, finish' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
 // then you have a few seconds to find (: in the office and click it (see updateSmiley in game.js).
@@ -126,10 +126,10 @@ const PRESETS = [
   { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8],                  mods: ['len'] },
   { name: 'Crawl space',     levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'] },
   { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'] },
+  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
   { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12],             mods: ['len', 'sqr'] },
   { name: 'New faces',       levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'] },
   { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16],             mods: ['dia', 'len', 'smi'] },
-  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
   { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],             mods: [] },
   { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
   { name: '9/20',            levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [] },

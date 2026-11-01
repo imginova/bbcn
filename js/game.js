@@ -376,11 +376,10 @@ function updateSquare(dt) {
   const S = G.square;
   const lit = S.stage > 0 && lightOn(S.side);
 
-  // ■ Flinch: if the light WAS on it and now isn't (you let go, shut that door or raised the
-  // camera) while it's still at your door, it lunges one step closer. From close, that gets you.
-  if (modOn('sqr') && S.wasLit && !lit && S.stage > 0) {
-    S.wasLit = false;
-    if (S.stage === 3) { lose(SQUARE, S.side); return; }
+  // ■ Flinch: if the light WAS on it and you take it off (let go of the light or raise the camera)
+  // while it's still at your door, it lunges one step closer, but never past close, so a flinch
+  // can't kill you by itself. Shutting that door doesn't count: you may need to, to stop another shape.
+  if (modOn('sqr') && S.wasLit && !lit && S.stage > 0 && S.stage < 3 && !G.doors[S.side]) {
     S.stage++;
     sfx.lunge(S.side);
     if (S.stage === 3) sfx.creep(S.side);
