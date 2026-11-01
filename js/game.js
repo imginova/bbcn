@@ -472,7 +472,7 @@ function catchSmiley(i = 0) {
 
 // ---------- Ж Crawler ----------
 // It crawls one room at a time along CRAWLER.route (CAM 7 → Supply → East hall → your office).
-// In your office it gets you after reactWindow(level) seconds unless you click it (see pushCrawler).
+// In your office it gets you after crawlerWindow(level) seconds unless you click it (see pushCrawler).
 function updateCrawler(dt) {
   const C = G.crawler;
   const office = CRAWLER.route.length - 1;
@@ -489,7 +489,7 @@ function updateCrawler(dt) {
   C.step++;
   C.hits = 0;
   if (C.step === office) {
-    C.deadline = G.t + reactWindow(C.level);
+    C.deadline = G.t + crawlerWindow(C.level);
     sfx.crawlIn();
   } else {
     sfx.crawl(C.step / office);   // skittering, louder the closer it gets

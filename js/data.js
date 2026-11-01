@@ -69,9 +69,9 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // after "close" and it gets you. Closed doors don't stop it; only the door LIGHT pushes it back,
 // and the longer you hold the light on it, the further back it goes (see updateSquare in game.js).
 // interval works like the shapes' above. It was 6.0, then 12.0 because the square felt too fast,
-// then 15.0 to make every threat a bit easier.
+// then 15.0 to make every threat a bit easier, then 18.0 so Total Nightmare could be beaten.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
-  interval: 15.0 / PACE,
+  interval: 18.0 / PACE,
   mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer (up to close). Once you start lighting it, finish' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
@@ -84,8 +84,9 @@ const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your offi
 // The Crawler Ж crawls from the prize corner to your office: CAM 7 → CAM 4 → CAM 6 → office.
 // Click it on the camera it's on to push it back ONE camera; follow it there and keep clicking
 // until it's home on CAM 7. If it reaches your office, click it there before time runs out.
+// Its interval was 12.0; it was doubled because the Crawler was the deadliest threat on Total Nightmare.
 const CRAWLER = { id: 'crw', sym: 'Ж', name: 'Crawler', door: 'Crawls from CAM 7 to your office', path: 'CAM 7 → Supply → East hall → office. Click it on camera to push it back one room',
-  interval: 12.0 / PACE, route: ['prize', 'supply', 'ehall', 'office'],
+  interval: 24.0 / PACE, route: ['prize', 'supply', 'ehall', 'office'],
   mod: { name: 'Stubborn', desc: 'Takes two clicks to push it back each room' } };
 
 // The Flicker ¤ turns up at a door (you hear it buzz). A short flash of that door's light makes it
@@ -109,31 +110,46 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR];
 
 // Ready-made challenges for the custom night screen. Each one sets every level
 // (in SETUP order: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ) and which modifiers are ticked (by id).
-// They're in order from easiest to hardest, measured by a bot playing each one many times.
-// Every ★ modifier shows up in at least one challenge before the last one, so you can practise it.
 // "6/20" is the first six threats at level 20 with no modifiers (like FNAF's 4/20 mode), and
-// Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with all nine.
+// Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with all nine
+// (Total Nightmare is the maximum: every level 20 and every modifier, 225 points).
 // Challenges written before Ж ¤ Ψ existed list only six levels; the rest are padded in as 0 (off) below.
+//
+// `bot` is how many of 500 nights a test bot survived (reacting after about a second, one action
+// at a time). The list is SORTED by it below: the most wins first, and on a tie, the fewest points
+// first. So if you retest a challenge, just change its number and the order updates itself.
 const PRESETS = [
-  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],                   mods: [] },
-  { name: 'Masquerade',      levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'] },
-  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'] },
-  { name: 'Strobe',          levels: [0, 10, 0, 0, 14, 0, 0, 20, 0],      mods: ['flk'] },
-  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20],                mods: ['smi'] },
-  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'] },
-  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'] },
-  { name: 'Waiting game',    levels: [10, 10, 20, 6, 12, 0],               mods: ['orb'] },
-  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8],                  mods: ['len'] },
-  { name: 'Crawl space',     levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'] },
-  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'] },
-  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
-  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12],             mods: ['len', 'sqr'] },
-  { name: 'New faces',       levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'] },
-  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16],             mods: ['dia', 'len', 'smi'] },
-  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],             mods: [] },
-  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
-  { name: '9/20',            levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [] },
-  { name: 'Total Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'] },
+  { name: 'Warm-up',         bot: 500, levels: [4, 4, 3, 3, 0, 0],                   mods: [] },
+  { name: 'Hide & seek',     bot: 500, levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'] },
+  { name: 'Face off',        bot: 500, levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'] },
+  { name: 'Masquerade',      bot: 500, levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'] },
+  { name: 'Strobe',          bot: 500, levels: [0, 10, 0, 0, 14, 0, 0, 20, 0],      mods: ['flk'] },
+  { name: 'Double trouble',  bot: 500, levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'] },
+  { name: 'Lights out',      bot: 500, levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'] },
+  { name: 'Prank call',      bot: 500, levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'] },
+  { name: "Don't blink",     bot: 500, levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'] },
+  { name: 'Night crawlers',  bot: 500, levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'] },
+  { name: 'Crawl space',     bot: 500, levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'] },
+  { name: 'Shape party',     bot: 500, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
+  { name: 'Waiting game',    bot: 500, levels: [10, 10, 20, 6, 12, 0],               mods: ['orb'] },
+  { name: 'Music lover',     bot: 500, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'] },
+  { name: 'Channel surfing', bot: 500, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0],     mods: ['len', 'crw'] },
+  { name: 'Mixed bag',       bot: 499, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'] },
+  { name: 'New faces',       bot: 500, levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'] },
+  { name: 'Graveyard shift', bot: 418, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'] },
+  { name: 'Light show',      bot: 331, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'] },
+  { name: 'Overtime',        bot: 497, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'] },
+  { name: '6/20',            bot: 489, levels: [20, 20, 20, 20, 20, 20],             mods: [] },
+  { name: 'Nightmare',       bot: 477, levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
+  { name: '9/20',            bot: 429, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [] },
+  { name: 'Total Nightmare', bot: 52,  levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'] },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention.
 PRESETS.forEach(p => { while (p.levels.length < SETUP.length) p.levels.push(0); });
+
+// The points a challenge is worth: all its levels, plus MOD_BONUS for each modifier on a switched-on threat.
+const presetPoints = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
+
+// Sort: most bot wins first; on a tie, fewest points first. sort() takes a compare function that
+// returns a negative number to put `a` first. (If both are equal too, they keep the order above.)
+PRESETS.sort((a, b) => (b.bot - a.bot) || (presetPoints(a) - presetPoints(b)));
