@@ -147,7 +147,7 @@ const PEEKER = { id: 'pek', sym: '¥', name: 'Peeker', door: 'Peeks in, any time
 
 // The Spammer © floods the monitor with ads while it's up. Close each ad with its [X];
 // ADS_MAX ads open at once crashes the system, and that's the end of you.
-const SPAMMER = { id: 'spm', sym: '©', name: 'Spammer', door: 'Pops up ads on your monitor', path: 'Close each ad with its [X]. Too many open at once crashes the system',
+const SPAMMER = { id: 'spm', sym: '©', name: 'Spammer', door: 'Pops up ads on your monitor', path: 'Each ad covers your whole monitor until you close it with its [X]. Too many at once crashes the system',
   how: 'crashed your system',
   interval: 8.0 / PACE,   // (was 6.0, eased for Absolute Nightmare)
   mod: { name: 'Sneaky', desc: 'The [X] can be in any corner of the ad, not just the top right' } };
@@ -226,10 +226,10 @@ const PRESETS = [
   { name: 'Shape party',     v: 2, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 tries: 1.05 },
   { name: 'Waiting game',    v: 2, levels: [10, 10, 20, 0, 12, 8, 0, 8, 0],     mods: ['orb', 'smi'],                               tries: 1.1 },
   { name: 'Music lover',     v: 3, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      tries: 1 },
-  { name: 'Channel surfing', v: 4, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0, 0, 0, 0, 10], mods: ['len', 'crw'],                               tries: 1.08 },
-  { name: 'Mixed bag',       v: 3, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                tries: 4.78 },
+  { name: 'Channel surfing', v: 5, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0, 0, 0, 0, 10], mods: ['len', 'crw'],                               tries: 1.08 },
+  { name: 'Mixed bag',       v: 4, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                tries: 4.78 },
   { name: 'New faces',       v: 2, levels: [0, 0, 0, 0, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        tries: 1 },
-  { name: 'Graveyard shift', v: 4, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                       tries: 8.63 },
+  { name: 'Graveyard shift', v: 5, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                       tries: 8.63 },
   { name: 'Light show',      v: 2, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               tries: 1.7 },
   { name: 'Overtime',        v: 3, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        tries: 3.1 },
   { name: '6/20',            v: 2, levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           tries: 2.6 },
@@ -241,39 +241,39 @@ const PRESETS = [
   // In SETUP order: ◆  ▲  ●  Len ■  (:  Ж  ¤  Ψ  Ξ  §  ¥  ©
   { name: 'Ventilation',     levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.78 },
   { name: 'Peekaboo',        levels: [0, 0, 0, 0, 0, 10, 0, 0, 12, 0, 0, 18, 0],    mods: ['pek'],                                      tries: 1 },
-  { name: 'Pop-up panic',    levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
+  { name: 'Pop-up panic',    v: 2, levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
   { name: 'Crowded vents',   levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
-  { name: 'Fresh meat',      levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 5.43 },
-  { name: '13/20',           levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 16.18 },
-  { name: 'Absolute Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 60 },
+  { name: 'Fresh meat',      v: 2, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 5.43 },
+  { name: '13/20',           v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 16.18 },
+  { name: 'Absolute Nightmare', v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 60 },
 
   // ---- Generator mode ----
   { name: 'Power plant',     v: 2, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
   { name: 'Brownout',        v: 2, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.33 },
   { name: 'Static charge',   v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1 },
-  { name: 'Dead battery',    v: 2, mode: 'generator', levels: [0, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 10],  mods: ['len'],             tries: 1 },
-  { name: 'Overload',        v: 2, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 2.5 },
+  { name: 'Dead battery',    v: 3, mode: 'generator', levels: [0, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 10],  mods: ['len'],             tries: 1 },
+  { name: 'Overload',        v: 3, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 2.5 },
   { name: 'Running on fumes', v: 2, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 99 },
   { name: 'Ghost in the wires', v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 99 },
-  { name: 'Spam generator',  v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 99 },
+  { name: 'Spam generator',  v: 3, mode: 'generator', levels: [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 99 },
   { name: 'Crank it',        v: 2, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 99 },
-  { name: 'Full circuit',    v: 2, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 99 },
-  { name: '13/20 (Generator)', v: 2, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 22.4 },
-  { name: 'Absolute Nightmare (Generator)', v: 2, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
+  { name: 'Full circuit',    v: 3, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 99 },
+  { name: '13/20 (Generator)', v: 3, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 22.4 },
+  { name: 'Absolute Nightmare (Generator)', v: 3, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
 
   // ---- Tasks mode ----
   { name: 'Night school',    mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
-  { name: 'Busy work',       mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
+  { name: 'Busy work',       v: 2, mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
   { name: 'Multitasking',    mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
   { name: 'Deadline',        mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.08 },
-  { name: 'Paperwork',       mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 10.43 },
-  { name: 'Inbox zero',      mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 99 },
+  { name: 'Paperwork',       v: 2, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 10.43 },
+  { name: 'Inbox zero',      v: 2, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 99 },
   { name: 'Vent duty',       mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 99 },
   { name: 'Office party',    mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 99 },
   { name: 'Door duty',       mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 99 },
-  { name: 'Crunch time',     mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 99 },
-  { name: '13/20 (Tasks)',   mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 60 },
-  { name: 'Absolute Nightmare (Tasks)', mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
+  { name: 'Crunch time',     v: 2, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 99 },
+  { name: '13/20 (Tasks)',   v: 2, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 60 },
+  { name: 'Absolute Nightmare (Tasks)', v: 2, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention,
 // and give it a mode: a challenge that doesn't say is a standard night.

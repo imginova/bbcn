@@ -76,8 +76,11 @@ const otherSide = side => side === 'L' ? 'R' : 'L';
 // Is a threat's modifier active tonight? modOn('dia') asks about the ◆ Diamond, and so on.
 const modOn = id => G.mod[id];
 
-// Are you looking at camera `room` right now? (The monitor is up, on the CAMS tab, showing that room.)
-const onCam = room => G.cam && G.tab === 'cams' && G.camRoom === room;
+// Is the monitor covered by © Spammer's ads? Then nothing on it can be seen or used until they're closed.
+const adsUp = () => G.ads.length > 0;
+// Are you looking at camera `room` right now? (The monitor is up, on the CAMS tab, showing that room,
+// and no ad is covering it.)
+const onCam = room => G.cam && G.tab === 'cams' && G.camRoom === room && !adsUp();
 // Is the VENTS tab worth having tonight? Only if a vent crawler is switched on.
 const ventsOn = () => G.echo.level > 0 || G.slink.level > 0;
 
@@ -311,7 +314,7 @@ function runDry() {
 // The task you picked fills up only while the monitor is up on the TASKS tab (and the power is on).
 // Finishing the last one wins the night.
 function updateTasks(dt) {
-  if (G.mode !== 'tasks' || G.task === null || !G.cam || G.tab !== 'tasks') return;
+  if (G.mode !== 'tasks' || G.task === null || !G.cam || G.tab !== 'tasks' || adsUp()) return;   // an ad in the way pauses it too
   const T = G.tasks[G.task];
   T.done = Math.min(T.need, T.done + dt);
   if (T.done < T.need) return;
@@ -323,7 +326,7 @@ function updateTasks(dt) {
 
 // Pick task number i to work on (click it on the TASKS tab, or keys 1 to 8 there).
 function pickTask(i) {
-  if (!G || G.over || G.paused || G.mode !== 'tasks' || !G.cam || G.tab !== 'tasks') return;
+  if (!G || G.over || G.paused || G.mode !== 'tasks' || !G.cam || G.tab !== 'tasks' || adsUp()) return;
   const T = G.tasks[i];
   if (!T || T.done >= T.need) return;
   G.task = i;
@@ -798,7 +801,7 @@ function moveVent(V, room) {
 //   § Slink: next to that room, it goes there and stays put for a while; but a lure in its OWN
 //           room startles it one vent closer to you (out of V6 means into your office).
 function playLure(room) {
-  if (!G || G.over || G.paused || !G.cam || G.tab !== 'vents' || !powered()) return;
+  if (!G || G.over || G.paused || !G.cam || G.tab !== 'vents' || !powered() || adsUp()) return;
   if (G.t < G.lureReadyAt) { sfx.deny(); return; }
   G.lureReadyAt = G.t + LURE_COOLDOWN;
   G.lureRoom = room;
@@ -877,8 +880,10 @@ function peekIn() {
 }
 
 // ---------- © Spammer ----------
-// While the monitor is up, it gets its usual chance every so often to pop up an ad somewhere on it.
-// Ads stay until you close them (even if you lower the monitor). ADS_MAX open at once: crash.
+// While the monitor is up, it gets its usual chance every so often to pop up an ad over it. An ad
+// covers the whole monitor, whatever tab you're on: until you close it you can't see or use anything
+// on the monitor (cameras, winding, lures, tasks; see adsUp). Ads stay until you close them, even if
+// you lower the monitor. ADS_MAX open at once: crash.
 function updateSpammer(dt) {
   const S = G.spammer;
   if (S.level === 0 || !G.cam) return;
@@ -888,7 +893,9 @@ function updateSpammer(dt) {
   if (Math.random() * MAX_LEVEL >= S.level) return;
   G.ads.push({
     id: G.nextAdId++,
-    x: Math.random() * 55, y: Math.random() * 60,   // where it sits, in % of the monitor
+    // Each ad covers (nearly) the whole monitor; this small random nudge, in %, makes a stack of
+    // them look like a pile, so you can see how many are open.
+    x: Math.random() * 6, y: Math.random() * 8,
     text: pick(AD_TEXT),
     corner: modOn('spm') ? pick(['tl', 'tr', 'bl', 'br']) : 'tr',   // ★ Sneaky: the [X] can be in any corner
   });
