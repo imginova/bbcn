@@ -116,33 +116,35 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR];
 // Challenges written before Ж ¤ Ψ existed list only six levels; the rest are padded in as 0 (off) below.
 //
 // `bot` is how many of 500 nights a test bot survived (reacting after about a second, one action
-// at a time). The list is SORTED by it below: the most wins first, and on a tie, the fewest points
-// first. So if you retest a challenge, just change its number and the order updates itself.
+// at a time). The list is SORTED by it below: the most wins first. Challenges that tied have a
+// list instead, [normal bot, then 5 slower bots]: each slower bot has the same reactions but moves
+// its "cursor" more slowly and plays worse, and the first one that tells them apart decides the
+// order. Warm-up is always first. If you retest a challenge, just change its numbers.
 const PRESETS = [
-  { name: 'Warm-up',         bot: 500, levels: [4, 4, 3, 3, 0, 0],                   mods: [] },
-  { name: 'Hide & seek',     bot: 500, levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'] },
-  { name: 'Face off',        bot: 500, levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'] },
-  { name: 'Masquerade',      bot: 500, levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'] },
-  { name: 'Strobe',          bot: 500, levels: [0, 10, 0, 0, 14, 0, 0, 20, 0],      mods: ['flk'] },
-  { name: 'Double trouble',  bot: 500, levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'] },
-  { name: 'Lights out',      bot: 500, levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'] },
-  { name: 'Prank call',      bot: 500, levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'] },
-  { name: "Don't blink",     bot: 500, levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'] },
-  { name: 'Night crawlers',  bot: 500, levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'] },
-  { name: 'Crawl space',     bot: 500, levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'] },
-  { name: 'Shape party',     bot: 500, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
-  { name: 'Waiting game',    bot: 500, levels: [10, 10, 20, 6, 12, 0],               mods: ['orb'] },
-  { name: 'Music lover',     bot: 500, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'] },
-  { name: 'Channel surfing', bot: 500, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0],     mods: ['len', 'crw'] },
-  { name: 'Mixed bag',       bot: 499, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'] },
-  { name: 'New faces',       bot: 500, levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'] },
-  { name: 'Graveyard shift', bot: 418, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'] },
-  { name: 'Light show',      bot: 331, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'] },
-  { name: 'Overtime',        bot: 497, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'] },
-  { name: '6/20',            bot: 489, levels: [20, 20, 20, 20, 20, 20],             mods: [] },
-  { name: 'Nightmare',       bot: 477, levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
-  { name: '9/20',            bot: 429, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [] },
-  { name: 'Total Nightmare', bot: 52,  levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'] },
+  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],                   mods: [],                                           bot: [500, 500, 500, 500, 500, 500] },
+  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'],                               bot: [500, 500, 500, 460, 352, 289] },
+  { name: 'Face off',        levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'],                               bot: [500, 500, 500, 497, 411, 307] },
+  { name: 'Masquerade',      levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'],                                      bot: [500, 497, 478, 469, 258, 300] },
+  { name: 'Strobe',          levels: [0, 10, 0, 0, 14, 0, 0, 20, 0],      mods: ['flk'],                                      bot: [500, 500, 500, 500, 500, 500] },
+  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'],                                      bot: [500, 487, 458, 318, 173, 106] },
+  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'],                                      bot: [500, 500, 500, 500, 481, 493] },
+  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'],                                      bot: [500, 500, 498, 493, 356, 442] },
+  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'],                                      bot: [500, 500, 500, 491, 353, 377] },
+  { name: 'Night crawlers',  levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'],                               bot: [500, 500, 500, 500, 249, 153] },
+  { name: 'Crawl space',     levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'],                                      bot: [500, 500, 500, 500, 406, 328] },
+  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 bot: [500, 500, 500, 453, 127, 104] },
+  { name: 'Waiting game',    levels: [10, 10, 20, 6, 12, 0],               mods: ['orb'],                                      bot: [500, 500, 495, 487, 289, 255] },
+  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      bot: [500, 500, 500, 490, 258, 143] },
+  { name: 'Channel surfing', levels: [14, 0, 0, 16, 0, 10, 14, 0, 0],     mods: ['len', 'crw'],                               bot: [500, 500, 500, 498, 295, 135] },
+  { name: 'Mixed bag',       levels: [10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                        bot: 499 },
+  { name: 'New faces',       levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        bot: [500, 500, 500, 500, 346, 159] },
+  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                               bot: 418 },
+  { name: 'Light show',      levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               bot: 331 },
+  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        bot: 497 },
+  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           bot: 489 },
+  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'],   bot: 477 },
+  { name: '9/20',            levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                           bot: 429 },
+  { name: 'Total Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'], bot: 52 },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention.
 PRESETS.forEach(p => { while (p.levels.length < SETUP.length) p.levels.push(0); });
@@ -150,6 +152,19 @@ PRESETS.forEach(p => { while (p.levels.length < SETUP.length) p.levels.push(0); 
 // The points a challenge is worth: all its levels, plus MOD_BONUS for each modifier on a switched-on threat.
 const presetPoints = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
 
-// Sort: most bot wins first; on a tie, fewest points first. sort() takes a compare function that
-// returns a negative number to put `a` first. (If both are equal too, they keep the order above.)
-PRESETS.sort((a, b) => (b.bot - a.bot) || (presetPoints(a) - presetPoints(b)));
+// Sort: Warm-up always comes first. After that, most bot wins first. On a tie, the slower bots'
+// wins decide, one bot at a time; if those are all equal too, fewest points first.
+// sort() takes a compare function that returns a negative number to put `a` first, and a positive
+// number to put `b` first. (If it returns 0, the two keep the order they have above.)
+const botList = p => [].concat(p.bot);   // turns a single number into a list of one, so both kinds work
+function compareChallenges(a, b) {
+  if (a.name === 'Warm-up') return -1;
+  if (b.name === 'Warm-up') return 1;
+  const x = botList(a), y = botList(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const diff = (y[i] ?? 0) - (x[i] ?? 0);   // `?? 0` stands in for a missing number
+    if (diff) return diff;
+  }
+  return presetPoints(a) - presetPoints(b);
+}
+PRESETS.sort(compareChallenges);
