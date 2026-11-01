@@ -23,7 +23,7 @@ const path = require('path');
 // Your Google Analytics "measurement ID" (looks like G-ABC123XYZ9). ANALYTICS.md explains where
 // to find it. It is not a secret: it is visible in the web page for everyone anyway.
 // Leave it empty and the site is built without analytics. A GA_ID environment variable overrides it.
-const GA_ID = process.env.GA_ID || '';
+const GA_ID = process.env.GA_ID || 'G-6YSDZ507F9';
 
 const root = path.join(__dirname, '..');
 const dist = path.join(root, 'dist');
