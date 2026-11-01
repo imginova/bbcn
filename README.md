@@ -2,7 +2,9 @@
 
 A survival game in the style of Five Nights at Freddy's, drawn with ASCII art. You guard a security office from 12 AM to 6 AM: shut the doors, check the door lights, watch the cameras, wind Lenny's music box, catch the hiding (:, chase Ж back to CAM 7, flash ¤ away, wear the mask for Ψ and make your power last.
 
-**Play it:** double-click `index.html` to open it in your browser, or use the shared link: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG
+**Play it:** https://imginova.github.io/bbcn/ (the public website), or double-click `index.html` to open it in your browser, or use the private shared link: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG
+
+The public website counts plays, deaths and wins with Google Analytics. The other two ways don't. [`ANALYTICS.md`](ANALYTICS.md) explains the setup and how to read the numbers.
 
 ## How this code is organized
 
@@ -13,6 +15,7 @@ Each file has one job. Every file starts with a comment explaining that job, and
 | `index.html` | **Structure**: what's on the page (screens, buttons, empty boxes the game draws into). It also loads all the other files. |
 | `style.css` | **Looks**: colors, fonts, sizes and layout. |
 | `js/helpers.js` | Tiny tools every file uses: `$` to find things on the page, `store` to save things, `pick` for a random choice. |
+| `js/analytics.js` | Counts how the game is going with Google Analytics (public website only) and shows the privacy banner where the law needs one. |
 | `js/config.js` | **The numbers you can tweak**: night length, power drain, how difficulty levels work. |
 | `js/data.js` | **What exists**: the rooms, the cameras, the nine threats with their routes and ★ modifiers, and the challenge presets. |
 | `js/sound.js` | Every sound effect, built in code from notes and noise (there are no sound files). |
@@ -24,6 +27,8 @@ Each file has one job. Every file starts with a comment explaining that job, and
 | `js/main.js` | **Starts everything** and runs the game loop. |
 
 The files load in that order, and each one can use what the files above it created.
+
+Around the game there are also `tools/build.js` (makes the public website's files in `dist/`) and `.github/workflows/deploy.yml` (checks the code and puts the site online whenever a change is merged into `main`).
 
 ## A good reading order
 

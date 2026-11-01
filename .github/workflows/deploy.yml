@@ -1,0 +1,56 @@
+# Checks the game and puts it online with GitHub Pages.
+#   - On every pull request: check the code and build it (nothing goes online).
+#   - On every push to main (a merged pull request): check, build and DEPLOY.
+# One-time setup: Settings > Pages > Source = "GitHub Actions" (see ANALYTICS.md).
+name: Check and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:   # also lets you press "Run workflow" by hand
+
+permissions:
+  contents: read
+
+# If two deploys overlap, the newer one wins.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The same quick check described in CLAUDE.md: every script must parse, and all of them
+      # together (in page order) must too, which catches names used twice across files.
+      - name: Syntax check
+        run: |
+          node -e "const fs=require('fs');const o=[...fs.readFileSync('index.html','utf8').matchAll(/<script src=\"([^\"]+)\"/g)].map(m=>m[1]);o.forEach(f=>new Function(fs.readFileSync(f,'utf8')));new Function(o.map(f=>fs.readFileSync(f,'utf8')).join('\n;\n'));console.log('OK:',o.join(', '))"
+
+      - name: Build the site
+        run: node tools/build.js
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    # Only after a push to main, never for pull requests.
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write      # allowed to publish to GitHub Pages
+      id-token: write   # proves to Pages that this really came from our workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

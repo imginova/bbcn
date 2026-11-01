@@ -6,15 +6,17 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 **Bare Bones Custom Night** (it was called *Night Shift* until 2026-10-31; the repo name `bbcn` is its initials) is a browser game in the style of Five Nights at Freddy's (FNAF), drawn in ASCII art and played with the mouse and keyboard. You sit in a security office from 12 AM to 6 AM, close two doors, flash two door lights, watch seven cameras, wind a music box, wear a mask and ration your power.
 
-- **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and ten scripts in `js/`. It has no build step, no dependencies and no sound files. Jake is learning from this code, so every file has a header comment and learning-oriented comments.
-- **Live, shareable link:** https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG. It's private: only the owner and people they share it with through the page's **Share** menu can open it. It belongs to the Claude account the project moved to on 2026-10-31. The old link (`5qmjeiJHMdgo8STTf2ZAFF`) belongs to the previous account and can't be updated from the new one.
+- **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and eleven scripts in `js/`. The game itself has no build step, no dependencies and no sound files; only the public website gets a small build (see "Hosting, deploy and analytics"). Jake is learning from this code, so every file has a header comment and learning-oriented comments.
+- **Public website:** https://imginova.github.io/bbcn/ (GitHub Pages, redeployed on every push to `main`, with Google Analytics; see "Hosting, deploy and analytics" below and [`ANALYTICS.md`](ANALYTICS.md)).
+- **Private Claude Artifact link (no analytics):** https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG. It's private: only the owner and people they share it with through the page's **Share** menu can open it. It belongs to the Claude account the project moved to on 2026-10-31. The old link (`5qmjeiJHMdgo8STTf2ZAFF`) belongs to the previous account and can't be updated from the new one.
 - **Owner:** Jake Harris started the project. Jake's son now works on it, using the `imginova` GitHub account that owns the repo. Both are new to programming: explain changes in plain language and avoid jargon.
 
 ## Working agreements with the owner
 
 - **Make a plan before big features**, and ask about genuinely ambiguous design choices. Small requests can be done directly.
 - **Commit only when asked.** After each change, ask "Commit these changes?" Commits go straight to `main`.
-- **After every change, republish the live link** so Jake can play it right away (see "Publishing" below).
+- **After every change, republish the private Artifact link** so Jake can play it right away (see "Publishing" below). The public site updates by itself when a change is merged to `main`.
+- **Land changes with a pull request** (the deploy is now automatic, so `main` is the live site). This replaced "commit straight to main" on 2026-11-01.
 - **Keep the pace fast.** Jake specifically removed slow mechanics such as door lights.
 - **Keep the split by job and keep the comments.** Put new code in the file whose job it matches, and comment it in the same beginner-friendly style: explain *why*, define jargon the first time it appears. Update `README.md` if a file's job changes.
 
@@ -67,7 +69,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 
 - **Doors:** when ◆, ▲ or ● reaches a doorway, you have a reaction window to shut the door: 4.0 seconds at level 1, down to 2.9 seconds at level 20 (raised from 2.6–1.4 when the nights got shorter, and from 2.4 at level 20 in the level-20 easing). If the door is shut (or already shut when it arrives), the shape knocks and goes back to the stage **at once** (except ● with Patient, see above). For a while shapes lingered 1–2 s at a shut door so doors would cost real power, but that was removed on request ("I just want to shut it and be done"). If not, a shaking jumpscare (no flashing) fills the screen with the shape, and the game-over screen offers Retry or Change levels.
 - **Movement sounds:** each move plays a footstep in that shape's own pitch (● deepest, ◆ middle, ▲ highest). The step gets louder and pans further toward its door the closer the shape is. ◆ and ▲ are turned up (`loudness: 1.8` in `data.js`, on request). When ◆ or ▲ reaches a doorway it plays `sfx.arrive(side, pitch)` instead, which is deliberately different from a footstep and a bit louder: a thud, four quick handle rattles and a rising creak in the shape's own pitch (it replaced the old heavy-footsteps `sfx.step`).
-- **Saved in the browser (`localStorage`):** the last levels used, the ticked modifiers (`mods`), the best result (the highest score survived: levels plus +5 per modifier, out of 150, stored as `{ sum, levels, mods }`), the names of beaten challenges (`cleared`) and the mute setting. Every read and write is wrapped in try/catch, so the game still works if storage is blocked.
+- **Saved in the browser (`localStorage`):** the last levels used, the ticked modifiers (`mods`), the best result (the highest score survived: levels plus +5 per modifier, out of 150, stored as `{ sum, levels, mods }`), the names of beaten challenges (`cleared`), the mute setting and, on the public website only, the analytics keys `stats`, `playerId`, `geo` and `consent`. Every read and write is wrapped in try/catch, so the game still works if storage is blocked.
 
 ## Design decisions (and why)
 
@@ -96,6 +98,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **`style.css`:** the color and font tokens at the top of `:root` (`--fg` amber, `--c-dia`, `--c-tri`, `--c-orb`, `--c-len`, `--danger`), then styles for each screen.
 - **`js/`**, plain classic scripts (not ES modules, so the game still works when `index.html` is opened from disk). Top-level `const`/`let`/`function` declarations are shared across the scripts through the global scope, so **load order matters** and **names must be unique across all files**. The files, in load order:
   1. **`helpers.js`:** `$` (getElementById), `store` (localStorage wrapped in try/catch) and `pick`.
+  1b. **`analytics.js`** (loaded second): the `analytics` object. It does nothing unless Google's tag is on the page (public website only). `analytics.start()` is called by `boot()`; `nightStart`/`death`/`win`/`leave` are called from `game.js` and `input.js`. Details in the next section.
   2. **`config.js`:** the tuning values `HOUR_SECONDS`, `NIGHT_HOURS`, `PACE`, `BASE_DRAIN`, `UNIT_DRAIN`, `MIN_LEVEL`/`MAX_LEVEL`, `clampLevel`, `reactWindow(level)`, `MAX_STREAK`, `boxDrain(level)`, `WIND_RATE`, `BOX_LOW`, `LENNY_DELAY`, `lightPush(level)`, `SQUARE_SWAP`, `smileyChance(level)`, `SMILEY_TICK`/`SMILEY_SOLO`, `smileyTime(level)`, `crawlerWindow(level)`, `FLASH_TIME`, `flickerWindow(level)`, `MASK_HOLD`, `visitorWait(level)`, and the modifier values `MOD_BONUS`, `TRICK_CHANCE`, `DOUBLE_TAKE`, `RETURN_DELAY`, `WANDER_TIME`, `LURK_EVERY` and `PATIENT_WAIT`. **Most balance changes happen here.**
   3. **`data.js`:** `ROOMS` and `CAM_ORDER` (the 7 cameras), `LENNY_FACE`, `CREATURES` (◆ ▲ ● with routes, movement interval, footstep `pitch` and `loudness`, and the `unseen`/`stalls` flags), `LENNY`, `BOX_ROOMS`, `SQUARE`, `SMILEY`, `CRAWLER`, `FLICKER`, `VISITOR`, `SETUP` (everything with a level, in the order of `levels[]`: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ) and `PRESETS` (the challenges, padded to 9 levels at load). Every `SETUP` entry has a `mod: { name, desc }`.
   4. **`sound.js`:** `sfx`, every sound, generated with the Web Audio API (`tone()` and `noise()` helpers).
@@ -117,17 +120,31 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 - **Lenny's face needs a system font.** IBM Plex Mono can't draw its combining marks (U+0361 and U+035C), which show up as a box. `.face` and `.bigface` use a `system-ui` font stack. Inside the ASCII grid the face is one cell followed by 7 empty cells, so it spans 8 columns.
 - **To add a camera:** update `ROOMS` and `CAM_ORDER` (`data.js`), `ROOM_ART` and `SLOTS` (`art.js`), the `#map` buttons (`index.html`), `.map`'s `grid-template-areas` (`style.css`), the `1–7` key check (`input.js`) and the help text.
 - **To add a leveled threat:** add it to `CREATURES` in `data.js`, or handle it separately like `LENNY`, and make sure it lands in `SETUP`. Old saved levels are padded automatically.
-- **To add a new script file:** add a `<script src>` line in `index.html` in the right load-order position, and add it to the `files` map when publishing.
+- **To add a new script file:** add a `<script src>` line in `index.html` in the right load-order position, and add it to the `files` map when publishing. `tools/build.js` and the syntax check read the script list from `index.html`, so they need no change.
 - **The `window.nightShift` test hook:** `nightShift.state` shows the current night, and `nightShift.speed = 20` fast-forwards time. It's harmless to leave in.
 
-## Publishing (the live link)
+## Hosting, deploy and analytics
+
+- **Hosting:** GitHub Pages. One-time setting (needs the `imginova` account): repo Settings → Pages → Source = **GitHub Actions**.
+- **Pipeline:** `.github/workflows/deploy.yml`. Every pull request runs the syntax check and `node tools/build.js`. A push to `main` also deploys `dist/` to Pages.
+- **`tools/build.js`:** copies `style.css` and the scripts listed in `index.html` into `dist/`, and wraps the `index.html` fragment in `<!doctype html><html><head>…<body>` (without a doctype, browsers use quirks mode). If `GA_ID` (a constant at the top of the file, or the `GA_ID` environment variable) is set, it also adds Google's `gtag.js` tag to the head and `window.GA_ID`. **The source `index.html` must stay a fragment.** `dist/` is gitignored.
+- **`js/analytics.js`:**
+  - Events: `night_start`, `death` (`killer` = the creature id, `side` L/R/office, `hour`, `seconds`, `power`, `power_out`), `night_win`, `challenge_complete`, `night_quit` (Quit to setup), `night_abandon` (`pagehide` mid-night). Each ends a night at most once (`nightReported`).
+  - Per-device counters live in `store` key `stats` (`nights`, `wins`, `deaths`, `firstSeen`, `attempts` per challenge); the random `playerId` is in `store` too. They are sent as GA user properties and event parameters, only while tracking is allowed.
+  - **Consent:** the first visit asks `get.geojs.io` for country and state (cached 30 days in `store` key `geo`). EU/EEA/UK/CH and 19 US states (`CONSENT_COUNTRIES`, `CONSENT_STATES`), or a failed lookup, show the `#consent` banner; the choice is saved in `store` key `consent`. The page also sets Google's region-based consent defaults (denied in those places). Declining deletes the `playerId`; GA then only receives cookieless pings. The Privacy button (`#btnPrivacy`) reopens the banner; it and the banner only appear when the tag is present.
+  - **When you add a new way to lose or a new ending, call `analytics.death`/`win`/`leave` from it**, and update the event table in `ANALYTICS.md`.
+- **No GA property existed when this was written (2026-11-01):** the owner follows `ANALYTICS.md` to create one and pastes the measurement ID into `GA_ID`, so the first deploy has no analytics until then.
+- **Tested** with a fake ID in the browser pane: banner shown for `US/California` and `DE`, hidden for `US/Washington` and the real lookup; Allow, Decline and failed-lookup paths; every event with its fields; no Google traffic and no banner without a `GA_ID`. **Not yet tested:** real data arriving in Google Analytics, and the live GitHub Pages deploy.
+
+## Publishing (the private Artifact link)
 
 The game is published with Claude's **Artifact** tool.
 
-- **The page is multi-file.** Publish `file_path: index.html` and pass every other file in `files`, mapping each published path to the same local path: `{"style.css": "style.css", "js/helpers.js": "js/helpers.js", ...}` for all ten scripts. On an update, files that are left out are kept as they were, so always include the ones you changed. Listing all of them is the safest.
+- **The page is multi-file.** Publish `file_path: index.html` and pass every other file in `files`, mapping each published path to the same local path: `{"style.css": "style.css", "js/helpers.js": "js/helpers.js", ...}` for all eleven scripts (including `js/analytics.js`). On an update, files that are left out are kept as they were, so always include the ones you changed. Listing all of them is the safest.
 - **In the same session that created it:** publish the same `file_path` (`index.html`) again, and the URL stays the same.
 - **From a new session or computer:** first **read** the artifact with `action: "read"` and `url: https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG`. Then publish with that same `url`, `file_path: index.html` and the `files` map. Without the `url`, a new, separate link is created.
 - If a publish is refused because a newer version exists, merge the differences it shows and publish again.
+- **The Artifact has no analytics:** `window.gtag` doesn't exist there, so `analytics.js` is a no-op. `js/analytics.js` still has to be in the `files` map.
 - **Page rules:** fonts may only come from Google Fonts, scripts only from cdnjs, jsDelivr or unpkg with pinned versions, and all other CSS and JS must be inline. `alert`/`confirm` don't work, and sound starts only after the player clicks or presses a key.
 
 ## Testing
@@ -141,7 +158,7 @@ The game is published with Claude's **Artifact** tool.
   node -e "const fs=require('fs');let h=fs.readFileSync('index.html','utf8');h=h.replace('<link rel=\"stylesheet\" href=\"style.css\">',()=>'<style>'+fs.readFileSync('style.css','utf8')+'</style>');h=h.replace(/<script src=\"([^\"]+)\"><\/script>/g,(m,f)=>'<script>'+fs.readFileSync(f,'utf8')+'</script>');fs.writeFileSync('_preview-test.html','<!doctype html><html><head><meta charset=\"utf-8\"><style>[hidden]{display:none!important}</style></head><body>\n'+h+'\n</body></html>')"
   ```
   Delete `_preview-test.html` afterwards; it's only for testing. The inlined copy adds its own `[hidden]` rule and charset, so it **won't** catch problems specific to opening the real file.
-- **The current computer is Windows**, with no Node.js and no Chrome. The two `node` commands above won't run until Node.js is installed (nodejs.org). Microsoft Edge is installed and works the same as headless Chrome: `"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"`.
+- **Computers:** the project moved to a Mac on 2026-11-01 (Node 22 via nvm, `gh` signed in as `jakeharris4u`); the `node` commands above work there. An earlier Windows computer had no Node.js (Microsoft Edge worked as headless Chrome). The Claude desktop app's browser pane can serve and test `dist/`: `cd dist && python3 -m http.server 8765`, then open http://127.0.0.1:8765/.
 - **Testing the real file the way Jake opens it:** run headless Chrome or Edge against `file:///…/index.html`:
   - For a screenshot, use `--headless=new --screenshot=out.png --window-size=900,1100 --virtual-time-budget=3000`.
   - For automated play, append a test `<script>` to a temporary copy *in the project folder* (so the relative paths work). It should send `keydown` events and write its results to `document.title`; then read them with `--dump-dom`.
@@ -160,7 +177,7 @@ The game is published with Claude's **Artifact** tool.
 
 ## Git and GitHub
 
-- **GitHub:** https://github.com/imginova/bbcn (a **public** repository; this is for Jake's son's use). Push to `main`. To move to another computer, clone it from there. The live link works from any computer once you're signed in to claude.ai.
+- **GitHub:** https://github.com/imginova/bbcn (a **public** repository; this is for Jake's son's use). Work on a branch and open a pull request into `main`; merging deploys the site. To move to another computer, clone it from there. The live link works from any computer once you're signed in to claude.ai.
 - **Keep personal details out of the repository.** Because it's public, no work email may appear in files or commits.
   - Commit as `imginova <107283216+imginova@users.noreply.github.com>`, the `imginova` account's private GitHub noreply address. Never use Jake's address or the email on the Claude account. The setting lives in this repo's local git config, which a clone doesn't copy, so run `git config user.email` before committing on a new computer and set it if it's empty.
   - Commits up to and including "Point the handoff docs at the GitHub repository" were made as `Jake Harris <3029091+jakeharris4u@users.noreply.github.com>`.
@@ -175,3 +192,4 @@ The game is published with Claude's **Artifact** tool.
   7. Fixed opening `index.html` directly from disk (`[hidden]` rule, charset meta)
   8. Pointed these docs at GitHub
   9. Moved to a new Claude account and Windows computer: new live link, commits as `imginova`
+  10. Several game updates (modifiers, Crawler, Flicker, Visitor, mask), then on 2026-11-01: GitHub Pages deploy pipeline and Google Analytics

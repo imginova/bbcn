@@ -35,7 +35,11 @@
 <div class="app">
   <div class="topbar">
     <span class="id">Bare Bones Custom Night · Security terminal 06</span>
-    <button id="btnMute" type="button" aria-pressed="false">Sound on</button>
+    <span class="topbar-btns">
+      <!-- Only shown on the public website, where analytics runs (see js/analytics.js). -->
+      <button id="btnPrivacy" type="button" hidden>Privacy</button>
+      <button id="btnMute" type="button" aria-pressed="false">Sound on</button>
+    </span>
   </div>
 
   <div class="monitor" id="monitor">
@@ -163,6 +167,16 @@
   </div>
 </div>
 
+<!-- ANALYTICS CONSENT: only shown on the public website, to players in places whose privacy
+     laws say we must ask first (see js/analytics.js). It doesn't block the game. -->
+<div id="consent" role="region" aria-label="Privacy" hidden>
+  <p>This game counts plays, deaths and wins with Google Analytics so we can see how it's going. Allow it to remember this device between visits? No ads, nothing personal.</p>
+  <div class="menu">
+    <button id="btnAllow" type="button" class="primary">Allow</button>
+    <button id="btnDecline" type="button">Decline</button>
+  </div>
+</div>
+
 <!-- HOW TO PLAY -->
 <div id="howto" hidden>
   <div class="howto-card" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
@@ -207,6 +221,7 @@
   main.js (which starts the game) loads last.
 -->
 <script src="js/helpers.js"></script>  <!-- tiny tools: $, store, pick -->
+<script src="js/analytics.js"></script><!-- Google Analytics, only on the public website -->
 <script src="js/config.js"></script>   <!-- numbers to tweak: power, timing, difficulty -->
 <script src="js/data.js"></script>     <!-- rooms, cameras and the four threats -->
 <script src="js/sound.js"></script>    <!-- every sound effect, generated in code -->

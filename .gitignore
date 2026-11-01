@@ -1,0 +1,4 @@
+# Made by `node tools/build.js`; never committed.
+dist/
+.DS_Store
+_preview-test.html

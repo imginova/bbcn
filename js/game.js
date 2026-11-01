@@ -695,6 +695,7 @@ function startNight() {
   windKey = windPointer = false;
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
   newGame();
+  analytics.nightStart();   // count it (analytics.js)
   hideScare();
   showPause(false);
   show('game');
@@ -721,6 +722,7 @@ function win() {
     cleared.push(challenge.name);
     store.set('cleared', cleared);
   }
+  analytics.win(isBest, challenge, firstTime);
   showWin(sum, isBest, challenge, firstTime);
 }
 
@@ -730,6 +732,7 @@ function lose(c, side, dark = false) {
   G.over = true;
   sfx.humOff();
   sfx.scream();
+  analytics.death(c.id, side, dark);   // count who got you (analytics.js)
   const when = hourLabel(hourOf(G.t));
   const how = side ? `came through the ${side === 'L' ? 'LEFT door' : 'RIGHT door'}` : 'got you in your office';
   const message = dark
@@ -754,6 +757,7 @@ function loseSmiley() {
   G.over = true;
   sfx.humOff();
   sfx.scream();
+  analytics.death(SMILEY.id, null, false);
   const message = `You didn't find ${symHtml(SMILEY)} in time. It got you at ${hourLabel(hourOf(G.t))}.`;
   showScare(message, `<span class="bigface s-smi">${SMILEY.sym}</span>`);
 }
@@ -762,6 +766,7 @@ function loseLenny() {
   G.over = true;
   sfx.humOff();
   sfx.scream();
+  analytics.death(LENNY.id, null, false);
   const message = `The music box ran down. ${symHtml(LENNY)} got out at ${hourLabel(hourOf(G.t))}.`;
   showScare(message, `<span class="bigface">${LENNY_FACE}</span>`);
 }
