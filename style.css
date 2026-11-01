@@ -212,8 +212,12 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .office pre[data-door] { cursor: pointer; }
 /* A door light shining: the doorway glows. */
 .office pre.lit { background: rgba(242,179,91,.16); box-shadow: 0 0 18px rgba(242,179,91,.25); }
-/* Wearing the mask: the office goes dim, as if seen through two small eye holes. */
-.office.masked { filter: brightness(.55) contrast(1.2); box-shadow: inset 0 0 60px 30px rgba(0,0,0,.85); }
+/* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
+   through its two eye holes. The holes let clicks through; the mask itself blocks them. */
+.viewport { position: relative; }
+.mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.mask-view svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.mask-view path { fill: #140e08; stroke: var(--dim); stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: visiblePainted; }
 .office.dark { color: var(--faint); }
 .office.dark .door, .office.dark .dim { color: #2a1f13; }
 .office.dark .sym { color: inherit; }

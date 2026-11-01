@@ -27,11 +27,11 @@ function renderGame(now) {
   const office = $('office'), cams = $('cams');
   office.hidden = G.cam;
   cams.hidden = !G.cam;
+  $('maskView').hidden = !G.mask || G.cam;   // the mask covers the office view, leaving two eye holes
   if (G.cam) {
     renderFeed(now);
   } else {
     office.classList.toggle('dark', G.powerOut);
-    office.classList.toggle('masked', G.mask);   // style.css darkens the view while you wear the mask
     for (const side of ['L', 'R']) {
       $('door' + side).innerHTML = toHtml(doorGrid(side, now));
       $('door' + side).classList.toggle('lit', lightOn(side));   // style.css makes a lit doorway glow

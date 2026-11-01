@@ -105,6 +105,14 @@
             <button type="button" data-room="ehall" style="grid-area:ehall">CAM 6<br>East hall</button>
           </div>
         </div>
+        <!-- The mask: covers the whole view except two eye holes. An SVG is a drawing made of shapes;
+             "evenodd" means the two ovals are cut OUT of the big rectangle, leaving holes.
+             It sits inside a <div> because only normal page elements understand `hidden`. -->
+        <div class="mask-view" id="maskView" hidden aria-hidden="true">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path fill-rule="evenodd" d="M0 0H100V100H0Z M23 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z M52 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z"/>
+          </svg>
+        </div>
       </div>
 
       <div class="controls">
@@ -170,8 +178,8 @@
       <li><span class="smi-face s-smi">(:</span> hides in your office. If you hear a giggle (often right after lowering the camera, but it can wake up on its own too), find (: somewhere in the office and click it quickly.</li>
       <li><span class="sym s-crw">Ж</span> crawls from CAM 7 through Supply and the East hall to your office. Click it on the camera it's on to push it back one room, then follow it and keep clicking until it's home on CAM 7. If it reaches your office, click it there quickly.</li>
       <li><span class="sym s-flk">¤</span> buzzes at one of your doors. Flash that door's light for a moment and it jumps to the other door; flash it there too and it leaves. Doors don't stop it, and a shut door blocks the light.</li>
-      <li><span class="sym s-vis">Ψ</span> appears right in your office. Put the mask on (W, or the Mask button) and keep it on until it leaves. You can't use the cameras with the mask on, but doors, lights and clicking all still work.</li>
-      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Bold needs twice as much light to push back; (: Twins hides two at once; Ж Stubborn takes two clicks per room; ¤ Ping-pong needs a third flash; Ψ Lingerer makes you keep the mask on twice as long.</li>
+      <li><span class="sym s-vis">Ψ</span> appears right in your office. Put the mask on (W, or the Mask button) and keep it on until it leaves. The mask covers your view except for two eye holes, and you can't use the cameras with it on, but doors, lights and clicking through the eye holes all still work.</li>
+      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Flinch lunges a step closer if you let go of the light before it's gone; (: Twins hides two at once; Ж Stubborn takes two clicks per room; ¤ Ping-pong needs a third flash; Ψ Double take sometimes fakes leaving (the fake exit sound rises at the end) and comes right back.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
       <li>Doors, door lights and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>

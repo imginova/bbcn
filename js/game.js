@@ -114,6 +114,7 @@ function newGame() {
       stage: 0,                    // 0 = away, 1 = far, 2 = medium, 3 = close
       timer: SQUARE.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       pushT: 0,                    // how long the light has been shining on it without a break
+      wasLit: false,               // ■ Flinch: was the light on it a moment ago?
     },
 
     smiley: {
@@ -146,7 +147,9 @@ function newGame() {
       present: false,              // is it in your office right now?
       maskT: 0,                    // how long the mask has been on while it's here
       deadline: 0,                 // the moment it gets you if the mask isn't on
-      timer: VISITOR.interval * (0.7 + Math.random() * 0.6),
+      timer: visitorWait(levels[SETUP.indexOf(VISITOR)]),   // its appearance timer (see updateVisitor)
+      faked: false,                // Ψ Double take: has it already faked an exit this visit?
+      returnT: 0,                  // Ψ Double take: countdown until it's back after a fake exit
     },
     mask: false,                   // are you wearing the mask?
   };
@@ -371,11 +374,23 @@ function wanderBox(L, dt, winding) {
 // lightPush(level) seconds of steady light shove it back one stage. Off the door entirely at stage 0.
 function updateSquare(dt) {
   const S = G.square;
+  const lit = S.stage > 0 && lightOn(S.side);
 
-  if (S.stage > 0 && lightOn(S.side)) {
+  // ■ Flinch: if the light WAS on it and now isn't (you let go, shut that door or raised the
+  // camera) while it's still at your door, it lunges one step closer. From close, that gets you.
+  if (modOn('sqr') && S.wasLit && !lit && S.stage > 0) {
+    S.wasLit = false;
+    if (S.stage === 3) { lose(SQUARE, S.side); return; }
+    S.stage++;
+    sfx.lunge(S.side);
+    if (S.stage === 3) sfx.creep(S.side);
+    dirty = true;
+  }
+  S.wasLit = lit;
+
+  if (lit) {
     S.pushT += dt;
-    // ■ Bold: it takes BOLD_SLOW times as much light to push it back each stage.
-    if (S.pushT >= lightPush(S.level) * (modOn('sqr') ? BOLD_SLOW : 1)) {
+    if (S.pushT >= lightPush(S.level)) {
       S.pushT = 0;
       sfx.shove(S.side);
       S.stage--;
@@ -545,19 +560,28 @@ function updateFlicker(dt) {
 
 // ---------- Ψ Visitor and the mask ----------
 // It appears in your office. Get the mask on within reactWindow(level) seconds and keep it on for
-// MASK_HOLD seconds (twice that with Lingerer). Take it off too soon and the count starts over,
-// with the usual few seconds to put it back on.
+// MASK_HOLD seconds. Take it off too soon and the count starts over, with the usual few seconds
+// to put it back on.
 function updateVisitor(dt) {
   const V = G.visitor;
   if (V.present) {
     if (G.mask) {
       V.maskT += dt;
       V.deadline = G.t + reactWindow(V.level);
-      if (V.maskT >= MASK_HOLD * (modOn('vis') ? 2 : 1)) {
+      if (V.maskT >= MASK_HOLD) {
         V.present = false;
         V.maskT = 0;
-        V.timer = VISITOR.interval * (1 + Math.random() * 0.5);
-        sfx.visitorOut();
+        if (modOn('vis') && !V.faked && Math.random() < DOUBLE_TAKE) {
+          // Ψ Double take: it only pretends to leave (its exit sound rises at the end) and is
+          // back RETURN_DELAY seconds later. It fakes at most once per visit.
+          V.faked = true;
+          V.returnT = RETURN_DELAY;
+          sfx.visitorFake();
+        } else {
+          V.faked = false;
+          V.timer = visitorWait(V.level);   // a fresh random wait until its next visit
+          sfx.visitorOut();
+        }
         dirty = true;
       }
       return;
@@ -566,13 +590,27 @@ function updateVisitor(dt) {
     if (G.t >= V.deadline) lose(VISITOR, null);
     return;
   }
+  // Coming back after a fake exit.
+  if (V.returnT > 0) {
+    V.returnT -= dt;
+    if (V.returnT <= 0) {
+      V.present = true;
+      V.maskT = 0;
+      V.deadline = G.t + reactWindow(V.level);
+      sfx.visitorIn();
+      dirty = true;
+    }
+    return;
+  }
+  // Its appearance timer: a random wait (visitorWait in config.js) that keeps counting down even
+  // while you're on the cameras. When it runs out, the Visitor is ready, but it only shows up once
+  // you flip the camera down, so you always see it arrive. Level 0: it never comes.
+  if (V.level === 0) return;
   V.timer -= dt;
-  if (V.timer > 0) return;
-  V.timer = VISITOR.interval * (0.85 + Math.random() * 0.3);
-  if (Math.random() * MAX_LEVEL >= V.level) return;
+  if (V.timer > 0 || G.cam) return;
   V.present = true;
   V.maskT = 0;
-  V.deadline = G.t + reactWindow(V.level) + 0.5;   // a little extra, in case you're on the cameras
+  V.deadline = G.t + reactWindow(V.level);
   sfx.visitorIn();
   dirty = true;
 }
@@ -608,7 +646,7 @@ function powerOutStart() {
   G.outBy = pick(active.length ? active : visible);
   G.smiley.active = false;                                // in the dark there's nothing to find
   G.flicker.phase = 0; G.flicker.side = null;             // and the Flicker and Visitor give up too
-  G.visitor.present = false;
+  G.visitor.present = false; G.visitor.returnT = 0;
   sfx.humOff();
   sfx.powerDown();
   dirty = true;

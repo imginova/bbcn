@@ -73,14 +73,21 @@ const FLASH_TIME = 0.4;    // ¤ seconds of steady light that make the Flicker j
 // ¤ seconds to flash the Flicker before it gets you: a bit longer than a door's reaction window,
 // because you may need to lower the camera and open the door first.
 const flickerWindow = level => reactWindow(level) + 1.5;
-const MASK_HOLD = 2.5;     // Ψ seconds the mask must stay on before the Visitor leaves (twice that with Lingerer)
+const MASK_HOLD = 2.5;     // Ψ seconds the mask must stay on before the Visitor leaves
+// Ψ its appearance timer: a random wait between `shortest` and 1.8 times that. The shortest wait is
+// 30s at level 1, down to 8s at level 20 (so level 20 waits 8 to about 14 seconds between visits).
+const visitorWait = level => {
+  const shortest = 30 - (level - 1) * (22 / 19);
+  return shortest + Math.random() * shortest * 0.8;
+};
 
 // ---------- modifiers ----------
 // Ticking a threat's modifier on the custom night screen adds this much to the night's score
 // (only if that threat's level is above 0, since a switched-off threat's modifier does nothing).
 const MOD_BONUS = 5;
 const TRICK_CHANCE = 0.5;   // ▲ Trickster: chance, on each of its movement ticks WHILE THE CAMERA IS UP, to fake its doorway sound
-const BOLD_SLOW = 2;        // ■ Bold: it needs this many times as much light to be pushed back each stage
+const DOUBLE_TAKE = 0.5;    // Ψ Double take: chance that its first exit each visit is a fake
+const RETURN_DELAY = 1;     // Ψ Double take: seconds after a fake exit before it's back
 const WANDER_TIME = 25;     // Lenny Wanderer: about how many seconds between the box's moves
 const LURK_EVERY = 4;       // ● Patient: seconds between the soft growls while it waits behind a door
 const PATIENT_WAIT = 2;     // ● Patient: seconds it must wait behind the door (until its first growl) before

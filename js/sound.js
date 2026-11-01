@@ -171,6 +171,8 @@ const sfx = (() => {
       noise(0.35, { vol: 0.55, freq: 900, pan });
       tone(98, 0.3, { type: 'square', vol: 0.2, slide: -20, pan });
     },
+    // ■ Flinch: it lunges a step closer when the light leaves it. A sharp rising scrape.
+    lunge(side) { noise(0.15, { vol: 0.5, freq: 1200, pan: panOf(side) }); tone(90, 0.18, { type: 'square', vol: 0.2, slide: 80, pan: panOf(side) }); },
     // ■ being pushed back one stage by the light: a short scrape from its side.
     shove(side) { noise(0.22, { vol: 0.35, freq: 700, pan: panOf(side) }); tone(140, 0.2, { type: 'sawtooth', vol: 0.12, slide: -60, pan: panOf(side) }); },
 
@@ -213,6 +215,11 @@ const sfx = (() => {
     },
     // It leaves: the hum fades away downward.
     visitorOut() { tone(110, 0.6, { type: 'sine', vol: 0.25, slide: -70 }); },
+    // Double take: it PRETENDS to leave. Same falling hum, but it rises again at the end (the tell).
+    visitorFake() {
+      tone(110, 0.45, { type: 'sine', vol: 0.25, slide: -70 });
+      tone(60, 0.35, { type: 'sine', vol: 0.25, slide: 90, delay: 0.45 });
+    },
     // Putting the mask on (muffled thump) or taking it off (lighter click).
     mask(on) { on ? noise(0.15, { vol: 0.35, freq: 300 }) : tone(600, 0.05, { vol: 0.08 }); },
 

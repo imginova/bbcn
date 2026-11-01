@@ -72,7 +72,7 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // then 15.0 to make every threat a bit easier.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
   interval: 15.0 / PACE,
-  mod: { name: 'Bold', desc: 'Needs twice as much light to be pushed back each step, so start lighting it early' } };
+  mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer. Once you start lighting it, finish' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
 // then you have a few seconds to find (: in the office and click it (see updateSmiley in game.js).
@@ -97,8 +97,8 @@ const FLICKER = { id: 'flk', sym: '¤', name: 'Flicker', door: 'One door, then t
 // The Visitor Ψ appears right in your office. Put on the mask (W, or the Mask button) and keep it
 // on until it leaves. The cameras don't work with the mask on, but everything else does.
 const VISITOR = { id: 'vis', sym: 'Ψ', name: 'Visitor', door: 'Appears in your office', path: 'Heard it? Put the mask on (W) and keep it on until it leaves',
-  interval: 14.0 / PACE,
-  mod: { name: 'Lingerer', desc: 'Stays twice as long, so the mask has to stay on longer' } };
+  // (no interval: the Visitor uses its own random appearance timer, visitorWait in config.js)
+  mod: { name: 'Double take', desc: 'Sometimes it only pretends to leave and comes straight back. A fake exit rises at the end: keep the mask on' } };
 
 // Everything that gets a level on the custom night screen, in order.
 // levels[0] is the Diamond's level, levels[3] is Lenny's, and so on.
