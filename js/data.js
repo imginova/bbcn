@@ -79,30 +79,61 @@ const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3
 const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your office', path: 'Heard a giggle (often after lowering the camera)? Find (: and click it',
   mod: { name: 'Twins', desc: 'Two (: hide at once and you must click both, with 50% more time' } };
 
+// ---------- the three newest threats (none of them are shapes) ----------
+
+// The Crawler Ж crawls from the prize corner to your office: CAM 7 → CAM 4 → CAM 6 → office.
+// Click it on the camera it's on to push it back ONE camera; follow it there and keep clicking
+// until it's home on CAM 7. If it reaches your office, click it there before time runs out.
+const CRAWLER = { id: 'crw', sym: 'Ж', name: 'Crawler', door: 'Crawls from CAM 7 to your office', path: 'CAM 7 → Supply → East hall → office. Click it on camera to push it back one room',
+  interval: 12.0 / PACE, route: ['prize', 'supply', 'ehall', 'office'],
+  mod: { name: 'Stubborn', desc: 'Takes two clicks to push it back each room' } };
+
+// The Flicker ¤ turns up at a door (you hear it buzz). A short flash of that door's light makes it
+// jump to the OTHER door; flash it there too and it leaves. Doors don't stop it.
+const FLICKER = { id: 'flk', sym: '¤', name: 'Flicker', door: 'One door, then the other', path: 'Hear it buzz? Flash that door\'s light, then the other door when it jumps',
+  interval: 13.0 / PACE,
+  mod: { name: 'Ping-pong', desc: 'Jumps back to the first door once more, so it needs three flashes' } };
+
+// The Visitor Ψ appears right in your office. Put on the mask (W, or the Mask button) and keep it
+// on until it leaves. The cameras don't work with the mask on, but everything else does.
+const VISITOR = { id: 'vis', sym: 'Ψ', name: 'Visitor', door: 'Appears in your office', path: 'Heard it? Put the mask on (W) and keep it on until it leaves',
+  interval: 14.0 / PACE,
+  mod: { name: 'Lingerer', desc: 'Stays twice as long, so the mask has to stay on longer' } };
+
 // Everything that gets a level on the custom night screen, in order.
 // levels[0] is the Diamond's level, levels[3] is Lenny's, and so on.
-// The "..." spreads the CREATURES list out, so SETUP is [Diamond, Triangle, Orb, Lenny, Square, Smiley].
+// The "..." spreads the CREATURES list out, so SETUP is
+// [Diamond, Triangle, Orb, Lenny, Square, Smiley, Crawler, Flicker, Visitor].
 // New threats go at the END, so levels saved by older versions still line up.
-const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY];
+const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR];
 
 // Ready-made challenges for the custom night screen. Each one sets every level
-// (in SETUP order: ◆ ▲ ● Lenny ■ (:) and which modifiers are ticked (by id).
+// (in SETUP order: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ) and which modifiers are ticked (by id).
 // They're in order from easiest to hardest, measured by a bot playing each one many times.
-// Every ★ modifier shows up in at least one challenge before Nightmare, so you can practise it.
-// "6/20" is all six threats at level 20 with no modifiers (like FNAF's 4/20 mode);
-// Nightmare is 6/20 with every modifier on.
+// Every ★ modifier shows up in at least one challenge before the last one, so you can practise it.
+// "6/20" is the first six threats at level 20 with no modifiers (like FNAF's 4/20 mode), and
+// Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with all nine.
+// Challenges written before Ж ¤ Ψ existed list only six levels; the rest are padded in as 0 (off) below.
 const PRESETS = [
-  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],         mods: [] },
-  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],      mods: ['orb', 'smi'] },
-  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20],      mods: ['smi'] },
-  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],        mods: ['sqr'] },
-  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],      mods: ['tri'] },
-  { name: 'Waiting game',    levels: [10, 10, 20, 6, 12, 0],     mods: ['orb'] },
-  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8],        mods: ['len'] },
-  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],      mods: ['dia'] },
-  { name: 'Shape party',     levels: [16, 16, 16, 6, 0, 0],      mods: ['dia', 'tri', 'orb'] },
-  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12],   mods: ['len', 'sqr'] },
-  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16],   mods: ['dia', 'len', 'smi'] },
-  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],   mods: [] },
-  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],   mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
+  { name: 'Warm-up',         levels: [4, 4, 3, 3, 0, 0],                   mods: [] },
+  { name: 'Masquerade',      levels: [0, 0, 12, 8, 0, 16, 0, 0, 20],      mods: ['vis'] },
+  { name: 'Hide & seek',     levels: [0, 0, 10, 0, 10, 18],                mods: ['orb', 'smi'] },
+  { name: 'Strobe',          levels: [0, 10, 0, 0, 14, 0, 0, 20, 0],      mods: ['flk'] },
+  { name: 'Double trouble',  levels: [6, 6, 0, 16, 10, 20],                mods: ['smi'] },
+  { name: 'Lights out',      levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'] },
+  { name: 'Prank call',      levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'] },
+  { name: 'Waiting game',    levels: [10, 10, 20, 6, 12, 0],               mods: ['orb'] },
+  { name: 'Music lover',     levels: [8, 8, 8, 20, 0, 8],                  mods: ['len'] },
+  { name: 'Crawl space',     levels: [8, 0, 0, 10, 0, 0, 18, 0, 0],       mods: ['crw'] },
+  { name: "Don't blink",     levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'] },
+  { name: 'Graveyard shift', levels: [12, 12, 12, 12, 12, 12],             mods: ['len', 'sqr'] },
+  { name: 'New faces',       levels: [0, 0, 0, 6, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'] },
+  { name: 'Overtime',        levels: [16, 16, 16, 16, 16, 16],             mods: ['dia', 'len', 'smi'] },
+  { name: 'Shape party',     levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'] },
+  { name: '6/20',            levels: [20, 20, 20, 20, 20, 20],             mods: [] },
+  { name: 'Nightmare',       levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'] },
+  { name: '9/20',            levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [] },
+  { name: 'Total Nightmare', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'] },
 ];
+// Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention.
+PRESETS.forEach(p => { while (p.levels.length < SETUP.length) p.levels.push(0); });

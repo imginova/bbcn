@@ -31,6 +31,7 @@ onClick('btnAll20', () => setAllLevels(MAX_LEVEL));
 onClick('btnL', () => toggleDoor('L'));
 onClick('btnR', () => toggleDoor('R'));
 onClick('btnCam', toggleCam);
+onClick('btnMask', toggleMask);
 onClick('btnResume', () => setPaused(false));
 onClick('btnQuit', () => { showPause(false); goSetup(); });
 onClick('btnAgainWin', startNight);
@@ -161,11 +162,26 @@ for (const side of ['L', 'R']) {
 // A "click" only counts if the button goes down AND up on the same element, so a redraw in
 // between made the click land on the whole office instead, and (: was never caught.
 // With the Twins modifier there are two; the "smi-1" class marks the second one.
+// The Ж Crawler (class "crw-hit") can be clicked in the office too.
 $('officeArt').addEventListener('pointerdown', e => {
   const cell = e.target.closest('.smi');
   if (cell) {
     sfx.init();
     catchSmiley(cell.classList.contains('smi-1') ? 1 : 0);
+    e.preventDefault();
+  } else if (e.target.closest('.crw-hit')) {
+    sfx.init();
+    pushCrawler();
+    e.preventDefault();
+  }
+});
+
+// Clicking the Ж Crawler on a camera pushes it back one room (pointerdown for the same
+// reason as Smiley: the feed is redrawn many times a second).
+$('feed').addEventListener('pointerdown', e => {
+  if (e.target.closest('.crw-hit')) {
+    sfx.init();
+    pushCrawler();
     e.preventDefault();
   }
 });
@@ -218,7 +234,10 @@ document.addEventListener('keydown', e => {
     if (k === 'a' || k === 'A') toggleDoor('L');
     else if (k === 'd' || k === 'D') toggleDoor('R');
     else if (k === ' ' || k === 's' || k === 'S') { e.preventDefault(); toggleCam(); }
-    else if (k === 'w' || k === 'W') windKey = true;                         // released in keyup below
+    // W does two jobs: on the cameras you HOLD it to wind the music box (released in keyup below);
+    // in the office each press puts the mask on or takes it off. e.repeat is true for the extra
+    // presses a held-down key sends, so holding W never flips the mask on and off by itself.
+    else if (k === 'w' || k === 'W') { if (G.cam) windKey = true; else if (!e.repeat) toggleMask(); }
     else if (k === 'q' || k === 'Q') pressLight('L', lightKey);              // left door light, also released in keyup
     else if (k === 'e' || k === 'E') pressLight('R', lightKey);              // right door light
     else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);            // /^[1-7]$/ means "exactly one digit from 1 to 7"

@@ -31,6 +31,7 @@ function renderGame(now) {
     renderFeed(now);
   } else {
     office.classList.toggle('dark', G.powerOut);
+    office.classList.toggle('masked', G.mask);   // style.css darkens the view while you wear the mask
     for (const side of ['L', 'R']) {
       $('door' + side).innerHTML = toHtml(doorGrid(side, now));
       $('door' + side).classList.toggle('lit', lightOn(side));   // style.css makes a lit doorway glow
@@ -38,6 +39,12 @@ function renderGame(now) {
     const og = grid(officeLines(now, G.powerOut, G.cam), 36);
     // Once Lenny is out he flickers on your desk monitor (shown 3 frames out of 4).
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
+    // Ψ Visitor's face in the office, right in front of the monitor.
+    if (G.visitor.present) sprite(og, ...VISITOR_OFFICE, SPRITES.vis.office, VISITOR);
+    // Ж Crawler in the office. "crw-hit" is the class input.js listens for when you click it.
+    if (G.crawler.step === CRAWLER.route.length - 1) {
+      sprite(og, ...CRAWLER_OFFICE, SPRITES.crw.office, CRAWLER, ' crw-hit');
+    }
     // Smiley hiding in its spot, drawn in brown with a glow (the "smi" class in style.css) so it stands out.
     // The same class is what input.js listens for when you click it; "smi-0" or "smi-1" says WHICH one
     // (there are two with the Twins modifier).
@@ -64,13 +71,18 @@ function renderGame(now) {
     $(label).textContent = G.powerOut ? 'NO POWER' : G.cam ? 'CAM UP' : G.doors[side] ? 'DOOR SHUT'
       : lightOn(side) ? 'ON' : 'HOLD';
   }
+  // The mask: works whenever the camera is down (it needs no power).
+  $('btnMask').classList.toggle('on', G.mask);
+  $('btnMask').setAttribute('aria-pressed', String(G.mask));
+  $('stMask').textContent = G.mask ? 'ON' : G.cam ? 'CAM UP' : 'OFF';
   $('btnCam').classList.toggle('on', G.cam);
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
   $('btnCam').disabled = G.powerOut;
   // When the box runs low, the Camera button names the camera it's on and that map button flashes.
   const boxLow = !G.lenny.out && G.lenny.wind < BOX_LOW;
   const boxCam = ROOMS[G.lenny.room].cam;
-  $('stCam').textContent = G.powerOut ? 'NO POWER' : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ` · WIND CAM ${boxCam}!` : '');
+  $('stCam').textContent = G.powerOut ? 'NO POWER' : G.mask ? 'MASK ON'
+    : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ` · WIND CAM ${boxCam}!` : '');
   $('stCam').classList.toggle('alert', boxLow && !G.powerOut);
   for (const b of document.querySelectorAll('#map button')) {
     b.classList.toggle('alert', boxLow && b.dataset.room === G.lenny.room);
@@ -109,6 +121,9 @@ function doorGrid(side, now) {
     const [r0, c0, w, h] = SQUARE_SIZES[S.stage];
     stamp(g, r0, c0, SQUARE, w, h);
   }
+  // The light also shows the ¤ Flicker if it's waiting at this door.
+  const F = G.flicker;
+  if (lightOn(side) && F.phase > 0 && F.side === side) sprite(g, ...FLICKER_DOOR, SPRITES.flk.door, FLICKER);
 
   if (!closed) {
     // A visible shape (not the orb) standing in this doorway.
@@ -144,6 +159,10 @@ function renderFeed(now) {
     if (room === 'prize') prizeArt(g, G.lenny);
     // With the Wanderer modifier the box can be on another camera: draw the small version there.
     else if (room === G.lenny.room) miniBox(g, ...BOX_SPOTS[room], G.lenny);
+    // Ж Crawler, if it's in this room: its small drawing, which you can click ("crw-hit", see input.js).
+    if (CRAWLER.route[G.crawler.step] === room) {
+      sprite(g, ...CRAWLER_SLOTS[room], SPRITES.crw.cam, CRAWLER, ' crw-hit');
+    }
   }
   $('feed').innerHTML = toHtml(g);
 

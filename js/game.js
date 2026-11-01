@@ -39,7 +39,7 @@ function matchingPreset() {
 // A night's score: every level added up, plus MOD_BONUS for each ticked modifier
 // (only when that threat is switched on: a modifier on a level-0 threat does nothing).
 const nightScore = () => SETUP.reduce((total, c, i) => total + levels[i] + (mods[i] && levels[i] > 0 ? MOD_BONUS : 0), 0);
-const MAX_SCORE = SETUP.length * (MAX_LEVEL + MOD_BONUS);   // 6 x 25 = 150
+const MAX_SCORE = SETUP.length * (MAX_LEVEL + MOD_BONUS);   // 9 x 25 = 225
 
 // ---------- the current night ----------
 let G = null;        // all the state of the night in progress (built by newGame)
@@ -123,6 +123,32 @@ function newGame() {
       deadline: 0,                 // the moment it gets you if you haven't clicked it
       tickT: SMILEY_TICK,          // countdown to its next chance to wake up on its own
     },
+
+    crawler: {
+      level: levels[SETUP.indexOf(CRAWLER)],
+      step: 0,                     // where it is on CRAWLER.route: 0 = CAM 7 ... last = in your office
+      timer: CRAWLER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
+      hits: 0,                     // clicks so far on this room (Stubborn needs two)
+      deadline: 0,                 // in your office: the moment it gets you
+    },
+
+    flicker: {
+      level: levels[SETUP.indexOf(FLICKER)],
+      side: null,                  // which door it's at, or null when it's away
+      phase: 0,                    // 0 = away; 1 = first door; 2 = jumped to the other door; 3 = back again (Ping-pong)
+      flashT: 0,                   // how long the light has been on it without a break
+      deadline: 0,                 // the moment it gets you if it isn't flashed
+      timer: FLICKER.interval * (0.7 + Math.random() * 0.6),
+    },
+
+    visitor: {
+      level: levels[SETUP.indexOf(VISITOR)],
+      present: false,              // is it in your office right now?
+      maskT: 0,                    // how long the mask has been on while it's here
+      deadline: 0,                 // the moment it gets you if the mask isn't on
+      timer: VISITOR.interval * (0.7 + Math.random() * 0.6),
+    },
+    mask: false,                   // are you wearing the mask?
   };
 }
 
@@ -144,6 +170,12 @@ function update(dt) {
     updateSquare(dt);
     if (G.over) return;
     updateSmiley(dt);
+    if (G.over) return;
+    updateCrawler(dt);
+    if (G.over) return;
+    updateFlicker(dt);
+    if (G.over) return;
+    updateVisitor(dt);
   } else {
     // Power is out: just wait for the shape in the dark.
     G.outTimer -= dt;
@@ -424,6 +456,137 @@ function catchSmiley(i = 0) {
   dirty = true;
 }
 
+// ---------- Ж Crawler ----------
+// It crawls one room at a time along CRAWLER.route (CAM 7 → Supply → East hall → your office).
+// In your office it gets you after reactWindow(level) seconds unless you click it (see pushCrawler).
+function updateCrawler(dt) {
+  const C = G.crawler;
+  const office = CRAWLER.route.length - 1;
+  if (C.step === office) {
+    if (G.t >= C.deadline) lose(CRAWLER, null);
+    return;
+  }
+  C.timer -= dt;
+  if (C.timer > 0) return;
+  C.timer = CRAWLER.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= C.level) return;   // the same dice roll as everyone else
+
+  const from = CRAWLER.route[C.step];
+  C.step++;
+  C.hits = 0;
+  if (C.step === office) {
+    C.deadline = G.t + reactWindow(C.level);
+    sfx.crawlIn();
+  } else {
+    sfx.crawl(C.step / office);   // skittering, louder the closer it gets
+  }
+  if (G.cam && (G.camRoom === from || G.camRoom === CRAWLER.route[C.step])) camStatic(0.3);
+  dirty = true;
+}
+
+// The player clicked the Crawler. It only counts where you can actually see it: on its camera
+// (not during static), or in your office with the camera down. Each push sends it back ONE room;
+// with Stubborn it takes two clicks per room.
+function pushCrawler() {
+  const C = G && G.crawler;
+  if (!C || G.over || G.paused || C.step === 0) return;
+  const room = CRAWLER.route[C.step];
+  const seen = room === 'office' ? !G.cam : G.cam && G.camRoom === room && performance.now() >= G.staticUntil;
+  if (!seen) return;
+  C.hits++;
+  if (C.hits < (modOn('crw') ? 2 : 1)) { sfx.tap(); return; }
+  C.hits = 0;
+  C.step--;
+  C.timer = CRAWLER.interval * (1 + Math.random() * 0.5);   // a short break before it tries again
+  sfx.shoo();
+  dirty = true;
+}
+
+// ---------- ¤ Flicker ----------
+// It turns up at a door. A short flash of that door's light (FLASH_TIME seconds) makes it jump to
+// the other door; flash it there too and it leaves (Ping-pong: once more back at the first door).
+function updateFlicker(dt) {
+  const F = G.flicker;
+  if (F.phase > 0) {
+    if (lightOn(F.side)) {
+      F.flashT += dt;
+      if (F.flashT >= FLASH_TIME) {
+        F.flashT = 0;
+        F.phase++;
+        sfx.zap(F.side);
+        if (F.phase > (modOn('flk') ? 3 : 2)) {
+          F.phase = 0;                                          // flashed enough: it's gone
+          F.side = null;
+          F.timer = FLICKER.interval * (1 + Math.random() * 0.5);
+        } else {
+          F.side = otherSide(F.side);                           // it jumps to the other door
+          F.deadline = G.t + flickerWindow(F.level);
+          sfx.buzz(F.side);
+        }
+        dirty = true;
+      }
+      return;
+    }
+    F.flashT = 0;   // the flash has to be one steady burst
+    if (G.t >= F.deadline) lose(FLICKER, F.side);
+    return;
+  }
+  F.timer -= dt;
+  if (F.timer > 0) return;
+  F.timer = FLICKER.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= F.level) return;
+  F.side = pick(['L', 'R']);
+  F.phase = 1;
+  F.flashT = 0;
+  F.deadline = G.t + flickerWindow(F.level);
+  sfx.buzz(F.side);
+  dirty = true;
+}
+
+// ---------- Ψ Visitor and the mask ----------
+// It appears in your office. Get the mask on within reactWindow(level) seconds and keep it on for
+// MASK_HOLD seconds (twice that with Lingerer). Take it off too soon and the count starts over,
+// with the usual few seconds to put it back on.
+function updateVisitor(dt) {
+  const V = G.visitor;
+  if (V.present) {
+    if (G.mask) {
+      V.maskT += dt;
+      V.deadline = G.t + reactWindow(V.level);
+      if (V.maskT >= MASK_HOLD * (modOn('vis') ? 2 : 1)) {
+        V.present = false;
+        V.maskT = 0;
+        V.timer = VISITOR.interval * (1 + Math.random() * 0.5);
+        sfx.visitorOut();
+        dirty = true;
+      }
+      return;
+    }
+    V.maskT = 0;
+    if (G.t >= V.deadline) lose(VISITOR, null);
+    return;
+  }
+  V.timer -= dt;
+  if (V.timer > 0) return;
+  V.timer = VISITOR.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= V.level) return;
+  V.present = true;
+  V.maskT = 0;
+  V.deadline = G.t + reactWindow(V.level) + 0.5;   // a little extra, in case you're on the cameras
+  sfx.visitorIn();
+  dirty = true;
+}
+
+// Put the mask on or take it off (W in the office, or the Mask button). It can't be used while
+// you're on the cameras, and while it's on the cameras can't be raised.
+function toggleMask() {
+  if (!G || G.over || G.paused) return;
+  if (G.cam) { sfx.deny(); return; }
+  G.mask = !G.mask;
+  sfx.mask(G.mask);
+  dirty = true;
+}
+
 // Show static on the camera for `sec` seconds.
 // performance.now() is the time in milliseconds since the page opened.
 function camStatic(sec) {
@@ -444,6 +607,8 @@ function powerOutStart() {
   const active = visible.filter(m => m.level > 0);
   G.outBy = pick(active.length ? active : visible);
   G.smiley.active = false;                                // in the dark there's nothing to find
+  G.flicker.phase = 0; G.flicker.side = null;             // and the Flicker and Visitor give up too
+  G.visitor.present = false;
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -460,7 +625,7 @@ function toggleDoor(side) {
 
 function toggleCam() {
   if (!G || G.over || G.paused) return;
-  if (G.powerOut) { sfx.deny(); return; }
+  if (G.powerOut || G.mask) { sfx.deny(); return; }   // no cameras without power, or with the mask on
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
@@ -471,7 +636,7 @@ function toggleCam() {
 // Jump to a camera (raising the camera first if needed).
 function setCam(room) {
   if (!G || G.over || G.paused) return;
-  if (G.powerOut) { sfx.deny(); return; }
+  if (G.powerOut || G.mask) { sfx.deny(); return; }
   G.cam = true;
   G.camRoom = room;
   sfx.cam();
@@ -522,17 +687,26 @@ function win() {
   showWin(sum, isBest, challenge, firstTime);
 }
 
-// A shape (c, from data.js) got you through door `side`. `dark` is true when the power had run out.
+// A threat (c, from data.js) got you through door `side` ('L' or 'R'), or straight in your office
+// when side is null (the Crawler and the Visitor). `dark` is true when the power had run out.
 function lose(c, side, dark = false) {
   G.over = true;
   sfx.humOff();
   sfx.scream();
   const when = hourLabel(hourOf(G.t));
-  const doorName = side === 'L' ? 'LEFT door' : 'RIGHT door';
+  const how = side ? `came through the ${side === 'L' ? 'LEFT door' : 'RIGHT door'}` : 'got you in your office';
   const message = dark
     ? `The power ran out. ${symHtml(c)} found you in the dark at ${when}.`
-    : `${symHtml(c)} came through the ${doorName} at ${when}.`;
-  // The jumpscare: the shape drawn huge, filling a 44 x 22 grid.
+    : `${symHtml(c)} ${how} at ${when}.`;
+  // The jumpscare. Ж ¤ Ψ have a big drawing of their own (SPRITES in art.js), shown at double size;
+  // the shapes are drawn huge, filling a 44 x 22 grid with their symbol.
+  const big = SPRITES[c.id] && SPRITES[c.id].scare;
+  if (big) {
+    const g = Array.from({ length: big.length }, () => Array.from({ length: Math.max(...big.map(l => l.length)) }, () => ({ ch: ' ', cls: '' })));
+    sprite(g, 0, 0, big, c);
+    showScare(message, `<span class="scare-big">${toHtml(g)}</span>`);
+    return;
+  }
   const W = 44, H = 22;
   const g = Array.from({ length: H }, () => Array.from({ length: W }, () => ({ ch: ' ', cls: '' })));
   stamp(g, 0, 0, c, W, H);

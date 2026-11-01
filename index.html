@@ -20,7 +20,7 @@
   The game has five screens, and only one is visible at a time
   (the others carry the `hidden` attribute):
     #scr-title  title screen
-    #scr-setup  custom night: set each threat's level (six of them)
+    #scr-setup  custom night: set each threat's level (nine of them)
     #scr-game   the night itself (HUD, office or cameras, controls)
     #scr-win    6 AM, you survived
     #scare      jumpscare and game over (covers the whole window)
@@ -44,8 +44,8 @@
     <section id="scr-title" class="title">
       <p class="eyebrow">Overnight guard post · 12 AM to 6 AM</p>
       <h1>BARE BONES CUSTOM NIGHT</h1>
-      <p class="tag">Six hours, two doors, two lights, one battery. Four shapes wander this building after closing, something waits in the music box, and something else likes to hide.</p>
-      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="sym s-sqr">■</span><span class="face">( ͡° ͜ʖ ͡°)</span><span class="smi-face s-smi">(:</span></p>
+      <p class="tag">Six hours, two doors, two lights, one mask, one battery. Four shapes wander this building after closing, something waits in the music box, something likes to hide, and three stranger things have moved in.</p>
+      <p class="trio" aria-hidden="true"><span class="sym s-dia">◆</span><span class="sym s-tri">▲</span><span class="sym s-orb">●</span><span class="sym s-sqr">■</span><span class="face">( ͡° ͜ʖ ͡°)</span><span class="smi-face s-smi">(:</span><span class="sym s-crw">Ж</span><span class="sym s-flk">¤</span><span class="sym s-vis">Ψ</span></p>
       <div class="menu">
         <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
         <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
@@ -112,9 +112,10 @@
         <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
         <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
         <button id="btnLightL" type="button" class="light"><span>Left light<kbd>Q</kbd></span><span class="state" id="stLightL">HOLD</span></button>
+        <button id="btnMask" type="button"><span>Mask<kbd>W</kbd></span><span class="state" id="stMask">OFF</span></button>
         <button id="btnLightR" type="button" class="light"><span>Right light<kbd>E</kbd></span><span class="state" id="stLightR">HOLD</span></button>
       </div>
-      <p class="keys hint">1–7 jump to a camera · hold Q / E for the door lights · hold W on CAM 7 to wind · P pauses · M toggles sound</p>
+      <p class="keys hint">1–7 jump to a camera · hold Q / E for the door lights · W: mask in the office, hold to wind on CAM 7 · P pauses · M toggles sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -167,7 +168,10 @@
       <li><span class="face">( ͡° ͜ʖ ͡°)</span> sleeps in the music box on CAM 7. The box slowly unwinds; hold W (or the Wind button) while watching CAM 7 to wind it back up. When it gets low, the Camera button warns you. If it runs out, he comes for you and nothing can stop him.</li>
       <li><span class="sym s-sqr">■</span> creeps up to either door in three steps: far, medium, close. One more step and it gets you, and doors don't stop it. You hear a loud scrape when it gets close. Hold a door light (Q or E) to see it; keep holding and it gets pushed further back. A shut door blocks the light. From far away it may sneak over to the other door.</li>
       <li><span class="smi-face s-smi">(:</span> hides in your office. If you hear a giggle (often right after lowering the camera, but it can wake up on its own too), find (: somewhere in the office and click it quickly.</li>
-      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Bold needs twice as much light to push back; (: Twins hides two at once.</li>
+      <li><span class="sym s-crw">Ж</span> crawls from CAM 7 through Supply and the East hall to your office. Click it on the camera it's on to push it back one room, then follow it and keep clicking until it's home on CAM 7. If it reaches your office, click it there quickly.</li>
+      <li><span class="sym s-flk">¤</span> buzzes at one of your doors. Flash that door's light for a moment and it jumps to the other door; flash it there too and it leaves. Doors don't stop it, and a shut door blocks the light.</li>
+      <li><span class="sym s-vis">Ψ</span> appears right in your office. Put the mask on (W, or the Mask button) and keep it on until it leaves. You can't use the cameras with the mask on, but doors, lights and clicking all still work.</li>
+      <li>★ Modifiers (ticked on the custom night screen) give each threat a twist: ◆ Charger freezes while you watch it but rushes when you don't; ▲ Trickster fakes its door sound while you're on the cameras (the real one is always in the doorway); ● Patient, when shut out, waits behind the door; when it growls (after about 2 seconds), open the door, let it attack once more and slam it again (open too soon and it just waits again); Lenny's Wanderer box moves between cameras 2, 3, 4 and 7; ■ Bold needs twice as much light to push back; (: Twins hides two at once; Ж Stubborn takes two clicks per room; ¤ Ping-pong needs a third flash; Ψ Lingerer makes you keep the mask on twice as long.</li>
       <li>Watch the hallway cameras (5 and 6) for early warning, then close the door before the shape arrives.</li>
       <li>Doors, door lights and the camera use power. If power hits 0%, everything shuts off and you are on your own.</li>
     </ul>
@@ -176,9 +180,11 @@
         <tr><td>Left / right door</td><td>A / D, or click the door or its button (works with the camera up too)</td></tr>
         <tr><td>Door lights</td><td>Hold Q (left) / E (right), or hold the light buttons (camera down, door open)</td></tr>
         <tr><td>Catch (:</td><td>Click it in the office</td></tr>
+        <tr><td>Push back Ж</td><td>Click it on its camera (or in the office)</td></tr>
+        <tr><td>Mask</td><td>W in the office, or the Mask button (not while on the cameras)</td></tr>
         <tr><td>Camera up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Pick a camera</td><td>1 to 7, or click a room on the map</td></tr>
-        <tr><td>Wind the music box</td><td>Hold W, or hold the Wind button, while on CAM 7 (or wherever the box wandered)</td></tr>
+        <tr><td>Wind the music box</td><td>Hold W (on the cameras), or hold the Wind button, while on CAM 7 (or wherever the box wandered)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>
       </table>

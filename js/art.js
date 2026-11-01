@@ -228,6 +228,104 @@ function miniBox(g, r, c, lenny) {
 // Index 0 is unused because stage 0 means "not at a door".
 const SQUARE_SIZES = [null, [8, 4, 4, 2], [6, 3, 6, 4], [3, 1, 10, 9]];
 
+// ---------- the three newest threats: little ASCII drawings ----------
+// Unlike the shapes (drawn as a blob of their own symbol), Ж ¤ Ψ are proper drawings, with their
+// symbol as the eyes or the body. Each one comes in a few sizes: small for a camera or a doorway,
+// medium for your office, big for its jumpscare.
+//
+// String.raw`...` keeps every backslash exactly as typed (normally \ is a special character),
+// which makes ASCII art much easier to write. drawing() turns one into a list of lines.
+const drawing = text => text.split('\n').filter(line => line.trim() !== '');
+
+const SPRITES = {
+  crw: {   // Ж Crawler: a spider-ish thing with a Ж body
+    cam: drawing(String.raw`
+\Ж/
+=O=
+/ \
+`),
+    office: drawing(String.raw`
+\\ Ж //
+-=(_)=-
+//   \\
+`),
+    scare: drawing(String.raw`
+\\\             ///
+ \\\   .---.   ///
+  \\\ ( Ж Ж ) ///
+===== (  ^  ) =====
+  /// ( \_/ ) \\\
+ ///   '---'   \\\
+///             \\\
+`),
+  },
+  flk: {   // ¤ Flicker: a crackling spark with legs
+    door: drawing(String.raw`
+ \ | /
+-- ¤ --
+ / | \
+  /|\
+   |
+  / \
+`),
+    scare: drawing(String.raw`
+  \    \ | /    /
+   \   .-+-.   /
+----  / ¤ ¤ \  ----
+----  \  ^  /  ----
+   /   '-+-'   \
+  /    / | \    \
+      /  |  \
+     /   |   \
+`),
+  },
+  vis: {   // Ψ Visitor: a pale, smiling face with Ψ eyes
+    office: drawing(String.raw`
+   .-----.
+  /       \
+ |  Ψ   Ψ  |
+ |    ^    |
+  \ '---' /
+   \_____/
+`),
+    scare: drawing(String.raw`
+      .---------.
+    /             \
+   |   Ψ       Ψ   |
+   |               |
+   |       ^       |
+    \   '-----'   /
+     \___________/
+         |   |
+      ___|   |___
+`),
+  },
+};
+
+// Copy a drawing into a grid with its top-left corner at row r0, column c0, in the creature's color.
+// The creature's own symbol gets the "sym" class (so it keeps its one-column width). Spaces outside
+// the drawing are see-through; spaces INSIDE it (between the first and last character of a line)
+// cover whatever is behind, so the background doesn't show through its face.
+// `extra` adds a class to every cell, e.g. ' crw-hit' so the Crawler can be clicked.
+function sprite(g, r0, c0, lines, creature, extra = '') {
+  lines.forEach((line, r) => {
+    const first = line.search(/\S/), last = line.trimEnd().length - 1;   // where the drawing starts and ends
+    Array.from(line).forEach((ch, c) => {
+      const cell = g[r0 + r] && g[r0 + r][c0 + c];
+      if (!cell || c < first || c > last) return;
+      g[r0 + r][c0 + c] = { ch, cls: (ch === creature.sym ? 'sym ' : '') + 's-' + creature.id + extra };
+    });
+  });
+}
+
+// Where the drawings go, as [top row, left column]:
+//   the Ж Crawler on each camera of its route (clear of the shapes' SLOTS and the wandering box),
+//   the Ж Crawler and Ψ Visitor in your office, and the ¤ Flicker inside a lit doorway.
+const CRAWLER_SLOTS = { prize: [6, 5], supply: [5, 2], ehall: [4, 11] };
+const CRAWLER_OFFICE = [5, 24];
+const VISITOR_OFFICE = [7, 9];
+const FLICKER_DOOR = [5, 2];
+
 // ---------- Smiley's hiding spots ----------
 // Where (: can appear in the office picture, as [row, column] of its "(".
 // They match the lines in officeLines() below: on the poster, on the monitor,

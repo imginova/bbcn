@@ -182,6 +182,40 @@ const sfx = (() => {
     // Clicking it in time: a little pop.
     pop() { tone(500, 0.08, { type: 'sine', vol: 0.3, slide: 700 }); },
 
+    // ----- Ж Crawler -----
+    // Skittering as it moves a room closer (from the right side, where its route ends up).
+    crawl(progress) {
+      for (let i = 0; i < 5; i++) noise(0.03, { vol: 0.08 + progress * 0.3, freq: 3500, type: 'highpass', delay: i * 0.05, pan: 0.6 * progress });
+    },
+    // In your office: a fast, loud scuttle right in front of you.
+    crawlIn() {
+      for (let i = 0; i < 9; i++) noise(0.03, { vol: 0.5, freq: 3000, type: 'highpass', delay: i * 0.035 });
+      tone(180, 0.3, { type: 'sawtooth', vol: 0.15, slide: 120 });
+    },
+    tap() { tone(700, 0.04, { vol: 0.1 }); },                               // Stubborn: one more click needed
+    shoo() { tone(900, 0.12, { type: 'triangle', vol: 0.18, slide: -600 }); },   // pushed back a room
+
+    // ----- ¤ Flicker -----
+    // An electric buzz from the door it's at.
+    buzz(side) {
+      for (let i = 0; i < 3; i++) tone(120, 0.08, { type: 'square', vol: 0.16, delay: i * 0.12, pan: panOf(side) });
+      noise(0.35, { vol: 0.12, freq: 2200, type: 'highpass', pan: panOf(side) });
+    },
+    // Flashed: a sharp zap.
+    zap(side) { tone(1800, 0.1, { type: 'sawtooth', vol: 0.15, slide: -1500, pan: panOf(side) }); },
+
+    // ----- Ψ Visitor and the mask -----
+    // It appears: a low breath and a wobbling hum.
+    visitorIn() {
+      noise(0.9, { vol: 0.35, freq: 500 });
+      tone(65, 0.9, { type: 'sine', vol: 0.4, slide: 25 });
+      tone(97, 0.9, { type: 'triangle', vol: 0.15, slide: -20, delay: 0.1 });
+    },
+    // It leaves: the hum fades away downward.
+    visitorOut() { tone(110, 0.6, { type: 'sine', vol: 0.25, slide: -70 }); },
+    // Putting the mask on (muffled thump) or taking it off (lighter click).
+    mask(on) { on ? noise(0.15, { vol: 0.35, freq: 300 }) : tone(600, 0.05, { vol: 0.08 }); },
+
     // ----- Lenny's music box -----
     windTick() { tone(2300, 0.025, { vol: 0.05 }); },
     boxWarn() {

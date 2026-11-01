@@ -67,6 +67,14 @@ const SMILEY_SOLO = 0.5;
 // (It was 5 to 2.5; everything was multiplied by 1.25 to make Smiley a bit easier, still level-based.)
 const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
 
+// ---------- Ж Crawler, ¤ Flicker, Ψ Visitor ----------
+// (The Crawler in your office and the Visitor both give you reactWindow(level) seconds, like the doors.)
+const FLASH_TIME = 0.4;    // ¤ seconds of steady light that make the Flicker jump doors (or leave)
+// ¤ seconds to flash the Flicker before it gets you: a bit longer than a door's reaction window,
+// because you may need to lower the camera and open the door first.
+const flickerWindow = level => reactWindow(level) + 1.5;
+const MASK_HOLD = 2.5;     // Ψ seconds the mask must stay on before the Visitor leaves (twice that with Lingerer)
+
 // ---------- modifiers ----------
 // Ticking a threat's modifier on the custom night screen adds this much to the night's score
 // (only if that threat's level is above 0, since a switched-off threat's modifier does nothing).

@@ -28,7 +28,10 @@
   --c-orb: #c8a6ff;
   --c-len: #a8ee7e;   /* the threat colors: --c-dia, --c-tri, --c-orb above and --c-sqr, --c-smi below */
   --c-sqr: #ff8a3d;
-  --c-smi: #b8662e;   /* a reddish brown: darker and redder than the amber, so (: still shows up in the office */
+  --c-smi: #b8662e;
+  --c-crw: #d6e04a;   /* Ж Crawler: sickly yellow-green */
+  --c-flk: #e4f0ff;   /* ¤ Flicker: pale electric white */
+  --c-vis: #ff5fc8;   /* Ψ Visitor: magenta */   /* a reddish brown: darker and redder than the amber, so (: still shows up in the office */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --art: min(16px, calc((100vw - 60px) / 37));
@@ -117,6 +120,12 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
 .s-sqr { color: var(--c-sqr); }
 .s-len, .face { color: var(--c-len); }
 .s-smi { color: var(--c-smi); }
+.s-crw { color: var(--c-crw); }
+.s-flk { color: var(--c-flk); text-shadow: 0 0 6px var(--c-flk); }
+.s-vis { color: var(--c-vis); }
+/* The Crawler can be clicked; the invisible ::after box makes each small symbol easier to hit. */
+.crw-hit { position: relative; cursor: pointer; }
+.crw-hit::after { content: ""; position: absolute; inset: -4px; }
 /* Smiley's (: on menus and in the help. It's plain text, two characters wide. */
 .smi-face { display: inline-block; white-space: pre; font-weight: 600; }
 /* Smiley hiding in the office, in brown with a soft glow so it stands out from the amber.
@@ -203,6 +212,8 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .office pre[data-door] { cursor: pointer; }
 /* A door light shining: the doorway glows. */
 .office pre.lit { background: rgba(242,179,91,.16); box-shadow: 0 0 18px rgba(242,179,91,.25); }
+/* Wearing the mask: the office goes dim, as if seen through two small eye holes. */
+.office.masked { filter: brightness(.55) contrast(1.2); box-shadow: inset 0 0 60px 30px rgba(0,0,0,.85); }
 .office.dark { color: var(--faint); }
 .office.dark .door, .office.dark .dim { color: #2a1f13; }
 .office.dark .sym { color: inherit; }
@@ -234,6 +245,7 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .controls button:disabled { opacity: .35; cursor: not-allowed; }
 /* The two door lights sit on a second row, under their doors (columns 1 and 3). */
 #btnLightL { grid-column: 1; }
+#btnMask { grid-column: 2; }   /* the mask sits between the two lights */
 #btnLightR { grid-column: 3; }
 .controls button.light { touch-action: none; user-select: none; -webkit-user-select: none; }
 .hint { margin-top: 10px; text-align: center; }
@@ -260,6 +272,8 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 }
 #scareArt { font-size: min(3.3vw, 3.4vh); line-height: 1; }
 #scareArt .sym { text-shadow: 0 0 10px currentColor; }
+/* Ж ¤ Ψ jumpscares are smaller drawings, so they're shown at double size. */
+#scareArt .scare-big { font-size: 2.2em; line-height: 1.1; text-shadow: 0 0 10px currentColor; }
 #scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 #scareMsg h2 { color: var(--danger); }
 .shake { animation: shake .07s linear infinite; }
