@@ -33,27 +33,30 @@ const MAX_LEVEL = 20;
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
 // Seconds you get to shut the door once a shape is in the doorway.
-// This is a straight line: 4.0s at level 1, sliding down to 2.4s at level 20.
-// (level - 1) goes from 0 to 19, so (level - 1) * (1.6 / 19) goes from 0 to 1.6.
-const reactWindow = level => 4.0 - (level - 1) * (1.6 / 19);
+// This is a straight line: 4.0s at level 1, sliding down to 2.9s at level 20.
+// (level - 1) goes from 0 to 19, so (level - 1) * (1.1 / 19) goes from 0 to 1.1.
+// (Level 20 used to give only 2.4s; it was eased, with the other level-20 numbers below marked
+// "eased", so a bot could beat Total Nightmare about 1 night in 10 instead of never.)
+const reactWindow = level => 4.0 - (level - 1) * (1.1 / 19);
 
 // The orb never visits the same door more than this many times in a row (see chooseRoute in game.js).
 // Pure coin flips made some nights feel like it only ever went right.
 const MAX_STREAK = 2;
 
 // ---------- Lenny's music box ----------
-// How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 4.0 at level 20.
+// How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 2.0 at level 20.
 // Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1
-// (about 110s from full) up to 6.0 at level 20 (about 17s from full).
-const boxDrain = level => (0.6 + (level - 1) * (3.4 / 19)) * PACE * 0.75;
+// (about 110s from full) up to 3.0 at level 20 (about 33s from full).
+// (Eased: level 20 used to unwind twice as fast, emptying in about 17s.)
+const boxDrain = level => (0.6 + (level - 1) * (1.4 / 19)) * PACE * 0.75;
 const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
 const BOX_LOW = 30;        // below this %, the camera button and CAM 7 start warning you
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you
 
 // ---------- ■ Square and the door lights ----------
 // Seconds of steady light needed to push the square back ONE stage; keep holding to push it further.
-// 0.5s at level 1, up to 1.0s at level 20 (harder squares are more stubborn).
-const lightPush = level => 0.5 + (level - 1) * (0.5 / 19);
+// 0.5s at level 1, up to 0.8s at level 20 (harder squares are more stubborn; eased from 1.0s).
+const lightPush = level => 0.5 + (level - 1) * (0.3 / 19);
 const SQUARE_SWAP = 0.5;   // chance that a square at FAR switches doors instead of coming closer
 
 // ---------- (: Smiley ----------
@@ -68,16 +71,21 @@ const SMILEY_SOLO = 0.5;
 const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
 
 // ---------- Ж Crawler, ¤ Flicker, Ψ Visitor ----------
-// (The Crawler in your office and the Visitor both give you reactWindow(level) seconds, like the doors.)
+// (The Visitor gives you reactWindow(level) seconds to get the mask on, like the doors.)
+// Ж seconds to click the Crawler once it's in your office: the reaction window plus 2.5s, because you
+// may have to lower the camera first, and with its Stubborn modifier it takes two clicks. (Eased: it
+// used to be just the reaction window, and it was the bot's deadliest threat on Total Nightmare.)
+const crawlerWindow = level => reactWindow(level) + 2.5;
 const FLASH_TIME = 0.4;    // ¤ seconds of steady light that make the Flicker jump doors (or leave)
 // ¤ seconds to flash the Flicker before it gets you: a bit longer than a door's reaction window,
 // because you may need to lower the camera and open the door first.
 const flickerWindow = level => reactWindow(level) + 1.5;
-const MASK_HOLD = 2.5;     // Ψ seconds the mask must stay on before the Visitor leaves
+const MASK_HOLD = 2.0;     // Ψ seconds the mask must stay on before the Visitor leaves (eased from 2.5)
 // Ψ its appearance timer: a random wait between `shortest` and 1.8 times that. The shortest wait is
-// 30s at level 1, down to 8s at level 20 (so level 20 waits 8 to about 14 seconds between visits).
+// 30s at level 1, down to 12s at level 20 (so level 20 waits 12 to about 22 seconds between visits;
+// eased from 8 to 14).
 const visitorWait = level => {
-  const shortest = 30 - (level - 1) * (22 / 19);
+  const shortest = 30 - (level - 1) * (18 / 19);
   return shortest + Math.random() * shortest * 0.8;
 };
 
