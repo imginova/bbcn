@@ -244,6 +244,10 @@ function update(dt) {
   if (!G.powerOut) {
     updatePower(dt);
     if (G.powerOut || G.over) return;
+    // The Spammer goes before the tasks, so a task stops on the very moment an ad pops up
+    // (an ad pauses the task you're working on until you close it).
+    updateSpammer(dt);
+    if (G.over) return;
     updateTasks(dt);
     if (G.over) return;
     for (const m of G.mobs) {
@@ -265,8 +269,6 @@ function update(dt) {
     updateVentCrawler(G.slink, SLINK, dt);
     if (G.over) return;
     updatePeeker(dt);
-    if (G.over) return;
-    updateSpammer(dt);
   } else {
     // Power is out: just wait for the shape in the dark.
     G.outTimer -= dt;
