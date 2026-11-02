@@ -140,7 +140,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 
 ## Hosting, deploy and analytics
 
-- **Hosting:** GitHub Pages. One-time setting (needs the `imginova` account): repo Settings → Pages → Source = **GitHub Actions**.
+- **Hosting:** GitHub Pages, live since 2026-11-01. Its one setting (needs the `imginova` account): repo Settings → Pages → Source = **GitHub Actions**; it is already on.
 - **Pipeline:** `.github/workflows/deploy.yml`. Every pull request runs the syntax check and `node tools/build.js`. A push to `main` also deploys `dist/` to Pages.
 - **`tools/build.js`:** copies `style.css` and the scripts listed in `index.html` into `dist/`, and wraps the `index.html` fragment in `<!doctype html><html><head>…<body>` (without a doctype, browsers use quirks mode). If `GA_ID` (a constant at the top of the file, or the `GA_ID` environment variable) is set, it also adds Google's `gtag.js` tag to the head and `window.GA_ID`. **The source `index.html` must stay a fragment.** `dist/` is gitignored.
 - **`js/analytics.js`:**
@@ -148,8 +148,8 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
   - Per-device counters live in `store` key `stats` (`nights`, `wins`, `deaths`, `firstSeen`, `attempts` per challenge); the random `playerId` is in `store` too. They are sent as GA user properties and event parameters, only while tracking is allowed.
   - **Consent:** the first visit asks `get.geojs.io` for country and state (cached 30 days in `store` key `geo`). EU/EEA/UK/CH and 19 US states (`CONSENT_COUNTRIES`, `CONSENT_STATES`), or a failed lookup, show the `#consent` banner; the choice is saved in `store` key `consent`. The page also sets Google's region-based consent defaults (denied in those places). Declining deletes the `playerId`; GA then only receives cookieless pings. The Privacy button (`#btnPrivacy`) reopens the banner; it and the banner only appear when the tag is present.
   - **When you add a new way to lose or a new ending, call `analytics.death`/`win`/`leave` from it**, and update the event table in `ANALYTICS.md`.
-- **No GA property existed when this was written (2026-11-01):** the owner follows `ANALYTICS.md` to create one and pastes the measurement ID into `GA_ID`, so the first deploy has no analytics until then.
-- **Tested** with a fake ID in the browser pane: banner shown for `US/California` and `DE`, hidden for `US/Washington` and the real lookup; Allow, Decline and failed-lookup paths; every event with its fields; no Google traffic and no banner without a `GA_ID`. **Not yet tested:** real data arriving in Google Analytics, and the live GitHub Pages deploy.
+- **Google Analytics is set up (2026-11-01):** the GA4 property is owned by the project's company Google account. Its measurement ID `G-6YSDZ507F9` is the `GA_ID` constant in `tools/build.js` (public, not a secret). In GA: event data retention is 14 months, all 16 custom dimensions from `ANALYTICS.md` are registered (10 event-scoped, 6 user-scoped), and the daily BigQuery export is linked (no streaming).
+- **Tested** with a fake ID in the browser pane: banner shown for `US/California` and `DE`, hidden for `US/Washington` and the real lookup; Allow, Decline and failed-lookup paths; every event with its fields; no Google traffic and no banner without a `GA_ID`. After the first deploy: the build and deploy jobs passed, and the live page, its scripts and the tag in the page all load. **Not yet checked by Claude:** real events arriving in Google Analytics (Claude can't see the GA account), the dimensions filling in, and the first BigQuery tables.
 
 ## Publishing (the private Artifact link)
 
