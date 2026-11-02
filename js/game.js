@@ -813,6 +813,19 @@ function updateVentCrawler(V, c, dt) {
 // One of the rooms next to `room` that is a step closer to your office (a random one if there are two).
 const closerVent = room => pick(VENTS[room].next.filter(r => VENTS[r].dist < VENTS[room].dist));
 
+// How many steps through the vents it takes to get from room `a` to room `b` (0 if they're the same).
+// It spreads out one step at a time: first the rooms next to `a`, then the rooms next to those, and
+// so on, until it reaches `b`. (This is called a "breadth-first search".)
+function ventSteps(a, b) {
+  let ring = [a];
+  const seen = new Set(ring);
+  for (let steps = 0; ring.length; steps++) {
+    if (ring.includes(b)) return steps;
+    ring = ring.flatMap(r => VENTS[r].next).filter(r => !seen.has(r) && seen.add(r));
+  }
+  return Infinity;   // not connected at all (can't happen with today's vents)
+}
+
 // Move a vent crawler into `room`, with a metal clank that gets louder the closer it is.
 // Reaching V6 (right next to your office) makes a loud bang: that's your warning.
 function moveVent(V, room) {
@@ -841,7 +854,7 @@ function playLure(room) {
   const rest = c => c.interval * (2 + Math.random());
 
   const E = G.echo;
-  const echoHears = E.room === room || VENTS[E.room].next.includes(room);
+  const echoHears = ventSteps(E.room, room) <= ECHO_HEAR;   // up to 2 rooms away
   if (E.level > 0 && echoHears && !(modOn('ech') && E.followed === room)) {
     E.room = room;
     E.followed = room;
