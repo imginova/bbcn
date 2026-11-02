@@ -64,15 +64,17 @@ $('tabs').addEventListener('click', e => {
   if (e.detail) b.blur();
 });
 
-// Clicking a vent room on the VENTS tab plays an audio lure there. Each room's cells carry a class
-// like "vr-v3" (see ventGrid in art.js); we read the room out of it. pointerdown, like Smiley and the
-// Crawler, because the map is redrawn many times a second.
+// Clicking a vent room on the VENTS tab plays an audio lure there, or, if Ж is in that room (its
+// ★ Vent crawl), pushes it back one vent instead. Each room's cells carry a class like "vr-v3" (see
+// ventGrid in art.js); we read the room out of it. pointerdown, like Smiley and the Crawler,
+// because the map is redrawn many times a second.
 $('ventMap').addEventListener('pointerdown', e => {
   const cell = e.target.closest('.vroom');
   if (!cell) return;
   const room = [...cell.classList].find(name => name.startsWith('vr-')).slice(3);   // "vr-v3" → "v3"
   sfx.init();
-  playLure(room);
+  if (G && G.crawler.vent === room) pushVentCrawler();
+  else playLure(room);
   e.preventDefault();
 });
 

@@ -102,8 +102,9 @@ const adsUp = () => G.ads.length > 0;
 // Are you looking at camera `room` right now? (The monitor is up, on the CAMS tab, showing that room,
 // and no ad is covering it.)
 const onCam = room => G.cam && G.tab === 'cams' && G.camRoom === room && !adsUp();
-// Is the VENTS tab worth having tonight? Only if a vent crawler is switched on.
-const ventsOn = () => G.echo.level > 0 || G.slink.level > 0;
+// Is the VENTS tab worth having tonight? Only if a vent crawler is switched on, or Ж with its
+// ★ Vent crawl (it can climb into the vents, so you need the map to follow it).
+const ventsOn = () => G.echo.level > 0 || G.slink.level > 0 || (G.crawler.level > 0 && modOn('crw'));
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
@@ -184,7 +185,8 @@ function newGame() {
       route: pick(CRAWLER.routes), // its path tonight: east or west side (it picks again at CAM 2)
       step: 0,                     // where it is on its route: 0 = CAM 7 ... last = in your office
       timer: CRAWLER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
-      hits: 0,                     // clicks so far on this room (Stubborn needs two)
+      vent: null,                  // ★ Vent crawl: the vent room it's in ('v1'...'v15'), or null when it isn't
+      viaVent: false,              // ★ Vent crawl: did it come into your office through the vents?
       deadline: 0,                 // in your office: the moment it gets you
     },
 
@@ -217,8 +219,7 @@ function newGame() {
       maskT: 0,                    // how long the mask has been on while it's here
       deadline: 0,                 // the moment it gets you if the mask isn't on
       timer: peekerWait(levels[SETUP.indexOf(PEEKER)]),   // its appearance timer
-      returning: false,            // ¥ Double: has it already left once this visit?
-      returnT: 0,                  // ¥ Double: countdown until it's back
+      side: null,                  // ¥ Knock knock: 'L' or 'R' when this visit is at a door (null: the usual peek)
     },
 
     spammer: {
@@ -650,6 +651,10 @@ function catchSmiley(i = 0) {
 // ---------- Ж Crawler ----------
 // It crawls one room at a time along its route: CAM 7 → Stage → Dining, then the east side
 // (Supply → East hall) or the west side (Backstage → West hall), then your office.
+// ★ Vent crawl: leaving the dining hall it may climb into the vents instead (CRAWL_VENT_CHANCE). Then
+// C.vent says which vent room it's in (C.step stays on the dining hall, where it climbed in), and it
+// creeps one vent closer at a time, CRAWL_VENT_RATE times as often, until it drops out of V15 into
+// your office.
 // In your office it gets you after crawlerWindow(level) seconds unless you click it (see pushCrawler).
 function updateCrawler(dt) {
   const C = G.crawler;
@@ -658,17 +663,44 @@ function updateCrawler(dt) {
     if (G.t >= C.deadline) lose(CRAWLER, null);
     return;
   }
-  C.timer -= dt;
+  C.timer -= dt * (C.vent ? CRAWL_VENT_RATE : 1);
   if (C.timer > 0) return;
   C.timer = CRAWLER.interval * (0.85 + Math.random() * 0.3);
   if (Math.random() * MAX_LEVEL >= C.level) return;   // the same dice roll as everyone else
 
+  if (C.vent) {   // in the vents: one vent closer, or out of V15 into your office
+    if (C.vent === VENT_EXIT) {
+      C.vent = null;
+      C.step = office;
+      C.deadline = G.t + crawlerWindow(C.level);
+      sfx.crawlIn();
+    } else {
+      C.vent = closerVent(C.vent);
+      if (C.vent === VENT_EXIT) sfx.ventNear();   // the same loud bang as Echo and Slink
+      else sfx.ventMove(1 - (VENTS[C.vent].dist - 1) / 6);
+    }
+    dirty = true;
+    return;
+  }
+
   const from = C.route[C.step];
   // Leaving the dining hall: flip a coin for the east or the west side. Both routes start the same
   // way (CAM 7, Stage, Dining), so switching routes here doesn't move it.
-  if (from === 'dining') C.route = pick(CRAWLER.routes);
+  if (from === 'dining') {
+    if (modOn('crw') && Math.random() < CRAWL_VENT_CHANCE) {
+      // ★ Vent crawl: into the vents instead. The tell: a skitter and a clank, and it's on the vent map.
+      C.vent = VENT_START;
+      C.viaVent = true;
+      sfx.crawl(0.5);
+      sfx.ventMove(0.3);
+      if (G.cam && G.camRoom === 'dining') camStatic(0.3);
+      dirty = true;
+      return;
+    }
+    C.route = pick(CRAWLER.routes);
+    C.viaVent = false;
+  }
   C.step++;
-  C.hits = 0;
   if (C.step === office) {
     C.deadline = G.t + crawlerWindow(C.level);
     sfx.crawlIn();
@@ -680,19 +712,34 @@ function updateCrawler(dt) {
 }
 
 // The player clicked the Crawler. It only counts where you can actually see it: on its camera
-// (not during static), or in your office with the camera down. Each push sends it back ONE room;
-// with Stubborn it takes two clicks per room.
+// (not during static), or in your office with the camera down. Each push sends it back ONE room.
+// If it came through the vents (★ Vent crawl), pushing it out of your office sends it back into V15.
 function pushCrawler() {
   const C = G && G.crawler;
-  if (!C || G.over || G.paused || C.step === 0 || !free()) return;
+  if (!C || G.over || G.paused || C.step === 0 || C.vent || !free()) return;
   const room = C.route[C.step];
   const seen = room === 'office' ? !G.cam : onCam(room) && performance.now() >= G.staticUntil;
   if (!seen) return;
-  C.hits++;
-  if (C.hits < (modOn('crw') ? 2 : 1)) { sfx.tap(); return; }
-  C.hits = 0;
-  C.step--;
+  if (room === 'office' && C.viaVent) {
+    C.vent = VENT_EXIT;
+    C.step = C.route.indexOf('dining');   // in the vents it "belongs" to the dining hall, where it climbed in
+  } else {
+    C.step--;
+  }
   C.timer = CRAWLER.interval * (1 + Math.random() * 0.5);   // a short break before it tries again
+  sfx.shoo();
+  dirty = true;
+}
+
+// ★ Vent crawl: the player clicked the vent room the Crawler is in (on the VENTS tab). It goes back
+// one vent, away from your office; from V1 it climbs back out to the dining hall (CAM 2).
+function pushVentCrawler() {
+  const C = G && G.crawler;
+  if (!C || G.over || G.paused || !C.vent || !G.cam || G.tab !== 'vents' || !powered() || adsUp()) return;
+  const back = VENTS[C.vent].next.filter(r => VENTS[r].dist > VENTS[C.vent].dist);
+  C.vent = back.length ? pick(back) : null;   // null: out of V1 and back on CAM 2
+  if (!C.vent) C.viaVent = false;
+  C.timer = CRAWLER.interval * (1 + Math.random() * 0.5);
   sfx.shoo();
   dirty = true;
 }
@@ -877,35 +924,25 @@ function playLure(room) {
 // Its appearance timer counts down all the time, and when it runs out it peeks in straight away,
 // even if the monitor is up (you hear a sharp ting). Get the mask on within peekWindow(level)
 // seconds and keep it on for PEEK_HOLD seconds. Taking it off too soon starts the count over.
+// ★ Knock knock: some visits are at a door instead (P.side). Then the mask does nothing: shut that
+// door within peekWindow(level) seconds and it leaves (straight away if the door is already shut).
 function updatePeeker(dt) {
   const P = G.peeker;
   if (P.level === 0) return;
+  if (P.present && P.side) {
+    if (G.doors[P.side]) peekOut();
+    else if (G.t >= P.deadline) lose(PEEKER, P.side);
+    return;
+  }
   if (P.present) {
     if (G.mask) {
       P.maskT += dt;
       P.deadline = G.t + peekWindow(P.level);
-      if (P.maskT >= PEEK_HOLD) {
-        P.present = false;
-        P.maskT = 0;
-        sfx.peekOut();
-        if (modOn('pek') && !P.returning) {
-          P.returning = true;                // ¥ Double: it'll be back once more in a moment
-          P.returnT = PEEK_RETURN;
-        } else {
-          P.returning = false;
-          P.timer = peekerWait(P.level);     // a fresh random wait until its next visit
-        }
-        dirty = true;
-      }
+      if (P.maskT >= PEEK_HOLD) peekOut();
       return;
     }
     P.maskT = 0;
     if (G.t >= P.deadline) lose(PEEKER, null);
-    return;
-  }
-  if (P.returnT > 0) {
-    P.returnT -= dt;
-    if (P.returnT <= 0) peekIn();
     return;
   }
   P.timer -= dt;
@@ -917,7 +954,20 @@ function peekIn() {
   P.present = true;
   P.maskT = 0;
   P.deadline = G.t + peekWindow(P.level);
-  sfx.peekIn();
+  // ★ Knock knock: half its visits are at a door. The ting comes from that side (the tell).
+  P.side = modOn('pek') && Math.random() < PEEK_DOOR_CHANCE ? pick(['L', 'R']) : null;
+  sfx.peekIn(P.side);
+  dirty = true;
+}
+
+// It's sent away (by the mask, or by a shut door): a fresh random wait until its next visit.
+function peekOut() {
+  const P = G.peeker;
+  sfx.peekOut(P.side);
+  P.present = false;
+  P.maskT = 0;
+  P.side = null;
+  P.timer = peekerWait(P.level);
   dirty = true;
 }
 
@@ -1003,7 +1053,7 @@ function powerOutStart() {
   G.smiley.active = false;                                // in the dark there's nothing to find
   G.flicker.phase = 0; G.flicker.side = null;             // and the Flicker and Visitor give up too
   G.visitor.present = false; G.visitor.returnT = 0;
-  G.peeker.present = false; G.peeker.returnT = 0; G.peeker.returning = false;
+  G.peeker.present = false; G.peeker.side = null;
   G.peeker.timer = 999;                                   // ¥ doesn't come in the dark either
   sfx.humOff();
   sfx.powerDown();
