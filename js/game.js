@@ -31,7 +31,13 @@ let best = store.get('best', null);   // hardest night survived: { sum, levels, 
 // The challenges (from PRESETS) you've survived, saved by clearKey (name plus version, see data.js).
 // They get a ✓ on the custom night screen. .filter() drops any saved one that no longer matches a
 // challenge: renamed ones, and ones whose version went up because they got harder.
-let cleared = (store.get('cleared', []) || []).filter(key => PRESETS.some(p => clearKey(p) === key));
+// Saves from before challenges had versions hold plain names, like "Strobe". On request those count
+// again: upgradeTick turns each one into that challenge's key for today, once, and the result is
+// saved straight away, so a later version bump still takes the ✓ away as usual.
+// (new Set(...) drops doubles, in case a challenge was beaten both before and after.)
+const upgradeTick = key => { const p = PRESETS.find(p => p.name === key); return p ? clearKey(p) : key; };
+let cleared = [...new Set((store.get('cleared', []) || []).map(upgradeTick))].filter(key => PRESETS.some(p => clearKey(p) === key));
+store.set('cleared', cleared);
 
 // How many times each threat has got you, by its id: { dia: 3, len: 1, ... }. Saved in the browser,
 // shown on the game over screen and on the custom night screen (see countKill below).
