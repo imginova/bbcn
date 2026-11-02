@@ -69,10 +69,9 @@ const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
 // after "close" and it gets you. Closed doors don't stop it; only the door LIGHT pushes it back,
 // and the longer you hold the light on it, the further back it goes (see updateSquare in game.js).
 // interval works like the shapes' above. It was 6.0, then 12.0 because the square felt too fast,
-// then 15.0 to make every threat a bit easier, then 18.0 so Total Nightmare could be beaten,
-// then 24.0 so Absolute Nightmare could be.
+// then 15.0 to make every threat a bit easier, then 18.0 so Total Nightmare could be beaten.
 const SQUARE = { id: 'sqr', sym: '■', name: 'Square', door: 'Either door, in 3 steps', path: 'Far → medium → close. Doors do not stop it: hold the door light on it',
-  interval: 24.0 / PACE,
+  interval: 18.0 / PACE,
   mod: { name: 'Flinch', desc: 'Let go of the light while it\'s still at your door and it lunges one step closer (up to close). Once you start lighting it, finish' } };
 
 // Smiley hides in the office. Lowering the camera can wake it (you hear a giggle);
@@ -87,10 +86,9 @@ const SMILEY = { id: 'smi', sym: '(:', name: 'Smiley', door: 'Hides in your offi
 // It picks a side each time it leaves the dining hall (see updateCrawler in game.js).
 // Click it on the camera it's on to push it back ONE camera; follow it there and keep clicking
 // until it's home on CAM 7. If it reaches your office, click it there before time runs out.
-// Its interval was 12.0; it was doubled because the Crawler was the deadliest threat on Total Nightmare,
-// then raised to 30.0 so Absolute Nightmare could be beaten.
+// Its interval was 12.0; it was doubled because the Crawler was the deadliest threat on Total Nightmare.
 const CRAWLER = { id: 'crw', sym: 'Ж', name: 'Crawler', door: 'Crawls from CAM 7 to your office', path: 'CAM 7 → Stage → Dining → Supply → East hall, or Backstage → West hall → office. Click it on camera to push it back one room',
-  interval: 30.0 / PACE,
+  interval: 24.0 / PACE,
   routes: [['prize', 'stage', 'dining', 'supply', 'ehall', 'office'],
            ['prize', 'stage', 'dining', 'backstage', 'whall', 'office']],
   mod: { name: 'Stubborn', desc: 'Takes two clicks to push it back each room' } };
@@ -132,11 +130,11 @@ const VENT_ORDER = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'];   // keys 1 to 6 on the
 // `vent: true` marks a vent crawler; `how` is what the game over screen says it did.
 const ECHO = { id: 'ech', sym: 'Ξ', name: 'Echo', door: 'Crawls through the vents', path: 'Watch it on the VENTS tab. Play a lure in or next to its room to pull it there',
   vent: true, how: 'crawled out of the vent',
-  interval: 17.0 / PACE,   // (was 11.0, then 13.0; eased)
+  interval: 13.0 / PACE,   // (was 11.0, eased)
   mod: { name: 'Wise', desc: 'Ignores a lure in the same room it just followed one to. Switch rooms' } };
 const SLINK = { id: 'slk', sym: '§', name: 'Slink', door: 'Crawls through the vents', path: 'Lure a room NEXT to it. A lure in its own room startles it one vent closer',
   vent: true, how: 'crawled out of the vent',
-  interval: 18.0 / PACE,   // (was 12.0, then 14.0; eased)
+  interval: 14.0 / PACE,   // (was 12.0, eased)
   mod: { name: 'Quick', desc: 'Moves 1.5 times as often while you are not looking at the VENTS tab' } };
 
 // The Peeker ¥ is a second mask threat. Unlike Ψ it can turn up at ANY time, even while the monitor
@@ -149,7 +147,7 @@ const PEEKER = { id: 'pek', sym: '¥', name: 'Peeker', door: 'Peeks in, any time
 // ADS_MAX ads open at once crashes the system, and that's the end of you.
 const SPAMMER = { id: 'spm', sym: '©', name: 'Spammer', door: 'Pops up ads on your monitor', path: 'Each ad covers your whole monitor until you close it with its [X]. Too many at once crashes the system',
   how: 'crashed your system',
-  interval: 8.0 / PACE,   // (was 6.0, eased for Absolute Nightmare)
+  interval: 32.0 / PACE,  // (was 6.0, then 8.0; then on request ads come a quarter as often)
   mod: { name: 'Sneaky', desc: 'The [X] can be in any corner of the ad, not just the top right' } };
 
 // Everything that gets a level on the custom night screen, in order.
@@ -169,7 +167,7 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR, E
 //              progresses while you stay on that tab, so lowering the monitor pauses it.
 const MODES = {
   standard:  { name: 'Standard',  desc: 'Start with 100% power. Survive until 6 AM.' },
-  generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Survive until 6 AM.' },
+  generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Nothing moves for the first 30 seconds, and power costs half as much. Survive until 6 AM.' },
   tasks:     { name: 'Tasks',     desc: 'Finish every task on the monitor\'s TASKS tab to win. A task only fills while you stay on that tab.' },
 };
 const MODE_ORDER = ['standard', 'generator', 'tasks'];
@@ -190,8 +188,8 @@ const AD_TEXT = [
 
 // Ready-made challenges for the custom night screen. Each one sets every level
 // (in SETUP order: ◆ ▲ ● Lenny ■ (: Ж ¤ Ψ Ξ § ¥ ©), which modifiers are ticked (by id), and its
-// `mode` (a challenge without one is a Standard night). The custom night screen shows them in
-// three groups, one per mode.
+// `mode` (a challenge without one is a Standard night). The custom night screen shows them all in
+// one list, every mode mixed together, with a small tag on the Generator and Tasks ones.
 // "6/20" is the first six threats at level 20 with no modifiers (like FNAF's 4/20 mode), and
 // Nightmare is 6/20 with their modifiers on. "9/20" and "Total Nightmare" are the same with the
 // first nine. "13/20" and "Absolute Nightmare" are the same with all thirteen; Absolute Nightmare
@@ -212,68 +210,68 @@ const AD_TEXT = [
 // itself or because a threat in it got stronger. (Every `v` went to 2 when the Crawler's route
 // changed: all ✓ were reset then, on request.)
 const PRESETS = [
-  { name: 'Warm-up',         v: 2, levels: [4, 4, 3, 3, 0, 0],                   mods: [],                                           tries: 1 },
-  { name: 'Hide & seek',     v: 4, levels: [0, 0, 10, 10, 10, 18],               mods: ['orb', 'len', 'smi'],                        tries: 1.02 },
-  { name: 'Face off',        v: 2, levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'],                               tries: 1 },
-  { name: 'Masquerade',      v: 3, levels: [0, 0, 12, 8, 0, 16, 0, 0, 20, 0, 0, 10, 0],   mods: ['vis'],                                      tries: 1.18 },
-  { name: 'Strobe',          v: 2, levels: [0, 10, 0, 8, 14, 0, 0, 20, 0],      mods: ['flk'],                                      tries: 1 },
-  { name: 'Double trouble',  v: 2, levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'],                                      tries: 1.27 },
-  { name: 'Lights out',      v: 2, levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'],                                      tries: 1 },
-  { name: 'Prank call',      v: 2, levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'],                                      tries: 1.13 },
-  { name: "Don't blink",     v: 2, levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'],                                      tries: 1.23 },
-  { name: 'Night crawlers',  v: 2, levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'],                               tries: 1.02 },
-  { name: 'Crawl space',     v: 3, levels: [8, 0, 0, 10, 0, 0, 18, 0, 0, 8, 0, 0, 0],    mods: ['crw'],                                      tries: 1 },
-  { name: 'Shape party',     v: 2, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 tries: 1.05 },
-  { name: 'Waiting game',    v: 2, levels: [10, 10, 20, 0, 12, 8, 0, 8, 0],     mods: ['orb', 'smi'],                               tries: 1.1 },
-  { name: 'Music lover',     v: 3, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      tries: 1 },
-  { name: 'Channel surfing', v: 5, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0, 0, 0, 0, 10], mods: ['len', 'crw'],                               tries: 1.08 },
-  { name: 'Mixed bag',       v: 4, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                tries: 4.78 },
-  { name: 'New faces',       v: 2, levels: [0, 0, 0, 0, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        tries: 1 },
-  { name: 'Graveyard shift', v: 5, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                       tries: 8.63 },
-  { name: 'Light show',      v: 2, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               tries: 1.7 },
-  { name: 'Overtime',        v: 3, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        tries: 3.1 },
-  { name: '6/20',            v: 2, levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           tries: 2.6 },
-  { name: 'Nightmare',       v: 3, levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'],   tries: 5.3 },
-  { name: '9/20',            v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                           tries: 6.18 },
-  { name: 'Total Nightmare', v: 3, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'], tries: 21.6 },
+  { name: 'Warm-up',         v: 3, levels: [4, 4, 3, 3, 0, 0],                   mods: [],                                           tries: 1 },
+  { name: 'Hide & seek',     v: 5, levels: [0, 0, 10, 10, 10, 18],               mods: ['orb', 'len', 'smi'],                        tries: 1 },
+  { name: 'Face off',        v: 3, levels: [0, 0, 0, 12, 0, 16, 0, 0, 16],      mods: ['smi', 'vis'],                               tries: 1 },
+  { name: 'Masquerade',      v: 4, levels: [0, 0, 12, 8, 0, 16, 0, 0, 20, 0, 0, 10, 0],   mods: ['vis'],                                      tries: 1.2 },
+  { name: 'Strobe',          v: 3, levels: [0, 10, 0, 8, 14, 0, 0, 20, 0],      mods: ['flk'],                                      tries: 1 },
+  { name: 'Double trouble',  v: 3, levels: [6, 6, 0, 16, 10, 20, 0, 0, 10],     mods: ['smi'],                                      tries: 1.45 },
+  { name: 'Lights out',      v: 3, levels: [8, 8, 0, 8, 20, 0],                  mods: ['sqr'],                                      tries: 1 },
+  { name: 'Prank call',      v: 3, levels: [6, 20, 10, 16, 0, 0],                mods: ['tri'],                                      tries: 1.08 },
+  { name: "Don't blink",     v: 3, levels: [20, 10, 0, 14, 0, 6],                mods: ['dia'],                                      tries: 1.18 },
+  { name: 'Night crawlers',  v: 3, levels: [10, 10, 8, 0, 0, 0, 16, 0, 0],      mods: ['dia', 'crw'],                               tries: 1.02 },
+  { name: 'Crawl space',     v: 4, levels: [8, 0, 0, 10, 0, 0, 18, 0, 0, 8, 0, 0, 0],    mods: ['crw'],                                      tries: 1 },
+  { name: 'Shape party',     v: 3, levels: [16, 16, 16, 0, 16, 0],               mods: ['dia', 'tri', 'orb', 'sqr'],                 tries: 1.15 },
+  { name: 'Waiting game',    v: 3, levels: [10, 10, 20, 0, 12, 8, 0, 8, 0],     mods: ['orb', 'smi'],                               tries: 1.18 },
+  { name: 'Music lover',     v: 4, levels: [8, 8, 8, 20, 0, 8, 10, 0, 0],       mods: ['len'],                                      tries: 1.15 },
+  { name: 'Channel surfing', v: 6, levels: [14, 0, 0, 16, 0, 10, 14, 0, 0, 0, 0, 0, 10], mods: ['len', 'crw'],                               tries: 1.02 },
+  { name: 'Mixed bag',       v: 5, levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['crw', 'flk', 'vis'],                tries: 3.73 },
+  { name: 'New faces',       v: 3, levels: [0, 0, 0, 0, 0, 0, 18, 18, 18],      mods: ['crw', 'flk', 'vis'],                        tries: 1 },
+  { name: 'Graveyard shift', v: 6, levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'sqr'],                       tries: 5.9 },
+  { name: 'Light show',      v: 3, levels: [0, 0, 8, 0, 16, 0, 0, 16, 0],       mods: ['sqr', 'flk'],                               tries: 1.63 },
+  { name: 'Overtime',        v: 4, levels: [16, 16, 16, 16, 16, 16, 6, 6, 6],    mods: ['dia', 'len', 'smi'],                        tries: 3 },
+  { name: '6/20',            v: 3, levels: [20, 20, 20, 20, 20, 20],             mods: [],                                           tries: 2.3 },
+  { name: 'Nightmare',       v: 4, levels: [20, 20, 20, 20, 20, 20],             mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi'],   tries: 5.48 },
+  { name: '9/20',            v: 3, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                           tries: 5.9 },
+  { name: 'Total Nightmare', v: 4, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20], mods: ['dia', 'tri', 'orb', 'len', 'sqr', 'smi', 'crw', 'flk', 'vis'], tries: 16.2 },
 
   // ---- the vents, ¥ and © drop (Standard) ----
   // In SETUP order: ◆  ▲  ●  Len ■  (:  Ж  ¤  Ψ  Ξ  §  ¥  ©
-  { name: 'Ventilation',     levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.78 },
-  { name: 'Peekaboo',        levels: [0, 0, 0, 0, 0, 10, 0, 0, 12, 0, 0, 18, 0],    mods: ['pek'],                                      tries: 1 },
-  { name: 'Pop-up panic',    v: 2, levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
-  { name: 'Crowded vents',   levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
-  { name: 'Fresh meat',      v: 2, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 5.43 },
-  { name: '13/20',           v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 16.18 },
-  { name: 'Absolute Nightmare', v: 2, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 60 },
+  { name: 'Ventilation',     v: 2, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.9 },
+  { name: 'Peekaboo',        v: 2, levels: [0, 0, 0, 0, 0, 10, 0, 0, 12, 0, 0, 18, 0],    mods: ['pek'],                                      tries: 1 },
+  { name: 'Pop-up panic',    v: 3, levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
+  { name: 'Crowded vents',   v: 2, levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
+  { name: 'Fresh meat',      v: 3, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 2.58 },
+  { name: '13/20',           v: 3, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 12.65 },
+  { name: 'Absolute Nightmare', v: 3, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 55.05 },
 
   // ---- Generator mode ----
-  { name: 'Power plant',     v: 2, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
-  { name: 'Brownout',        v: 2, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.33 },
-  { name: 'Static charge',   v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1 },
-  { name: 'Dead battery',    v: 3, mode: 'generator', levels: [0, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 10],  mods: ['len'],             tries: 1 },
-  { name: 'Overload',        v: 3, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 2.5 },
-  { name: 'Running on fumes', v: 2, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 99 },
-  { name: 'Ghost in the wires', v: 2, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 99 },
-  { name: 'Spam generator',  v: 3, mode: 'generator', levels: [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 99 },
-  { name: 'Crank it',        v: 2, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 99 },
-  { name: 'Full circuit',    v: 3, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 99 },
-  { name: '13/20 (Generator)', v: 3, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 22.4 },
-  { name: 'Absolute Nightmare (Generator)', v: 3, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
+  { name: 'Power plant',     v: 3, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
+  { name: 'Brownout',        v: 3, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.15 },
+  { name: 'Static charge',   v: 3, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1.02 },
+  { name: 'Dead battery',    v: 4, mode: 'generator', levels: [0, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 10],  mods: ['len'],             tries: 1 },
+  { name: 'Overload',        v: 4, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 1.8 },
+  { name: 'Running on fumes', v: 3, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 1 },
+  { name: 'Ghost in the wires', v: 3, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 1 },
+  { name: 'Spam generator',  v: 4, mode: 'generator', levels: [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 1 },
+  { name: 'Crank it',        v: 3, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 1 },
+  { name: 'Full circuit',    v: 4, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
+  { name: '13/20 (Generator)', v: 4, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 11.13 },
+  { name: 'Absolute Nightmare (Generator)', v: 4, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
 
   // ---- Tasks mode ----
-  { name: 'Night school',    mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
-  { name: 'Busy work',       v: 2, mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
-  { name: 'Multitasking',    mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
-  { name: 'Deadline',        mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.08 },
-  { name: 'Paperwork',       v: 2, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 10.43 },
-  { name: 'Inbox zero',      v: 2, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 99 },
-  { name: 'Vent duty',       mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 99 },
-  { name: 'Office party',    mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 99 },
-  { name: 'Door duty',       mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 99 },
-  { name: 'Crunch time',     v: 2, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 99 },
-  { name: '13/20 (Tasks)',   v: 2, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 60 },
-  { name: 'Absolute Nightmare (Tasks)', v: 2, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 60 },
+  { name: 'Night school',    v: 2, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
+  { name: 'Busy work',       v: 3, mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
+  { name: 'Multitasking',    v: 2, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
+  { name: 'Deadline',        v: 2, mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.02 },
+  { name: 'Paperwork',       v: 3, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 1.27 },
+  { name: 'Inbox zero',      v: 3, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 1 },
+  { name: 'Vent duty',       v: 2, mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 1 },
+  { name: 'Office party',    v: 2, mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 1 },
+  { name: 'Door duty',       v: 2, mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 1 },
+  { name: 'Crunch time',     v: 3, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 1.27 },
+  { name: '13/20 (Tasks)',   v: 3, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 13.8 },
+  { name: 'Absolute Nightmare (Tasks)', v: 3, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 57.13 },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention,
 // and give it a mode: a challenge that doesn't say is a standard night.
@@ -282,6 +280,69 @@ PRESETS.forEach(p => {
   p.mode = p.mode || 'standard';
 });
 
+// A line of flavour text for each challenge, shown under the challenge list when you pick it
+// (see renderSetup in screens.js).
+const FLAVOR = {
+  // Standard
+  'Warm-up': "Your first night. The shapes are sleepy and the music box is patient. Probably.",
+  'Hide & seek': "Something giggles, something rolls, and the music box won't stay where you left it.",
+  'Face off': "Two smiles in the office, a mask on your face and a music box on the cameras.",
+  'Masquerade': "A party for masks. The Visitor brought a friend who doesn't wait to be invited.",
+  'Strobe': "Flash, jump, flash. The Flicker loves the light almost as much as the Square hates it.",
+  'Double trouble': "Two smiles hiding in the office. Count carefully before you relax.",
+  'Lights out': "The Square creeps closer in the dark. Keep your finger on that light.",
+  'Prank call': "That rattle at the door might be nothing. Lower the camera and check.",
+  "Don't blink": "The Diamond hates being watched. Look away and it comes running.",
+  'Night crawlers': "Something skitters through the building while the shapes walk the halls.",
+  'Crawl space': "Ж climbs out of the prize corner, and something else is already in the vents.",
+  'Shape party': "All four shapes, all their tricks, no music box. Just doors and lights.",
+  'Waiting game': "The Orb waits behind the door, the smiles wait in the office, and something buzzes.",
+  'Music lover': "Lenny's song is fast tonight. Keep the box wound and the Crawler out.",
+  'Channel surfing': "Cameras, cameras, cameras. And ads, right when you need the cameras.",
+  'Mixed bag': "A little of everything: every threat in the building, all at 10.",
+  'New faces': "The Crawler, the Flicker and the Visitor, all at 18.",
+  'Graveyard shift': "All thirteen at 12. A long shift with short breaks.",
+  'Light show': "Two threats, two lights, one pair of hands. Learn this before the nightmares.",
+  'Overtime': "The old crew at 16 with their tricks, the newer ones just getting started.",
+  '6/20': "The original six at full strength. A classic.",
+  'Nightmare': "The original six at 20, with every trick they know.",
+  '9/20': "Nine threats, all at 20. No tricks, just pressure.",
+  'Total Nightmare': "Nine threats at 20 with every modifier. The old ceiling.",
+  'Ventilation': "Clanking in the ducts. Keep the lures handy.",
+  'Peekaboo': "Something peeks in when you least expect it. The mask is your best friend tonight.",
+  'Pop-up panic': "WINNER! You've won a monitor full of ads, just as the music box runs low.",
+  'Crowded vents': "Both crawlers in the ducts while the Square and the Flicker work the doors.",
+  'Fresh meat': "The four newest threats together, all with their tricks.",
+  '13/20': "Every threat in the building at 20. No modifiers, no mercy.",
+  'Absolute Nightmare': "Every threat. Every level 20. Every trick. Good luck.",
+  // Generator
+  'Power plant': "The lights are out and the generator is cold. Crank it between visitors.",
+  'Brownout': "The Square and the Flicker both need light, and light needs power.",
+  'Static charge': "Masks and charging don't mix: grab the generator and the mask comes off.",
+  'Dead battery': "The music box needs the camera, the camera needs power, and the power needs you.",
+  'Overload': "Everything at 8, running on a battery you fill by hand.",
+  'Running on fumes': "Two shapes at the doors and a music box to wind, on whatever you can charge.",
+  'Ghost in the wires': "Flashes at the door, clanks in the vents, and a generator that opens every door.",
+  'Spam generator': "Ads, peeks and giggles, while you crank the power back in.",
+  'Crank it': "The Orb waits, the Square creeps, the Crawler climbs. Charge fast, charge often.",
+  'Full circuit': "Everyone at 12, and the only power is the power you make.",
+  '13/20 (Generator)': "All thirteen at 20, with a hand-cranked battery.",
+  'Absolute Nightmare (Generator)': "Everything at its worst, and you start in the dark.",
+  // Tasks
+  'Night school': "Paperwork with a little company at the doors.",
+  'Busy work': "Ads keep covering your work. Close them and keep going.",
+  'Multitasking': "Tasks on the screen, crawlers in the vents and in the halls.",
+  'Deadline': "The shapes don't care that you're busy, and the Triangle fakes its knocks.",
+  'Paperwork': "Every threat at 10 and a desk full of work.",
+  'Inbox zero': "The music box ticks down while the ads pile up.",
+  'Vent duty': "Both crawlers in the ducts, and Slink speeds up while you're busy.",
+  'Office party': "Giggles, masks and peeks. It's hard to work in a mask.",
+  'Door duty': "Shapes at both doors, and the Diamond rushes whenever you look away.",
+  'Crunch time': "Everyone at 12, ads included, and a deadline.",
+  '13/20 (Tasks)': "All thirteen at 20, and the work still has to get done.",
+  'Absolute Nightmare (Tasks)': "Everything at its worst, plus homework.",
+};
+
 // The name a challenge's ✓ is saved under: its name plus its version, like "Warm-up v2".
 // (Version 1 is saved as just the name, the way ✓ were saved before versions existed.)
 const clearKey = p => (p.v || 1) > 1 ? `${p.name} v${p.v}` : p.name;
@@ -289,11 +350,11 @@ const clearKey = p => (p.v || 1) > 1 ? `${p.name} v${p.v}` : p.name;
 // The points a challenge is worth: all its levels, plus MOD_BONUS for each modifier on a switched-on threat.
 const presetPoints = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
 
-// A few challenges have a fixed place, whatever the bots say: Warm-up is always first, and the
-// Standard list ends with Light show, Total Nightmare and Absolute Nightmare. Light show isn't the
+// A few challenges have a fixed place, whatever the bots say: Warm-up is always first, and the list
+// ends with Light show, Total Nightmare and the three Absolute Nightmares. Light show isn't the
 // hardest, but it teaches a skill (sharing the door lights between ■ and ¤) that the max modes need,
-// so it goes right before them. Each mode's Absolute Nightmare (every threat at 20 with every
-// modifier, the maximum score) is the last of its group. Everything else gets 0 and is sorted by the bots.
+// so it goes right before them. The Absolute Nightmares (every threat at 20 with every modifier, the
+// maximum score) come last, sorted among themselves. Everything else gets 0 and is sorted by the bots.
 const PINNED = {
   'Warm-up': -1, 'Light show': 1, 'Total Nightmare': 2, 'Absolute Nightmare': 3,
   'Absolute Nightmare (Generator)': 3, 'Absolute Nightmare (Tasks)': 3,

@@ -33,33 +33,30 @@ const MAX_LEVEL = 20;
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
 // Seconds you get to shut the door once a shape is in the doorway.
-// This is a straight line: 4.0s at level 1, sliding down to 3.2s at level 20.
-// (level - 1) goes from 0 to 19, so (level - 1) * (0.8 / 19) goes from 0 to 0.8.
+// This is a straight line: 4.0s at level 1, sliding down to 2.9s at level 20.
+// (level - 1) goes from 0 to 19, so (level - 1) * (1.1 / 19) goes from 0 to 1.1.
 // (Level 20 used to give only 2.4s; it was eased, with the other level-20 numbers below marked
 // "eased", so a bot could beat Total Nightmare about 1 night in 10 instead of never.)
-// (Eased again to 3.2s, with the other numbers marked "eased for Absolute Nightmare", so a bot can beat
-// Absolute Nightmare, all thirteen at 20 with every modifier, a few times in 500.)
-const reactWindow = level => 4.0 - (level - 1) * (0.8 / 19);
+const reactWindow = level => 4.0 - (level - 1) * (1.1 / 19);
 
 // The orb never visits the same door more than this many times in a row (see chooseRoute in game.js).
 // Pure coin flips made some nights feel like it only ever went right.
 const MAX_STREAK = 2;
 
 // ---------- Lenny's music box ----------
-// How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 1.1 at level 20.
+// How many % the box unwinds per second, before PACE: 0.6 at level 1, up to 2.0 at level 20.
 // Multiplied by PACE (2) and by 0.75 (to make Lenny a bit easier), that's 0.9 at level 1
-// (about 110s from full) up to 1.65 at level 20 (about 60s from full).
-// (Eased twice: level 20 used to empty in about 17s, then 33s; eased for Absolute Nightmare.)
-const boxDrain = level => (0.6 + (level - 1) * (0.5 / 19)) * PACE * 0.75;
+// (about 110s from full) up to 3.0 at level 20 (about 33s from full).
+// (Eased: level 20 used to unwind twice as fast, emptying in about 17s.)
+const boxDrain = level => (0.6 + (level - 1) * (1.4 / 19)) * PACE * 0.75;
 const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
 const BOX_LOW = 30;        // below this %, the camera button starts warning you (without saying which camera)
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you
 
 // ---------- ■ Square and the door lights ----------
 // Seconds of steady light needed to push the square back ONE stage; keep holding to push it further.
-// 0.5s at level 1, up to 0.6s at level 20 (harder squares are a bit more stubborn; eased from 1.0s,
-// then 0.8s, eased for Absolute Nightmare).
-const lightPush = level => 0.5 + (level - 1) * (0.1 / 19);
+// 0.5s at level 1, up to 0.8s at level 20 (harder squares are more stubborn; eased from 1.0s).
+const lightPush = level => 0.5 + (level - 1) * (0.3 / 19);
 const SQUARE_SWAP = 0.5;   // chance that a square at FAR switches doors instead of coming closer
 
 // ---------- (: Smiley ----------
@@ -69,10 +66,9 @@ const smileyChance = level => level / MAX_LEVEL * 0.5;
 // (so 25% every 10 seconds at level 20, about 1% at level 1).
 const SMILEY_TICK = 10;
 const SMILEY_SOLO = 0.5;
-// Seconds you get to find and click it: 6.25s at level 1, down to about 4.4s at level 20.
-// (It was 5 to 2.5; everything was multiplied by 1.25 to make Smiley a bit easier, still level-based.
-// Level 20 was 3.1s until it was eased for Absolute Nightmare.)
-const smileyTime = level => (5 - (level - 1) * (1.5 / 19)) * 1.25;
+// Seconds you get to find and click it: 6.25s at level 1, down to about 3.1s at level 20.
+// (It was 5 to 2.5; everything was multiplied by 1.25 to make Smiley a bit easier, still level-based.)
+const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
 
 // ---------- Ж Crawler, ¤ Flicker, Ψ Visitor ----------
 // (The Visitor gives you reactWindow(level) seconds to get the mask on, like the doors.)
@@ -86,10 +82,10 @@ const FLASH_TIME = 0.4;    // ¤ seconds of steady light that make the Flicker j
 const flickerWindow = level => reactWindow(level) + 1.5;
 const MASK_HOLD = 2.0;     // Ψ seconds the mask must stay on before the Visitor leaves (eased from 2.5)
 // Ψ its appearance timer: a random wait between `shortest` and 1.8 times that. The shortest wait is
-// 30s at level 1, down to 18s at level 20 (so level 20 waits 18 to about 32 seconds between visits;
-// eased from 8-14, then 12-22, then for Absolute Nightmare).
+// 30s at level 1, down to 12s at level 20 (so level 20 waits 12 to about 22 seconds between visits;
+// eased from 8 to 14).
 const visitorWait = level => {
-  const shortest = 30 - (level - 1) * (12 / 19);
+  const shortest = 30 - (level - 1) * (18 / 19);
   return shortest + Math.random() * shortest * 0.8;
 };
 
@@ -100,7 +96,7 @@ const LURE_SHOW = 0.8;     // seconds a lured vent room stays highlighted on the
 // your office: the reaction window plus 2s, since you may need to open the VENTS tab first.
 // (Added to ease the vents: without it, an unlucky roll could come right after the bang.)
 const ventWindow = level => reactWindow(level) + 2.0;
-const QUICK_RATE = 1.25;   // § Quick: how much faster Slink moves while you're not on the VENTS tab (was 2, then 1.5)
+const QUICK_RATE = 1.5;    // § Quick: how much faster Slink moves while you're not on the VENTS tab (was 2)
 
 // ---------- ¥ Peeker ----------
 // It can turn up while the monitor is up, so it gives you half a second more than the doors do.
@@ -108,9 +104,9 @@ const peekWindow = level => reactWindow(level) + 0.5;
 const PEEK_HOLD = 1.0;     // seconds of mask that send it away (Ψ needs MASK_HOLD, twice as long)
 const PEEK_RETURN = 1.5;   // ¥ Double: seconds after leaving before it's back once more
 // Its appearance timer: a random wait between `shortest` and 1.8 times that.
-// The shortest wait is 24s at level 1, down to 16s at level 20 (eased for Absolute Nightmare from 12s).
+// The shortest wait is 24s at level 1, down to 12s at level 20.
 const peekerWait = level => {
-  const shortest = 24 - (level - 1) * (8 / 19);
+  const shortest = 24 - (level - 1) * (12 / 19);
   return shortest + Math.random() * shortest * 0.8;
 };
 
@@ -118,11 +114,16 @@ const peekerWait = level => {
 const ADS_MAX = 4;         // this many ads open at once crashes the system (and gets you)
 
 // ---------- modes (see MODES in data.js) ----------
-const GEN_RATE = 1;        // Generator mode: % power gained per second while you hold the generator (was 5, slowed on request)
-const TASK_COUNT = 6;      // Tasks mode: how many tasks a night has (was 8, eased for Absolute Nightmare)
-// Tasks mode: seconds of work one task needs (on the TASKS tab): a random 8 to 14, so all of them
-// take about a minute of monitor time, and a whole night about two minutes.
-const taskTime = () => 8 + Math.random() * 6;
+// Generator mode starts at 0% power, so it gets two helps (added so Absolute Nightmare (Generator)
+// can be beaten): the threats stay still for the first GEN_QUIET seconds while you charge, and
+// everything costs GEN_COST times as much power as usual (half).
+const GEN_QUIET = 30;
+const GEN_COST = 0.5;
+const GEN_RATE = 2;        // Generator mode: % power gained per second while you hold the generator (was 5, then 1; 2 on request so Absolute Nightmare (Generator) can be beaten)
+const TASK_COUNT = 4;      // Tasks mode: how many tasks a night has (was 8, then 6; 4 so Absolute Nightmare (Tasks) can be beaten)
+// Tasks mode: seconds of work one task needs (on the TASKS tab): a random 4 to 6, so all of them take
+// about 20 seconds of monitor time. (Was 4-8, then 8-14; shortened so Absolute Nightmare (Tasks) can be beaten.)
+const taskTime = () => 4 + Math.random() * 2;
 
 // ---------- modifiers ----------
 // Ticking a threat's modifier on the custom night screen adds this much to the night's score

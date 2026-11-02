@@ -234,6 +234,10 @@ function update(dt) {
   // Made it to 6 AM. (Not in Tasks mode: there you win by finishing the tasks, see updateTasks.)
   if (G.mode !== 'tasks' && G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();
 
+  // Generator mode: a quiet start. For the first GEN_QUIET seconds nothing moves (the music box doesn't
+  // unwind either), so you can charge up from 0% before the night really begins.
+  if (G.mode === 'generator' && G.t < GEN_QUIET) { if (!G.powerOut) updatePower(dt); return; }
+
   updateLenny(dt);
   if (G.over) return;
 
@@ -284,7 +288,7 @@ function updatePower(dt) {
     if (G.genTickT <= 0) { sfx.genTick(G.power / 100); G.genTickT = 0.15; }
     return;
   }
-  G.power -= (BASE_DRAIN + UNIT_DRAIN * powerUnits()) * dt;
+  G.power -= (BASE_DRAIN + UNIT_DRAIN * powerUnits()) * dt * (G.mode === 'generator' ? GEN_COST : 1);
   if (G.power > 0) return;
   if (G.mode !== 'generator') return powerOutStart();
   G.power = 0;
@@ -807,9 +811,9 @@ function playLure(room) {
   G.lureRoom = room;
   G.lureUntil = G.t + LURE_SHOW;
   sfx.lure();
-  // Its next move waits 2.5 to 3.5 turns: a lure buys you real time. (It was 1 to 1.5 turns, until the
+  // Its next move waits 2 to 3 turns: a lure buys you real time. (It was 1 to 1.5 turns, until the
   // vents were eased so Absolute Nightmare could be beaten.)
-  const rest = c => c.interval * (2.5 + Math.random());
+  const rest = c => c.interval * (2 + Math.random());
 
   const E = G.echo;
   const echoHears = E.room === room || VENTS[E.room].next.includes(room);

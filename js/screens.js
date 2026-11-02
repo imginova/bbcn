@@ -96,11 +96,11 @@ function buildSetup() {
   // Each challenge button shows the points it's worth (presetPoints is in data.js, which also uses
   // it to sort the challenges).
   // The empty <span class="tick"> gets its ✓ in renderSetup() once that challenge is beaten.
-  // The challenges are shown in three groups, one per mode, each in its sorted order.
-  const button = (p, i) => `<button type="button" data-preset="${i}"><span class="tick" id="tick${i}"></span>${p.name} <span class="dim">${presetPoints(p)}</span></button>`;
+  // All the challenges are in one list, in their sorted order (all three modes mixed together, on
+  // request). A Generator or Tasks challenge gets a small tag saying its mode.
+  const tag = p => p.mode === 'standard' ? '' : `<span class="mode-tag">${MODES[p.mode].name}</span>`;
   $('presets').innerHTML = '<span class="lab" id="presetsLab">Challenges</span>' +
-    MODE_ORDER.map(m => `<div class="preset-group"><span class="lab">${MODES[m].name}</span>` +
-      PRESETS.map((p, i) => p.mode === m ? button(p, i) : '').join('') + '</div>').join('');
+    PRESETS.map((p, i) => `<button type="button" data-preset="${i}"><span class="tick" id="tick${i}"></span>${p.name} ${tag(p)}<span class="dim">${presetPoints(p)}</span></button>`).join('');
 }
 
 // Update the numbers, bars, checkboxes, score and selected row on the custom night screen.
@@ -129,6 +129,10 @@ function renderSetup() {
     $('tick' + i).parentElement.classList.toggle('done', done);
   });
   $('presetsLab').textContent = `Challenges ${cleared.length}/${PRESETS.length}`;
+  // The picked challenge (if tonight's settings still match one exactly): highlight it and show its flavour text.
+  const picked = matchingPreset();
+  PRESETS.forEach((p, i) => $('tick' + i).parentElement.classList.toggle('picked', p === picked));
+  $('presetFlavor').innerHTML = picked ? `<b>${picked.name}</b> · ${FLAVOR[picked.name] || ''}` : '';
   // The mode picker: the chosen one is highlighted (aria-pressed, see style.css), with what it means.
   document.querySelectorAll('#modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
   $('modeDesc').textContent = MODES[mode].desc;

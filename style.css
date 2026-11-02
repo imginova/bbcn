@@ -207,9 +207,12 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
 .presets button { padding: 6px 10px; font-size: 12px; }
-/* One group of challenges per mode, each on its own line(s) with the mode's name first. */
-.preset-group { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.preset-group .lab { min-width: 9ch; color: var(--fg); }
+/* The picked challenge is outlined, and its flavour text shows under the list. */
+.presets button.picked { border-color: var(--fg); background: rgba(242,179,91,.1); }
+.flavor { color: var(--dim); font-style: italic; min-height: 1.5em; margin-top: -8px; }
+.flavor b { color: var(--fg); font-style: normal; }
+/* A Generator or Tasks challenge's mode, as a small tag on its button. */
+.mode-tag { font-size: 10px; letter-spacing: .08em; padding: 0 4px; margin-right: 4px; border: 1px solid var(--faint); color: var(--c-ech); }
 /* A beaten challenge: green ✓ and a green border (the same green as Lenny). */
 .tick { color: var(--c-len); font-weight: 600; }
 .presets button.done { border-color: var(--c-len); }
