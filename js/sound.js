@@ -107,6 +107,11 @@ const sfx = (() => {
   return {
     init,
     get muted() { return muted; },
+    // Put the audio engine to sleep while the page is hidden (another tab or window is in front),
+    // and wake it when you come back. A sleeping engine uses no computer power; a running one keeps
+    // working even when silent, which made several open copies of the game slow everything down.
+    sleep() { if (ctx && ctx.state === 'running') ctx.suspend(); },
+    wake() { if (ctx && ctx.state === 'suspended') ctx.resume(); },
     toggleMute() {
       muted = !muted;
       store.set('muted', muted);

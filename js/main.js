@@ -16,6 +16,7 @@ let speed = 1;   // 1 = normal speed. Raise it to fast-forward when testing (see
 
 let lastTime = performance.now();
 let sinceRender = 0;
+let looping = false;   // is the loop running right now? (see wakeLoop below)
 
 function loop(now) {
   // Seconds since the last frame. Capped at 0.1 so that if the computer stalls (or the tab
@@ -33,6 +34,19 @@ function loop(now) {
       sinceRender = 0;
     }
   }
+  // Keep going only while a night is being played. On every other screen (title, setup, 6 AM,
+  // game over) and while paused nothing moves, so the loop stops itself and costs the computer
+  // nothing. That matters when several copies of the game are left open. wakeLoop() restarts it.
+  if (currentScreen === 'game' && G && !G.over && !G.paused) requestAnimationFrame(loop);
+  else looping = false;
+}
+
+// Start the loop again (called when a night starts, and when you unpause). Does nothing if it's
+// already running, so calling it twice never makes two loops.
+function wakeLoop() {
+  if (looping) return;
+  looping = true;
+  lastTime = performance.now();   // so the first frame doesn't count the time spent stopped
   requestAnimationFrame(loop);
 }
 
@@ -46,7 +60,8 @@ window.nightShift = {
   set speed(v) { speed = Math.max(0.1, Number(v) || 1); },
 };
 
-// Start everything: build the custom night rows, set the sound button, show the title, start the loop.
+// Start everything: build the custom night rows, set the sound button and show the title.
+// (The loop doesn't start yet: startNight in game.js wakes it when a night begins.)
 function boot(data) {
   // When the Claude artifact viewer swaps in a new version of the page, it hands back the levels.
   if (data && Array.isArray(data.levels) && data.levels.length === SETUP.length) levels = data.levels.map(clampLevel);
@@ -54,7 +69,6 @@ function boot(data) {
   renderMute();
   show('title');
   analytics.start();   // Google Analytics, only on the public website (see analytics.js)
-  requestAnimationFrame(loop);
 }
 
 // window.claude?.hot only exists inside the Claude artifact viewer, where it keeps your levels
