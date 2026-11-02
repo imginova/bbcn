@@ -6,6 +6,15 @@
    times a second, and right away whenever `dirty` is true.
    ===================================================================== */
 
+// Put new HTML into a page element, but only if it's different from what's already there.
+// Turning HTML into page elements is the slowest part of drawing, and most redraws change nothing
+// (a quiet room, a shut door), so this skips them. `el.lastHtml` remembers what we put in last time.
+function setHtml(el, html) {
+  if (el.lastHtml === html) return;
+  el.lastHtml = html;
+  el.innerHTML = html;
+}
+
 // Draw everything on the game screen: HUD, then either the office or the camera, then the buttons.
 function renderGame(now) {
   // ----- HUD: clock, power, usage -----
@@ -35,7 +44,7 @@ function renderGame(now) {
   } else {
     office.classList.toggle('dark', !powered());   // after a power-out, or at 0% in Generator mode
     for (const side of ['L', 'R']) {
-      $('door' + side).innerHTML = toHtml(doorGrid(side, now));
+      setHtml($('door' + side), toHtml(doorGrid(side, now)));
       $('door' + side).classList.toggle('lit', lightOn(side));   // style.css makes a lit doorway glow
     }
     const og = grid(officeLines(now, !powered(), G.cam), 36);
@@ -58,7 +67,7 @@ function renderGame(now) {
         og[r][c + 1] = { ch: ':', cls: 'smi smi-' + i };
       });
     }
-    $('officeArt').innerHTML = toHtml(og);
+    setHtml($('officeArt'), toHtml(og));
   }
 
   // ----- buttons -----
@@ -167,12 +176,12 @@ function renderMonitor(now) {
 function renderTasks() {
   const doneCount = G.tasks.filter(T => T.done >= T.need).length;
   $('taskCount').textContent = `${doneCount}/${G.tasks.length} DONE`;
-  $('taskList').innerHTML = G.tasks.map((T, i) => {
+  setHtml($('taskList'), G.tasks.map((T, i) => {
     const seg = Math.round(T.done / T.need * 10);
     const state = T.done >= T.need ? 'done' : G.task === i && taskHeld() ? 'doing' : '';   // lit only while held
     return `<button type="button" class="${state}" data-task="${i}"><span>${i + 1}. ${T.name}</span>`
       + `<span class="bars">${T.done >= T.need ? 'DONE ✓' : '[' + '|'.repeat(seg) + '.'.repeat(10 - seg) + ']'}</span></button>`;
-  }).join('');
+  }).join(''));
 }
 
 // © Spammer's ads on top of the monitor. They're only rebuilt when they change (adsVersion),
@@ -194,7 +203,7 @@ function renderAds() {
 function renderVents() {
   const crawlers = [[G.echo, ECHO], [G.slink, SLINK]].filter(([V]) => V.level > 0).map(([V, c]) => ({ c, room: V.room }));
   if (G.crawler.vent) crawlers.push({ c: CRAWLER, room: G.crawler.vent });   // Ж on its ★ Vent crawl
-  $('ventMap').innerHTML = toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null));
+  setHtml($('ventMap'), toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null)));
   const wait = G.lureReadyAt - G.t;
   $('lureState').textContent = wait > 0 ? `LURE ${wait.toFixed(1)}s` : 'LURE READY';
   $('lureState').classList.toggle('dim', wait > 0);
@@ -228,7 +237,7 @@ function renderFeed(now) {
       sprite(g, ...CRAWLER_SLOTS[room], SPRITES.crw.cam, CRAWLER, ' crw-hit');
     }
   }
-  $('feed').innerHTML = toHtml(g);
+  setHtml($('feed'), toHtml(g));
 
   // The wind bar and button only appear on the camera the music box is on (CAM 7 unless it wandered).
   const onBox = room === G.lenny.room;

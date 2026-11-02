@@ -1097,6 +1097,7 @@ function setPaused(p) {
   showPause(p);
   if (p) sfx.humOff();
   else if (!G.powerOut) sfx.humOn();
+  if (!p) wakeLoop();   // the loop stops while paused (main.js), so start it again
 }
 
 function startNight() {
@@ -1113,6 +1114,7 @@ function startNight() {
   show('game');
   sfx.humOn();
   dirty = true;
+  wakeLoop();   // start the game loop (main.js); it stops by itself when the night ends
 }
 
 // ---------- how a night ends ----------

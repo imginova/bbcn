@@ -345,9 +345,16 @@ window.addEventListener('blur', () => {
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
 });
 
-// Switching to another tab pauses the game.
+// Switching to another tab pauses the game and puts the sound engine to sleep, so a copy of the
+// game left open in the background uses (almost) no computer power. Coming back wakes the sound;
+// the game itself stays paused until you unpause it.
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+  if (document.hidden) {
+    if (currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+    sfx.sleep();
+  } else {
+    sfx.wake();
+  }
 });
 
 // Closing or leaving the page in the middle of a night: tell analytics the night was abandoned.
