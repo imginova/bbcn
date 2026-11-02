@@ -311,9 +311,10 @@ document.addEventListener('keydown', e => {
     else if (k === 'v' || k === 'V') setTab('vents');
     else if (k === 't' || k === 'T') setTab('tasks');
     else if (k === 'g' || k === 'G') genKey = true;                          // Generator mode: hold G to charge (released in keyup)
-    // On the VENTS tab, 1 to 6 play a lure in vent V1 to V6; on TASKS, 1 to 8 pick a task;
-    // everywhere else, 1 to 7 pick a camera. /^[1-7]$/ means "exactly one digit from 1 to 7".
-    else if (/^[1-6]$/.test(k) && G.cam && G.tab === 'vents') playLure(VENT_ORDER[Number(k) - 1]);
+    // On the VENTS tab the number keys do nothing (on request: with 15 vent rooms, lures are
+    // click-only); on TASKS, 1 to 4 hold a task; everywhere else, 1 to 7 pick a camera.
+    // /^[1-7]$/ means "exactly one digit from 1 to 7".
+    else if (/^[0-9]$/.test(k) && G.cam && G.tab === 'vents') { /* nothing */ }
     else if (/^[1-9]$/.test(k) && G.cam && G.tab === 'tasks') { pickTask(Number(k) - 1); taskKey = true; }   // held: released in keyup
     else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h' || k === 'H') openHowto();

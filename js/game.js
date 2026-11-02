@@ -207,7 +207,7 @@ function newGame() {
       returnT: 0,                  // Ψ Double take: countdown until it's back after a fake exit
     },
 
-    // The two vent crawlers. Both start in vent V1 (see VENTS in data.js).
+    // The two vent crawlers. Both start in vent V1, VENT_START (see VENTS in data.js).
     echo: ventCrawler(ECHO),
     slink: ventCrawler(SLINK),
 
@@ -243,7 +243,7 @@ function makeTasks() {
 function ventCrawler(c) {
   return {
     level: levels[SETUP.indexOf(c)],
-    room: 'v1',                  // which vent room it's in
+    room: VENT_START,            // which vent room it's in
     timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
     followed: null,              // Ξ Wise: the room of the last lure it followed
   };
@@ -797,7 +797,7 @@ function updateVisitor(dt) {
 
 // ---------- Ξ Echo, § Slink and the vents ----------
 // A vent crawler's turn: every so often it gets the usual chance (its level out of 20) to creep one
-// vent closer. It's already in V6, the last vent? Then this move takes it into your office.
+// vent closer. It's already in V15 (VENT_EXIT), the last vent? Then this move takes it into your office.
 function updateVentCrawler(V, c, dt) {
   if (V.level === 0) return;
   // § Quick: its countdown runs twice as fast while you're NOT watching the VENTS tab.
@@ -806,7 +806,7 @@ function updateVentCrawler(V, c, dt) {
   if (V.timer > 0) return;
   V.timer = c.interval * (0.85 + Math.random() * 0.3);
   if (Math.random() * MAX_LEVEL >= V.level) return;
-  if (V.room === 'v6') return lose(c, null);
+  if (V.room === VENT_EXIT) return lose(c, null);
   moveVent(V, closerVent(V.room));
 }
 
@@ -827,21 +827,21 @@ function ventSteps(a, b) {
 }
 
 // Move a vent crawler into `room`, with a metal clank that gets louder the closer it is.
-// Reaching V6 (right next to your office) makes a loud bang: that's your warning.
+// Reaching V15 (VENT_EXIT, right next to your office) makes a loud bang: that's your warning.
 function moveVent(V, room) {
   V.room = room;
-  // In V6 it always waits at least ventWindow(level) seconds before its next move (into your office).
-  if (room === 'v6') { V.timer = Math.max(V.timer, ventWindow(V.level)); sfx.ventNear(); }
-  else sfx.ventMove(1 - (VENTS[room].dist - 1) / 3);   // dist 4 → quiet, dist 2 → louder
+  // In V15 it always waits at least ventWindow(level) seconds before its next move (into your office).
+  if (room === VENT_EXIT) { V.timer = Math.max(V.timer, ventWindow(V.level)); sfx.ventNear(); }
+  else sfx.ventMove(1 - (VENTS[room].dist - 1) / 6);   // dist 7 (V1) → quiet, dist 2 → loud
   dirty = true;
 }
 
-// Play an audio lure in vent `room` (clicking it on the VENTS tab, or keys 1 to 6 there).
+// Play an audio lure in vent `room` (by clicking it on the VENTS tab).
 // Lures cost no power but need LURE_COOLDOWN seconds to recharge. Each crawler that hears it reacts:
-//   Ξ Echo: in that room or next to it, it goes there and stays put for a good while.
+//   Ξ Echo: up to ECHO_HEAR (2) rooms from it, it goes there and stays put for a good while.
 //           (Wise: not if it just followed a lure to that same room.)
 //   § Slink: next to that room, it goes there and stays put for a while; but a lure in its OWN
-//           room startles it one vent closer to you (out of V6 means into your office).
+//           room startles it one vent closer to you (out of V15 means into your office).
 function playLure(room) {
   if (!G || G.over || G.paused || !G.cam || G.tab !== 'vents' || !powered() || adsUp()) return;
   if (G.t < G.lureReadyAt) { sfx.deny(); return; }
@@ -864,7 +864,7 @@ function playLure(room) {
   const S = G.slink;
   if (S.level > 0 && S.room === room) {
     sfx.startle();
-    if (S.room === 'v6') return lose(SLINK, null);
+    if (S.room === VENT_EXIT) return lose(SLINK, null);
     moveVent(S, closerVent(S.room));
   } else if (S.level > 0 && VENTS[S.room].next.includes(room)) {
     S.room = room;

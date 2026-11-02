@@ -95,7 +95,7 @@ const LURE_SHOW = 0.8;     // seconds a lured vent room stays highlighted on the
 // Ξ Echo hears a lure up to this many vent rooms away (counting steps through the vents) and goes
 // straight there. It was 1 (its own room or the next one); 2 on request, when Echo was made faster.
 const ECHO_HEAR = 2;
-// Seconds a crawler always waits in V6 (after the loud bang) before its next move can take it into
+// Seconds a crawler always waits in V15, the last vent (after the loud bang), before its next move can take it into
 // your office: the reaction window plus 2s, since you may need to open the VENTS tab first.
 // (Added to ease the vents: without it, an unlucky roll could come right after the bang.)
 const ventWindow = level => reactWindow(level) + 2.0;

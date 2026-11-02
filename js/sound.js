@@ -229,7 +229,7 @@ const sfx = (() => {
       tone(240, 0.16, { type: 'sine', vol: 0.06 + 0.25 * progress, slide: -90 });
       noise(0.1, { vol: 0.05 + 0.25 * progress, freq: 900 });
     },
-    // Reaching V6, right next to your office: a loud bang in the vent. Its next move gets you.
+    // Reaching V15 (the last vent), right next to your office: a loud bang in the vent. Its next move gets you.
     ventNear() {
       noise(0.45, { vol: 0.8, freq: 500 });
       tone(70, 0.45, { type: 'square', vol: 0.25, slide: -25 });

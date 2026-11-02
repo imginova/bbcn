@@ -383,34 +383,41 @@ const PEEKER_OFFICE = [8, 0];   // ¥ peeks round the left edge of the office, l
 const FLICKER_DOOR = [5, 2];
 
 // ---------- the VENTS tab ----------
-// The vent map: six 9-wide boxes joined by tunnels (= across, | down), with V6 opening into your
-// office. VENT_SPOTS is each room's top-left corner. Every cell of a room gets the classes
-// "vroom vr-v1" (and so on) so input.js knows which room you clicked; the room you just lured
-// also gets "vlure", which makes it glow. Crawlers are drawn on the room's middle line.
-const VENT_SPOTS = { v1: [0, 0], v2: [0, 12], v3: [0, 24], v4: [5, 0], v5: [5, 12], v6: [5, 24] };
+// The vent map: 15 small boxes (3 rows of 5, see VENTS in data.js) joined by tunnels (== across,
+// | down), with V15 opening into your office. Each box is 5 wide and 3 tall, with the room's name in
+// its top border, so the whole map is the same size as a camera picture:
+//     +V1-+  +V2-+  ...
+//     | Ξ |==|   |==...
+//     +---+  +---+  ...
+//       |      |
+// VENT_SPOTS is each room's top-left corner, as [row, column] in the map. Every cell of a room gets
+// the classes "vroom vr-v1" (and so on) so input.js knows which room you clicked; the room you just
+// lured also gets "vlure", which makes it glow, and ))) in its bottom border.
+const VENT_SPOTS = {};
+for (const id of VENT_ORDER) VENT_SPOTS[id] = [VENTS[id].row * 4, VENTS[id].col * 7];
 //   crawlers  a list like [{ c: ECHO, room: 'v2' }, ...] (only the ones switched on tonight)
 //   lured     the room to highlight, or null
 function ventGrid(crawlers, lured) {
-  const g = grid([
-    '+-------+   +-------+   +-------+',
-    '|       |===|       |===|       |',
-    '|       |   |       |   |       |',
-    '+-------+   +-------+   +-------+',
-    '    |           |           |',
-    '+-------+   +-------+   +-------+',
-    '|       |===|       |===|       |=> YOU',
-    '|       |   |       |   |       |',
-    '+-------+   +-------+   +-------+',
-  ], 40, 'dim');
+  // Build the picture one line at a time: for each row of rooms, the top borders, the insides joined
+  // by == tunnels, the bottom borders, and then (except after the last row) the | tunnels down.
+  const lines = [];
+  const each = text => Array(VENT_COLS).fill(text);   // the same bit of text once per column
+  for (let row = 0; row < VENT_ROWS; row++) {
+    lines.push(each('+---+').join('  '));
+    lines.push(each('|   |').join('==') + (row === VENT_ROWS - 1 ? '=> YOU' : ''));
+    lines.push(each('+---+').join('  '));
+    if (row < VENT_ROWS - 1) lines.push(each('  |  ').join('  '));
+  }
+  const g = grid(lines, 40, 'dim');
   for (const id of VENT_ORDER) {
     const [r0, c0] = VENT_SPOTS[id];
     const cls = 'vroom vr-' + id + (lured === id ? ' vlure' : '');
-    for (let r = r0; r < r0 + 4; r++) for (let c = c0; c < c0 + 9; c++) g[r][c] = { ch: g[r][c].ch, cls };
-    Array.from(VENTS[id].name).forEach((ch, k) => { g[r0 + 1][c0 + 2 + k] = { ch, cls }; });
-    if (lured === id) Array.from(')))').forEach((ch, k) => { g[r0 + 1][c0 + 5 + k] = { ch, cls }; });
+    for (let r = r0; r < r0 + 3; r++) for (let c = c0; c < c0 + 5; c++) g[r][c] = { ch: g[r][c].ch, cls };
+    Array.from(VENTS[id].name).forEach((ch, k) => { g[r0][c0 + 1 + k] = { ch, cls }; });
+    if (lured === id) Array.from(')))').forEach((ch, k) => { g[r0 + 2][c0 + 1 + k] = { ch, cls }; });
     // The crawlers in this room, side by side (Echo first, then Slink).
     crawlers.filter(v => v.room === id).forEach((v, k) => {
-      g[r0 + 2][c0 + 2 + k * 3] = { ch: v.c.sym, cls: `sym s-${v.c.id} ${cls}` };
+      g[r0 + 1][c0 + 1 + k * 2] = { ch: v.c.sym, cls: `sym s-${v.c.id} ${cls}` };
     });
   }
   return g;
