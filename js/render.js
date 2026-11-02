@@ -167,7 +167,7 @@ function renderTasks() {
   $('taskCount').textContent = `${doneCount}/${G.tasks.length} DONE`;
   $('taskList').innerHTML = G.tasks.map((T, i) => {
     const seg = Math.round(T.done / T.need * 10);
-    const state = T.done >= T.need ? 'done' : G.task === i ? 'doing' : '';
+    const state = T.done >= T.need ? 'done' : G.task === i && taskHeld() ? 'doing' : '';   // lit only while held
     return `<button type="button" class="${state}" data-task="${i}"><span>${i + 1}. ${T.name}</span>`
       + `<span class="bars">${T.done >= T.need ? 'DONE ✓' : '[' + '|'.repeat(seg) + '.'.repeat(10 - seg) + ']'}</span></button>`;
   }).join('');

@@ -76,14 +76,19 @@ $('ventMap').addEventListener('pointerdown', e => {
   e.preventDefault();
 });
 
-// Tasks mode: clicking a task on the TASKS tab starts working on it (pointerdown: the list is redrawn often).
+// Tasks mode: pressing a task on the TASKS tab works on it, but only while the mouse button stays
+// down (pointerdown: the list is redrawn often). Letting go anywhere stops it, so the release is
+// watched on the whole window: the button you pressed may have been redrawn by then.
 $('taskList').addEventListener('pointerdown', e => {
   const b = e.target.closest('[data-task]');
   if (!b) return;
   sfx.init();
   pickTask(Number(b.dataset.task));
+  taskPointer = true;
   e.preventDefault();
 });
+for (const ev of ['pointerup', 'pointercancel']) window.addEventListener(ev, () => { taskPointer = false; });
+$('taskList').addEventListener('contextmenu', e => e.preventDefault());
 
 // Generator mode: the Generator button charges only while it's HELD, like the door lights.
 const btnGen = $('btnGen');
@@ -309,7 +314,7 @@ document.addEventListener('keydown', e => {
     // On the VENTS tab, 1 to 6 play a lure in vent V1 to V6; on TASKS, 1 to 8 pick a task;
     // everywhere else, 1 to 7 pick a camera. /^[1-7]$/ means "exactly one digit from 1 to 7".
     else if (/^[1-6]$/.test(k) && G.cam && G.tab === 'vents') playLure(VENT_ORDER[Number(k) - 1]);
-    else if (/^[1-9]$/.test(k) && G.cam && G.tab === 'tasks') pickTask(Number(k) - 1);
+    else if (/^[1-9]$/.test(k) && G.cam && G.tab === 'tasks') { pickTask(Number(k) - 1); taskKey = true; }   // held: released in keyup
     else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h' || k === 'H') openHowto();
 
@@ -324,6 +329,7 @@ document.addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
   if (k === 'w') windKey = false;
   else if (k === 'g') genKey = false;
+  else if (/^[1-9]$/.test(k)) taskKey = false;   // letting go of a task's number key stops working on it
   else if (k === 'q') releaseLight('L', lightKey);
   else if (k === 'e') releaseLight('R', lightKey);
 });
@@ -332,6 +338,7 @@ document.addEventListener('keyup', e => {
 window.addEventListener('blur', () => {
   windKey = windPointer = false;
   genKey = genPointer = false;
+  taskKey = taskPointer = false;
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
 });
 

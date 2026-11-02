@@ -29,15 +29,28 @@ if (!MODES[mode]) mode = 'standard';
 let best = store.get('best', null);   // hardest night survived: { sum, levels, mods, mode } or null
 
 // The challenges (from PRESETS) you've survived, saved by clearKey (name plus version, see data.js).
-// They get a ✓ on the custom night screen. .filter() drops any saved one that no longer matches a
-// challenge: renamed ones, and ones whose version went up because they got harder.
+// They get a ✓ on the custom night screen.
+// RULE (on request): the only saved ✓s ever deleted are those of challenges that were buffed or
+// reworked, which shows as their version going up. Everything else stays saved, even a ✓ this
+// version of the game doesn't recognise. (An older version threw away every saved ✓ it didn't
+// recognise, and the next win saved over the list, so a player's ✓s were lost for good.)
+// So there are two lists:
+//   savedTicks: everything saved, minus outdated versions; this is the one written back;
+//   cleared:    the ones that count today (a ✓ is shown only for these).
 // Saves from before challenges had versions hold plain names, like "Strobe". On request those count
-// again: upgradeTick turns each one into that challenge's key for today, once, and the result is
-// saved straight away, so a later version bump still takes the ✓ away as usual.
+// again: upgradeTick turns each one into that challenge's key for today, and it's saved straight away,
+// so a later version bump still takes the ✓ away as usual.
+// outdated(key) is true for a key like "Strobe v2" when Strobe is now on a higher version.
 // (new Set(...) drops doubles, in case a challenge was beaten both before and after.)
 const upgradeTick = key => { const p = PRESETS.find(p => p.name === key); return p ? clearKey(p) : key; };
-let cleared = [...new Set((store.get('cleared', []) || []).map(upgradeTick))].filter(key => PRESETS.some(p => clearKey(p) === key));
-store.set('cleared', cleared);
+const outdated = key => {
+  const m = /^(.*) v(\d+)$/.exec(key);   // m[1] is the name, m[2] the version number
+  const p = m && PRESETS.find(p => p.name === m[1]);
+  return !!p && (p.v || 1) > Number(m[2]);
+};
+const savedTicks = [...new Set((store.get('cleared', []) || []).map(upgradeTick))].filter(key => !outdated(key));
+store.set('cleared', savedTicks);
+let cleared = savedTicks.filter(key => PRESETS.some(p => clearKey(p) === key));
 
 // How many times each threat has got you, by its id: { dia: 3, len: 1, ... }. Saved in the browser,
 // shown on the game over screen and on the custom night screen (see countKill below).
@@ -63,6 +76,8 @@ let windKey = false, windPointer = false;   // is W held down / is the Wind butt
 // Is each door light's key (Q / E) or on-screen button held down right now?
 const lightKey = { L: false, R: false }, lightPointer = { L: false, R: false };
 let genKey = false, genPointer = false;      // Generator mode: is G / the Generator button held down?
+let taskKey = false, taskPointer = false;    // Tasks mode: is a task's number key / the mouse held down on a task?
+const taskHeld = () => taskKey || taskPointer;
 
 // Is there power to use things right now? Not after a power-out, and not at 0% (Generator mode
 // can sit at 0% without a power-out: everything just stays off until you charge).
@@ -323,10 +338,11 @@ function runDry() {
 }
 
 // ---------- Tasks mode ----------
-// The task you picked fills up only while the monitor is up on the TASKS tab (and the power is on).
-// Finishing the last one wins the night.
+// The task you picked fills up only while you HOLD it (the mouse button on it, or its number key; on
+// request), and only while the monitor is up on the TASKS tab (and the power is on).
+// Letting go, or an ad popping up, pauses it. Finishing the last one wins the night.
 function updateTasks(dt) {
-  if (G.mode !== 'tasks' || G.task === null || !G.cam || G.tab !== 'tasks' || adsUp()) return;   // an ad in the way pauses it too
+  if (G.mode !== 'tasks' || G.task === null || !taskHeld() || !G.cam || G.tab !== 'tasks' || adsUp()) return;
   const T = G.tasks[G.task];
   T.done = Math.min(T.need, T.done + dt);
   if (T.done < T.need) return;
@@ -336,7 +352,8 @@ function updateTasks(dt) {
   if (G.tasks.every(task => task.done >= task.need)) win();
 }
 
-// Pick task number i to work on (click it on the TASKS tab, or keys 1 to 8 there).
+// Pick task number i to work on (press it on the TASKS tab, or keys 1 to 4 there). It only fills while
+// that press is held (see updateTasks); input.js sets taskPointer / taskKey.
 function pickTask(i) {
   if (!G || G.over || G.paused || G.mode !== 'tasks' || !G.cam || G.tab !== 'tasks' || adsUp()) return;
   const T = G.tasks[i];
@@ -1024,6 +1041,7 @@ function startNight() {
   store.set('levels', levels);
   windKey = windPointer = false;
   genKey = genPointer = false;
+  taskKey = taskPointer = false;
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
   newGame();
   analytics.nightStart();   // count it (analytics.js)
@@ -1051,7 +1069,8 @@ function win() {
   const firstTime = !!challenge && !cleared.includes(clearKey(challenge));
   if (firstTime) {
     cleared.push(clearKey(challenge));
-    store.set('cleared', cleared);
+    savedTicks.push(clearKey(challenge));
+    store.set('cleared', savedTicks);   // the full list, so nothing saved earlier is lost
   }
   analytics.win(isBest, challenge, firstTime);
   showWin(sum, isBest, challenge, firstTime);

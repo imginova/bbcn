@@ -168,7 +168,7 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR, E
 const MODES = {
   standard:  { name: 'Standard',  desc: 'Start with 100% power. Survive until 6 AM.' },
   generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Nothing moves for the first 30 seconds, and power costs half as much. Survive until 6 AM.' },
-  tasks:     { name: 'Tasks',     desc: 'Finish every task on the monitor\'s TASKS tab to win. A task only fills while you stay on that tab.' },
+  tasks:     { name: 'Tasks',     desc: 'Finish every task on the monitor\'s TASKS tab to win. A task only fills while you hold it down.' },
 };
 const MODE_ORDER = ['standard', 'generator', 'tasks'];
 
@@ -260,18 +260,18 @@ const PRESETS = [
   { name: 'Absolute Nightmare (Generator)', v: 4, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
 
   // ---- Tasks mode ----
-  { name: 'Night school',    v: 2, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
-  { name: 'Busy work',       v: 4, mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
-  { name: 'Multitasking',    v: 2, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
-  { name: 'Deadline',        v: 2, mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.02 },
-  { name: 'Paperwork',       v: 4, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 1.27 },
-  { name: 'Inbox zero',      v: 4, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 1 },
-  { name: 'Vent duty',       v: 2, mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 1 },
-  { name: 'Office party',    v: 2, mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 1 },
-  { name: 'Door duty',       v: 2, mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 1 },
-  { name: 'Crunch time',     v: 4, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 1.27 },
-  { name: '13/20 (Tasks)',   v: 4, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 13.8 },
-  { name: 'Absolute Nightmare (Tasks)', v: 4, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 57.13 },
+  { name: 'Night school',    v: 3, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
+  { name: 'Busy work',       v: 5, mode: 'tasks', levels: [0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 12, 16],     mods: ['spm'],             tries: 1 },
+  { name: 'Multitasking',    v: 3, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 12, 0, 0, 12, 12, 0, 0],     mods: [],                  tries: 1 },
+  { name: 'Deadline',        v: 3, mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.02 },
+  { name: 'Paperwork',       v: 5, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 1.27 },
+  { name: 'Inbox zero',      v: 5, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 1 },
+  { name: 'Vent duty',       v: 3, mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 1 },
+  { name: 'Office party',    v: 3, mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 1 },
+  { name: 'Door duty',       v: 3, mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 1 },
+  { name: 'Crunch time',     v: 5, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 1.27 },
+  { name: '13/20 (Tasks)',   v: 5, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 13.8 },
+  { name: 'Absolute Nightmare (Tasks)', v: 5, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 57.13 },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention,
 // and give it a mode: a challenge that doesn't say is a standard night.
@@ -344,8 +344,10 @@ const FLAVOR = {
 };
 
 // The name a challenge's ✓ is saved under: its name plus its version, like "Warm-up v2".
-// (Version 1 is saved as just the name, the way ✓ were saved before versions existed.)
-const clearKey = p => (p.v || 1) > 1 ? `${p.name} v${p.v}` : p.name;
+// Every challenge is on version 2 or more, and a new one starting at 1 is saved as "Name v1", so a
+// plain name (no version) only ever comes from a save made before versions existed (see upgradeTick
+// in game.js).
+const clearKey = p => `${p.name} v${p.v || 1}`;
 
 // The points a challenge is worth: all its levels, plus MOD_BONUS for each modifier on a switched-on threat.
 const presetPoints = p => p.levels.reduce((t, lv, i) => t + lv + (lv > 0 && p.mods.includes(SETUP[i].id) ? MOD_BONUS : 0), 0);
