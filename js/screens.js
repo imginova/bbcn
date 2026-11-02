@@ -59,7 +59,10 @@ function hideScare() {
 // `challenge` is the PRESETS entry tonight matched (or null); `firstTime` says it just earned its ✓.
 function showWin(sum, isBest, challenge, firstTime) {
   const powerLeft = Math.max(0, Math.ceil(G.power));
-  $('winMsg').textContent = `You kept them out until morning with ${powerLeft}% power left.`;
+  $('winMsg').textContent = G.mode === 'tasks'
+    ? `You finished every task with ${powerLeft}% power left.`
+    : `You kept them out until morning with ${powerLeft}% power left${G.mode === 'generator' ? ' (Generator mode)' : ''}.`;
+  $('winBig').textContent = G.mode === 'tasks' ? 'DONE' : '6:00 AM';
   // A ★ marks each threat that had its modifier on (worth +MOD_BONUS).
   $('winLevels').innerHTML =
     SETUP.map((c, i) => `<span>${symHtml(c)} ${levels[i] === 0 ? 'off' : 'level ' + levels[i]}${mods[i] && levels[i] > 0 ? ' ★' : ''}</span>`).join('') +
@@ -81,6 +84,7 @@ function buildSetup() {
     <div class="lvrow" data-i="${i}">
       ${symHtml(c, ' big')}
       <span class="who"><b>${c.name.toUpperCase()} · ${c.door}</b><small>${c.path}</small>
+        <small class="kills" id="kills${i}"></small>
         <label class="mod"><input type="checkbox" data-mod="${i}"> ★ ${c.mod.name} <span class="dim">+${MOD_BONUS}</span><small>${c.mod.desc}</small></label>
       </span>
       <span class="ctrl">
@@ -92,8 +96,11 @@ function buildSetup() {
   // Each challenge button shows the points it's worth (presetPoints is in data.js, which also uses
   // it to sort the challenges).
   // The empty <span class="tick"> gets its ✓ in renderSetup() once that challenge is beaten.
+  // All the challenges are in one list, in their sorted order (all three modes mixed together, on
+  // request). A Generator or Tasks challenge gets a small tag saying its mode.
+  const tag = p => p.mode === 'standard' ? '' : `<span class="mode-tag">${MODES[p.mode].name}</span>`;
   $('presets').innerHTML = '<span class="lab" id="presetsLab">Challenges</span>' +
-    PRESETS.map((p, i) => `<button type="button" data-preset="${i}"><span class="tick" id="tick${i}"></span>${p.name} <span class="dim">${presetPoints(p)}</span></button>`).join('');
+    PRESETS.map((p, i) => `<button type="button" data-preset="${i}"><span class="tick" id="tick${i}"></span>${p.name} ${tag(p)}<span class="dim">${presetPoints(p)}</span></button>`).join('');
 }
 
 // Update the numbers, bars, checkboxes, score and selected row on the custom night screen.
@@ -104,6 +111,11 @@ function renderSetup() {
     $('lv' + i).textContent = lv === 0 ? 'OFF' : 'LEVEL ' + String(lv).padStart(2, '0');
     $('bar' + i).textContent = '|'.repeat(lv) + '.'.repeat(MAX_LEVEL - lv);
   });
+  // Each threat's kill tally (kills, in game.js). Nothing is shown until it has got you at least once.
+  SETUP.forEach((c, i) => {
+    const n = kills[c.id] || 0;
+    $('kills' + i).textContent = n ? `☠ Got you ${n === 1 ? 'once' : n + ' times'}` : '';
+  });
   // A switched-off threat's modifier does nothing, so its checkbox is greyed out (but remembered).
   document.querySelectorAll('[data-mod]').forEach(box => {
     const i = Number(box.dataset.mod);
@@ -112,11 +124,18 @@ function renderSetup() {
   });
   // A ✓ on every challenge you've survived, and how many that is.
   PRESETS.forEach((p, i) => {
-    const done = cleared.includes(p.name);
+    const done = cleared.includes(clearKey(p));
     $('tick' + i).textContent = done ? '✓ ' : '';
     $('tick' + i).parentElement.classList.toggle('done', done);
   });
   $('presetsLab').textContent = `Challenges ${cleared.length}/${PRESETS.length}`;
+  // The picked challenge (if tonight's settings still match one exactly): highlight it and show its flavour text.
+  const picked = matchingPreset();
+  PRESETS.forEach((p, i) => $('tick' + i).parentElement.classList.toggle('picked', p === picked));
+  $('presetFlavor').innerHTML = picked ? `<b>${picked.name}</b> · ${FLAVOR[picked.name] || ''}` : '';
+  // The mode picker: the chosen one is highlighted (aria-pressed, see style.css), with what it means.
+  document.querySelectorAll('#modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+  $('modeDesc').textContent = MODES[mode].desc;
   $('scoreLine').innerHTML = `Tonight's score: <b>${nightScore()} / ${MAX_SCORE}</b>`;
   $('bestLine').innerHTML = bestText();
 }
@@ -134,8 +153,18 @@ function setMod(i, on) {
 function applyPreset(p) {
   levels = p.levels.map(clampLevel);
   mods = SETUP.map(c => p.mods.includes(c.id));
+  mode = p.mode;   // a challenge also picks its mode
   store.set('levels', levels);
   store.set('mods', mods);
+  store.set('mode', mode);
+  sfx.click();
+  renderSetup();
+}
+
+// Pick tonight's mode ('standard', 'generator' or 'tasks', see MODES in data.js).
+function setMode(m) {
+  mode = m;
+  store.set('mode', mode);
   sfx.click();
   renderSetup();
 }
@@ -162,7 +191,8 @@ function setAllLevels(value) {
 function bestText() {
   if (!best) return 'No night survived yet.';
   const parts = SETUP.map((c, i) => `${symHtml(c)} ${best.levels[i] ?? '–'}${best.mods?.[i] && best.levels[i] > 0 ? '★' : ''}`).join(' · ');
-  return `Best: survived to 6 AM on ${parts} <b>(total ${best.sum} / ${MAX_SCORE})</b>`;
+  const where = best.mode && best.mode !== 'standard' ? ` (${MODES[best.mode].name} mode)` : '';
+  return `Best: survived${where} on ${parts} <b>(total ${best.sum} / ${MAX_SCORE})</b>`;
 }
 
 // ---------- How to play ----------

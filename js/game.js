@@ -22,24 +22,33 @@ levels = levels.map(clampLevel);
 let mods = (store.get('mods', []) || []).slice(0, SETUP.length).map(Boolean);
 while (mods.length < SETUP.length) mods.push(false);
 
-let best = store.get('best', null);   // hardest night survived: { sum, levels, mods } or null
+// Tonight's mode: 'standard', 'generator' or 'tasks' (see MODES in data.js).
+let mode = store.get('mode', 'standard');
+if (!MODES[mode]) mode = 'standard';
 
-// The challenges (from PRESETS) you've survived, by name. They get a ✓ on the custom night screen.
-// .filter() drops any saved name that no longer matches a challenge (in case one gets renamed).
-let cleared = (store.get('cleared', []) || []).filter(name => PRESETS.some(p => p.name === name));
+let best = store.get('best', null);   // hardest night survived: { sum, levels, mods, mode } or null
+
+// The challenges (from PRESETS) you've survived, saved by clearKey (name plus version, see data.js).
+// They get a ✓ on the custom night screen. .filter() drops any saved one that no longer matches a
+// challenge: renamed ones, and ones whose version went up because they got harder.
+let cleared = (store.get('cleared', []) || []).filter(key => PRESETS.some(p => clearKey(p) === key));
+
+// How many times each threat has got you, by its id: { dia: 3, len: 1, ... }. Saved in the browser,
+// shown on the game over screen and on the custom night screen (see countKill below).
+let kills = store.get('kills', {}) || {};
 
 // Which challenge matches tonight's levels and modifiers EXACTLY, or null if none does.
 // (Picking a challenge and then changing a level doesn't count.) A modifier only matters
 // for threats that are switched on, just like in the score.
 function matchingPreset() {
-  return PRESETS.find(p => SETUP.every((c, i) =>
+  return PRESETS.find(p => p.mode === mode && SETUP.every((c, i) =>
     p.levels[i] === levels[i] && (levels[i] === 0 || p.mods.includes(c.id) === mods[i]))) || null;
 }
 
 // A night's score: every level added up, plus MOD_BONUS for each ticked modifier
 // (only when that threat is switched on: a modifier on a level-0 threat does nothing).
 const nightScore = () => SETUP.reduce((total, c, i) => total + levels[i] + (mods[i] && levels[i] > 0 ? MOD_BONUS : 0), 0);
-const MAX_SCORE = SETUP.length * (MAX_LEVEL + MOD_BONUS);   // 9 x 25 = 225
+const MAX_SCORE = SETUP.length * (MAX_LEVEL + MOD_BONUS);   // 25 per threat: 11 x 25 = 275
 
 // ---------- the current night ----------
 let G = null;        // all the state of the night in progress (built by newGame)
@@ -47,6 +56,13 @@ let dirty = true;    // "something changed, redraw now" (render.js also redraws 
 let windKey = false, windPointer = false;   // is W held down / is the Wind button held down?
 // Is each door light's key (Q / E) or on-screen button held down right now?
 const lightKey = { L: false, R: false }, lightPointer = { L: false, R: false };
+let genKey = false, genPointer = false;      // Generator mode: is G / the Generator button held down?
+
+// Is there power to use things right now? Not after a power-out, and not at 0% (Generator mode
+// can sit at 0% without a power-out: everything just stays off until you charge).
+const powered = () => !G.powerOut && G.power > 0;
+// Are you free to do things? Not while holding the generator: that's all you can do.
+const free = () => !G.genHeld;
 
 // Small questions about a shape `m` (one entry of G.mobs):
 const sideOf = m => m.route[m.route.length - 1];   // which door it is heading for: 'L' or 'R'
@@ -54,11 +70,19 @@ const atDoor = m => m.step === m.route.length - 1;  // is it standing in that do
 
 // Is a door light actually shining? You have to hold it, look at the office (camera down), have power,
 // and have that door OPEN: a shut door blocks the light, so you can't see or push back ■ through it.
-const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && !G.powerOut && !G.doors[side];
+const lightOn = side => (lightKey[side] || lightPointer[side]) && !G.cam && powered() && free() && !G.doors[side];
 const otherSide = side => side === 'L' ? 'R' : 'L';
 
 // Is a threat's modifier active tonight? modOn('dia') asks about the ◆ Diamond, and so on.
 const modOn = id => G.mod[id];
+
+// Is the monitor covered by © Spammer's ads? Then nothing on it can be seen or used until they're closed.
+const adsUp = () => G.ads.length > 0;
+// Are you looking at camera `room` right now? (The monitor is up, on the CAMS tab, showing that room,
+// and no ad is covering it.)
+const onCam = room => G.cam && G.tab === 'cams' && G.camRoom === room && !adsUp();
+// Is the VENTS tab worth having tonight? Only if a vent crawler is switched on.
+const ventsOn = () => G.echo.level > 0 || G.slink.level > 0;
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
@@ -68,10 +92,19 @@ const hourLabel = h => (h === 0 ? 12 : h) + ' AM';
 function newGame() {
   G = {
     t: 0,                          // seconds since 12 AM
-    power: 100,                    // percent
+    mode,                          // tonight's mode (see MODES in data.js)
+    power: mode === 'generator' ? 0 : 100,   // percent; Generator mode starts empty
+    genHeld: false,                // Generator mode: is the generator being held right now?
+    genTickT: 0,                   // countdown to the next generator whirr
+    dry: mode === 'generator',     // Generator mode: is the power at 0% (everything off)?
+    tasks: mode === 'tasks' ? makeTasks() : [],   // Tasks mode: [{ name, need, done }] (seconds of work)
+    task: null,                    // Tasks mode: which task you're working on (its number), or null
     doors: { L: false, R: false }, // true = closed
-    cam: false,                    // is the camera raised?
+    cam: false,                    // is the monitor raised?
+    tab: 'cams',                   // which of the monitor's tabs is showing: 'cams' or 'vents'
     camRoom: 'whall',              // which camera you are looking at
+    lureReadyAt: 0,                // the time the next audio lure can be played
+    lureRoom: null, lureUntil: 0,  // the vent room you last lured, highlighted on the map until lureUntil
     powerOut: false, outTimer: 0, outBy: null,
     over: false, paused: false,
     staticUntil: 0,                // camera shows static until this time (milliseconds)
@@ -127,7 +160,8 @@ function newGame() {
 
     crawler: {
       level: levels[SETUP.indexOf(CRAWLER)],
-      step: 0,                     // where it is on CRAWLER.route: 0 = CAM 7 ... last = in your office
+      route: pick(CRAWLER.routes), // its path tonight: east or west side (it picks again at CAM 2)
+      step: 0,                     // where it is on its route: 0 = CAM 7 ... last = in your office
       timer: CRAWLER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
       hits: 0,                     // clicks so far on this room (Stubborn needs two)
       deadline: 0,                 // in your office: the moment it gets you
@@ -151,21 +185,67 @@ function newGame() {
       faked: false,                // Ψ Double take: has it already faked an exit this visit?
       returnT: 0,                  // Ψ Double take: countdown until it's back after a fake exit
     },
+
+    // The two vent crawlers. Both start in vent V1 (see VENTS in data.js).
+    echo: ventCrawler(ECHO),
+    slink: ventCrawler(SLINK),
+
+    peeker: {
+      level: levels[SETUP.indexOf(PEEKER)],
+      present: false,              // is it peeking in right now?
+      maskT: 0,                    // how long the mask has been on while it's here
+      deadline: 0,                 // the moment it gets you if the mask isn't on
+      timer: peekerWait(levels[SETUP.indexOf(PEEKER)]),   // its appearance timer
+      returning: false,            // ¥ Double: has it already left once this visit?
+      returnT: 0,                  // ¥ Double: countdown until it's back
+    },
+
+    spammer: {
+      level: levels[SETUP.indexOf(SPAMMER)],
+      timer: SPAMMER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next ad (only while the monitor is up)
+    },
+    ads: [],                       // the ads open on the monitor: { id, x, y, text, corner }
+    adsVersion: 0,                 // goes up whenever ads change, so render.js knows to redraw them
+    nextAdId: 1,
     mask: false,                   // are you wearing the mask?
+  };
+}
+
+// Tasks mode: TASK_COUNT different tasks picked at random from TASK_NAMES, each needing taskTime() seconds.
+// .sort(() => Math.random() - 0.5) shuffles a copy of the list (good enough for a game).
+function makeTasks() {
+  return TASK_NAMES.slice().sort(() => Math.random() - 0.5).slice(0, TASK_COUNT)
+    .map(name => ({ name, need: taskTime(), done: 0 }));
+}
+
+// A fresh vent crawler (Ξ Echo or § Slink) for newGame.
+function ventCrawler(c) {
+  return {
+    level: levels[SETUP.indexOf(c)],
+    room: 'v1',                  // which vent room it's in
+    timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
+    followed: null,              // Ξ Wise: the room of the last lure it followed
   };
 }
 
 // ---------- the main rule loop ----------
 function update(dt) {
   G.t += dt;
-  if (G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();   // made it to 6 AM
+  // Made it to 6 AM. (Not in Tasks mode: there you win by finishing the tasks, see updateTasks.)
+  if (G.mode !== 'tasks' && G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();
+
+  // Generator mode: a quiet start. For the first GEN_QUIET seconds nothing moves (the music box doesn't
+  // unwind either), so you can charge up from 0% before the night really begins.
+  if (G.mode === 'generator' && G.t < GEN_QUIET) { if (!G.powerOut) updatePower(dt); return; }
 
   updateLenny(dt);
   if (G.over) return;
 
   if (!G.powerOut) {
-    G.power -= (BASE_DRAIN + UNIT_DRAIN * powerUnits()) * dt;
-    if (G.power <= 0) return powerOutStart();
+    updatePower(dt);
+    if (G.powerOut || G.over) return;
+    updateTasks(dt);
+    if (G.over) return;
     for (const m of G.mobs) {
       updateMob(m, dt);
       if (G.over) return;
@@ -179,6 +259,14 @@ function update(dt) {
     updateFlicker(dt);
     if (G.over) return;
     updateVisitor(dt);
+    if (G.over) return;
+    updateVentCrawler(G.echo, ECHO, dt);
+    if (G.over) return;
+    updateVentCrawler(G.slink, SLINK, dt);
+    if (G.over) return;
+    updatePeeker(dt);
+    if (G.over) return;
+    updateSpammer(dt);
   } else {
     // Power is out: just wait for the shape in the dark.
     G.outTimer -= dt;
@@ -186,10 +274,74 @@ function update(dt) {
   }
 }
 
+// Power for this moment: drain it by what's in use, or (Generator mode) charge it while the
+// generator is held. Running out means a power-out, except in Generator mode, where everything
+// just switches off until you charge again.
+function updatePower(dt) {
+  const holding = G.mode === 'generator' && (genKey || genPointer);
+  if (holding && !G.genHeld) startGenerator();
+  G.genHeld = holding;
+  if (G.genHeld) {
+    G.power = Math.min(100, G.power + GEN_RATE * dt);
+    G.dry = false;
+    G.genTickT -= dt;
+    if (G.genTickT <= 0) { sfx.genTick(G.power / 100); G.genTickT = 0.15; }
+    return;
+  }
+  G.power -= (BASE_DRAIN + UNIT_DRAIN * powerUnits()) * dt * (G.mode === 'generator' ? GEN_COST : 1);
+  if (G.power > 0) return;
+  if (G.mode !== 'generator') return powerOutStart();
+  G.power = 0;
+  if (!G.dry) runDry();
+}
+
+// Generator mode: you grabbed the generator. Both doors fly open, the monitor drops and the mask
+// comes off: while you hold it, you're wide open.
+function startGenerator() {
+  for (const side of ['L', 'R']) if (G.doors[side]) { G.doors[side] = false; sfx.door(side); }
+  if (G.cam) { G.cam = false; maybeWakeSmiley(); }
+  if (G.mask) { G.mask = false; sfx.mask(false); }
+  sfx.genStart();
+  dirty = true;
+}
+
+// Generator mode: the power just hit 0%. The doors open and the monitor goes dark (no game over).
+function runDry() {
+  G.dry = true;
+  for (const side of ['L', 'R']) G.doors[side] = false;
+  if (G.cam) G.cam = false;
+  sfx.powerDown();
+  dirty = true;
+}
+
+// ---------- Tasks mode ----------
+// The task you picked fills up only while the monitor is up on the TASKS tab (and the power is on).
+// Finishing the last one wins the night.
+function updateTasks(dt) {
+  if (G.mode !== 'tasks' || G.task === null || !G.cam || G.tab !== 'tasks' || adsUp()) return;   // an ad in the way pauses it too
+  const T = G.tasks[G.task];
+  T.done = Math.min(T.need, T.done + dt);
+  if (T.done < T.need) return;
+  G.task = null;
+  sfx.taskDone();
+  dirty = true;
+  if (G.tasks.every(task => task.done >= task.need)) win();
+}
+
+// Pick task number i to work on (click it on the TASKS tab, or keys 1 to 8 there).
+function pickTask(i) {
+  if (!G || G.over || G.paused || G.mode !== 'tasks' || !G.cam || G.tab !== 'tasks' || adsUp()) return;
+  const T = G.tasks[i];
+  if (!T || T.done >= T.need) return;
+  G.task = i;
+  sfx.click();
+  dirty = true;
+}
+
 // How many things are using power right now (0 to 5): each closed door, the camera, each lit door light.
 // (G.doors.L ? 1 : 0) means "1 if the left door is closed, otherwise 0".
 function powerUnits() {
-  if (G.powerOut) return 0;
+  if (!powered()) return 0;
   return (G.doors.L ? 1 : 0) + (G.doors.R ? 1 : 0) + (G.cam ? 1 : 0)
        + (lightOn('L') ? 1 : 0) + (lightOn('R') ? 1 : 0);
 }
@@ -241,7 +393,7 @@ function updateMob(m, dt) {
   // ◆ Charger: it can't move at all while you're watching its room on camera,
   // but while you're not, its countdown runs twice as fast (the extra "m.timer -= dt").
   if (m.c.id === 'dia' && modOn('dia')) {
-    if (G.cam && G.camRoom === m.route[m.step]) return;
+    if (onCam(m.route[m.step])) return;
     m.timer -= dt;
   }
 
@@ -334,7 +486,7 @@ function updateLenny(dt) {
     if (L.outTimer <= 0) loseLenny();
     return;
   }
-  const winding = (windKey || windPointer) && G.cam && G.camRoom === L.room && !G.powerOut;
+  const winding = (windKey || windPointer) && onCam(L.room) && !G.powerOut;
   if (modOn('len')) wanderBox(L, dt, winding);
   // At level 0 Lenny is switched off, so the box never unwinds (you can still wind it, harmlessly).
   const change = winding ? WIND_RATE : L.level === 0 ? 0 : -boxDrain(L.level);
@@ -463,7 +615,7 @@ function wakeSmiley() {
 // The player clicked (: number i in time (0, or 1 for the second twin). Once all are clicked, it's over.
 function catchSmiley(i = 0) {
   const S = G && G.smiley;
-  if (!S || G.over || G.paused || !S.active || i >= S.spots.length) return;
+  if (!S || G.over || G.paused || !S.active || i >= S.spots.length || !free()) return;
   S.spots.splice(i, 1);
   sfx.pop();
   if (S.spots.length === 0) S.active = false;
@@ -471,11 +623,12 @@ function catchSmiley(i = 0) {
 }
 
 // ---------- Ж Crawler ----------
-// It crawls one room at a time along CRAWLER.route (CAM 7 → Supply → East hall → your office).
+// It crawls one room at a time along its route: CAM 7 → Stage → Dining, then the east side
+// (Supply → East hall) or the west side (Backstage → West hall), then your office.
 // In your office it gets you after crawlerWindow(level) seconds unless you click it (see pushCrawler).
 function updateCrawler(dt) {
   const C = G.crawler;
-  const office = CRAWLER.route.length - 1;
+  const office = C.route.length - 1;
   if (C.step === office) {
     if (G.t >= C.deadline) lose(CRAWLER, null);
     return;
@@ -485,7 +638,10 @@ function updateCrawler(dt) {
   C.timer = CRAWLER.interval * (0.85 + Math.random() * 0.3);
   if (Math.random() * MAX_LEVEL >= C.level) return;   // the same dice roll as everyone else
 
-  const from = CRAWLER.route[C.step];
+  const from = C.route[C.step];
+  // Leaving the dining hall: flip a coin for the east or the west side. Both routes start the same
+  // way (CAM 7, Stage, Dining), so switching routes here doesn't move it.
+  if (from === 'dining') C.route = pick(CRAWLER.routes);
   C.step++;
   C.hits = 0;
   if (C.step === office) {
@@ -494,7 +650,7 @@ function updateCrawler(dt) {
   } else {
     sfx.crawl(C.step / office);   // skittering, louder the closer it gets
   }
-  if (G.cam && (G.camRoom === from || G.camRoom === CRAWLER.route[C.step])) camStatic(0.3);
+  if (G.cam && (G.camRoom === from || G.camRoom === C.route[C.step])) camStatic(0.3);
   dirty = true;
 }
 
@@ -503,9 +659,9 @@ function updateCrawler(dt) {
 // with Stubborn it takes two clicks per room.
 function pushCrawler() {
   const C = G && G.crawler;
-  if (!C || G.over || G.paused || C.step === 0) return;
-  const room = CRAWLER.route[C.step];
-  const seen = room === 'office' ? !G.cam : G.cam && G.camRoom === room && performance.now() >= G.staticUntil;
+  if (!C || G.over || G.paused || C.step === 0 || !free()) return;
+  const room = C.route[C.step];
+  const seen = room === 'office' ? !G.cam : onCam(room) && performance.now() >= G.staticUntil;
   if (!seen) return;
   C.hits++;
   if (C.hits < (modOn('crw') ? 2 : 1)) { sfx.tap(); return; }
@@ -614,11 +770,174 @@ function updateVisitor(dt) {
   dirty = true;
 }
 
+// ---------- Ξ Echo, § Slink and the vents ----------
+// A vent crawler's turn: every so often it gets the usual chance (its level out of 20) to creep one
+// vent closer. It's already in V6, the last vent? Then this move takes it into your office.
+function updateVentCrawler(V, c, dt) {
+  if (V.level === 0) return;
+  // § Quick: its countdown runs twice as fast while you're NOT watching the VENTS tab.
+  const quick = c === SLINK && modOn('slk') && !(G.cam && G.tab === 'vents');
+  V.timer -= dt * (quick ? QUICK_RATE : 1);
+  if (V.timer > 0) return;
+  V.timer = c.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= V.level) return;
+  if (V.room === 'v6') return lose(c, null);
+  moveVent(V, closerVent(V.room));
+}
+
+// One of the rooms next to `room` that is a step closer to your office (a random one if there are two).
+const closerVent = room => pick(VENTS[room].next.filter(r => VENTS[r].dist < VENTS[room].dist));
+
+// Move a vent crawler into `room`, with a metal clank that gets louder the closer it is.
+// Reaching V6 (right next to your office) makes a loud bang: that's your warning.
+function moveVent(V, room) {
+  V.room = room;
+  // In V6 it always waits at least ventWindow(level) seconds before its next move (into your office).
+  if (room === 'v6') { V.timer = Math.max(V.timer, ventWindow(V.level)); sfx.ventNear(); }
+  else sfx.ventMove(1 - (VENTS[room].dist - 1) / 3);   // dist 4 → quiet, dist 2 → louder
+  dirty = true;
+}
+
+// Play an audio lure in vent `room` (clicking it on the VENTS tab, or keys 1 to 6 there).
+// Lures cost no power but need LURE_COOLDOWN seconds to recharge. Each crawler that hears it reacts:
+//   Ξ Echo: in that room or next to it, it goes there and stays put for a good while.
+//           (Wise: not if it just followed a lure to that same room.)
+//   § Slink: next to that room, it goes there and stays put for a while; but a lure in its OWN
+//           room startles it one vent closer to you (out of V6 means into your office).
+function playLure(room) {
+  if (!G || G.over || G.paused || !G.cam || G.tab !== 'vents' || !powered() || adsUp()) return;
+  if (G.t < G.lureReadyAt) { sfx.deny(); return; }
+  G.lureReadyAt = G.t + LURE_COOLDOWN;
+  G.lureRoom = room;
+  G.lureUntil = G.t + LURE_SHOW;
+  sfx.lure();
+  // Its next move waits 2 to 3 turns: a lure buys you real time. (It was 1 to 1.5 turns, until the
+  // vents were eased so Absolute Nightmare could be beaten.)
+  const rest = c => c.interval * (2 + Math.random());
+
+  const E = G.echo;
+  const echoHears = E.room === room || VENTS[E.room].next.includes(room);
+  if (E.level > 0 && echoHears && !(modOn('ech') && E.followed === room)) {
+    E.room = room;
+    E.followed = room;
+    E.timer = rest(ECHO);
+  }
+
+  const S = G.slink;
+  if (S.level > 0 && S.room === room) {
+    sfx.startle();
+    if (S.room === 'v6') return lose(SLINK, null);
+    moveVent(S, closerVent(S.room));
+  } else if (S.level > 0 && VENTS[S.room].next.includes(room)) {
+    S.room = room;
+    S.timer = rest(SLINK);
+  }
+  dirty = true;
+}
+
+// ---------- ¥ Peeker ----------
+// Its appearance timer counts down all the time, and when it runs out it peeks in straight away,
+// even if the monitor is up (you hear a sharp ting). Get the mask on within peekWindow(level)
+// seconds and keep it on for PEEK_HOLD seconds. Taking it off too soon starts the count over.
+function updatePeeker(dt) {
+  const P = G.peeker;
+  if (P.level === 0) return;
+  if (P.present) {
+    if (G.mask) {
+      P.maskT += dt;
+      P.deadline = G.t + peekWindow(P.level);
+      if (P.maskT >= PEEK_HOLD) {
+        P.present = false;
+        P.maskT = 0;
+        sfx.peekOut();
+        if (modOn('pek') && !P.returning) {
+          P.returning = true;                // ¥ Double: it'll be back once more in a moment
+          P.returnT = PEEK_RETURN;
+        } else {
+          P.returning = false;
+          P.timer = peekerWait(P.level);     // a fresh random wait until its next visit
+        }
+        dirty = true;
+      }
+      return;
+    }
+    P.maskT = 0;
+    if (G.t >= P.deadline) lose(PEEKER, null);
+    return;
+  }
+  if (P.returnT > 0) {
+    P.returnT -= dt;
+    if (P.returnT <= 0) peekIn();
+    return;
+  }
+  P.timer -= dt;
+  if (P.timer <= 0) peekIn();
+}
+
+function peekIn() {
+  const P = G.peeker;
+  P.present = true;
+  P.maskT = 0;
+  P.deadline = G.t + peekWindow(P.level);
+  sfx.peekIn();
+  dirty = true;
+}
+
+// ---------- © Spammer ----------
+// While the monitor is up, it gets its usual chance every so often to pop up an ad over it. An ad
+// covers the whole monitor, whatever tab you're on: until you close it you can't see or use anything
+// on the monitor (cameras, winding, lures, tasks; see adsUp). Ads stay until you close them, even if
+// you lower the monitor. ADS_MAX open at once: crash.
+function updateSpammer(dt) {
+  const S = G.spammer;
+  if (S.level === 0 || !G.cam) return;
+  S.timer -= dt;
+  if (S.timer > 0) return;
+  S.timer = SPAMMER.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= S.level) return;
+  G.ads.push({
+    id: G.nextAdId++,
+    // Each ad covers (nearly) the whole monitor; this small random nudge, in %, makes a stack of
+    // them look like a pile, so you can see how many are open.
+    x: Math.random() * 6, y: Math.random() * 8,
+    text: pick(AD_TEXT),
+    corner: modOn('spm') ? pick(['tl', 'tr', 'bl', 'br']) : 'tr',   // ★ Sneaky: the [X] can be in any corner
+  });
+  G.adsVersion++;
+  sfx.adPop();
+  dirty = true;
+  if (G.ads.length >= ADS_MAX) lose(SPAMMER, null);
+}
+
+// The player clicked an ad's [X]. It only works while the monitor is up (that's where the ads are).
+function closeAd(id) {
+  if (!G || G.over || G.paused || !G.cam) return;
+  const i = G.ads.findIndex(ad => ad.id === id);
+  if (i < 0) return;
+  G.ads.splice(i, 1);
+  G.adsVersion++;
+  sfx.adClose();
+  dirty = true;
+}
+
+// Switch the monitor to one of its tabs ('cams', 'vents' or 'tasks'), raising it first if it's down.
+// VENTS only exists when a vent crawler is on, and TASKS only in Tasks mode.
+function setTab(tab) {
+  if (!G || G.over || G.paused) return;
+  if (tab === 'vents' && !ventsOn()) return;
+  if (tab === 'tasks' && G.mode !== 'tasks') return;
+  if (!powered() || !free() || G.mask) { sfx.deny(); return; }
+  if (!G.cam) sfx.cam();
+  G.cam = true;
+  if (G.tab !== tab) { G.tab = tab; sfx.click(); }
+  dirty = true;
+}
+
 // Put the mask on or take it off (W in the office, or the Mask button). It can't be used while
 // you're on the cameras, and while it's on the cameras can't be raised.
 function toggleMask() {
   if (!G || G.over || G.paused) return;
-  if (G.cam) { sfx.deny(); return; }
+  if (G.cam || !free()) { sfx.deny(); return; }
   G.mask = !G.mask;
   sfx.mask(G.mask);
   dirty = true;
@@ -646,6 +965,8 @@ function powerOutStart() {
   G.smiley.active = false;                                // in the dark there's nothing to find
   G.flicker.phase = 0; G.flicker.side = null;             // and the Flicker and Visitor give up too
   G.visitor.present = false; G.visitor.returnT = 0;
+  G.peeker.present = false; G.peeker.returnT = 0; G.peeker.returning = false;
+  G.peeker.timer = 999;                                   // ¥ doesn't come in the dark either
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -654,7 +975,7 @@ function powerOutStart() {
 // ---------- things the player does (called from input.js) ----------
 function toggleDoor(side) {
   if (!G || G.over || G.paused) return;
-  if (G.powerOut) { sfx.deny(); return; }
+  if (!powered() || !free()) { sfx.deny(); return; }   // no power, or busy with the generator
   G.doors[side] = !G.doors[side];   // flip: open becomes closed, closed becomes open
   sfx.door(side);
   dirty = true;
@@ -662,7 +983,7 @@ function toggleDoor(side) {
 
 function toggleCam() {
   if (!G || G.over || G.paused) return;
-  if (G.powerOut || G.mask) { sfx.deny(); return; }   // no cameras without power, or with the mask on
+  if (!powered() || !free() || G.mask) { sfx.deny(); return; }   // no monitor without power, while charging, or with the mask on
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
@@ -673,8 +994,9 @@ function toggleCam() {
 // Jump to a camera (raising the camera first if needed).
 function setCam(room) {
   if (!G || G.over || G.paused) return;
-  if (G.powerOut || G.mask) { sfx.deny(); return; }
+  if (!powered() || !free() || G.mask) { sfx.deny(); return; }
   G.cam = true;
+  G.tab = 'cams';
   G.camRoom = room;
   sfx.cam();
   camStatic(0.22);
@@ -693,6 +1015,7 @@ function startNight() {
   sfx.init();
   store.set('levels', levels);
   windKey = windPointer = false;
+  genKey = genPointer = false;
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
   newGame();
   analytics.nightStart();   // count it (analytics.js)
@@ -712,18 +1035,27 @@ function win() {
   const sum = nightScore();
   const isBest = !best || sum > best.sum;
   if (isBest) {
-    best = { sum, levels: levels.slice(), mods: mods.slice() };
+    best = { sum, levels: levels.slice(), mods: mods.slice(), mode };
     store.set('best', best);
   }
   // Was tonight one of the challenges? Then it earns its ✓ (if it didn't have one already).
   const challenge = matchingPreset();
-  const firstTime = !!challenge && !cleared.includes(challenge.name);
+  const firstTime = !!challenge && !cleared.includes(clearKey(challenge));
   if (firstTime) {
-    cleared.push(challenge.name);
+    cleared.push(clearKey(challenge));
     store.set('cleared', cleared);
   }
   analytics.win(isBest, challenge, firstTime);
   showWin(sum, isBest, challenge, firstTime);
+}
+
+// Add one to threat c's kill tally, save it, and return a line for the game over screen
+// like "Diamond has got you 3 times." (The tally itself is `kills`, near the top of this file.)
+function countKill(c) {
+  kills[c.id] = (kills[c.id] || 0) + 1;
+  store.set('kills', kills);
+  const n = kills[c.id];
+  return `<br><span class="dim">${c.name} has got you ${n === 1 ? 'once' : n + ' times'}.</span>`;
 }
 
 // A threat (c, from data.js) got you through door `side` ('L' or 'R'), or straight in your office
@@ -734,10 +1066,11 @@ function lose(c, side, dark = false) {
   sfx.scream();
   analytics.death(c.id, side, dark);   // count who got you (analytics.js)
   const when = hourLabel(hourOf(G.t));
-  const how = side ? `came through the ${side === 'L' ? 'LEFT door' : 'RIGHT door'}` : 'got you in your office';
-  const message = dark
+  const how = side ? `came through the ${side === 'L' ? 'LEFT door' : 'RIGHT door'}`
+    : c.how || 'got you in your office';   // some threats have their own words (`how` in data.js)
+  const message = (dark
     ? `The power ran out. ${symHtml(c)} found you in the dark at ${when}.`
-    : `${symHtml(c)} ${how} at ${when}.`;
+    : `${symHtml(c)} ${how} at ${when}.`) + countKill(c);
   // The jumpscare. Ж ¤ Ψ have a big drawing of their own (SPRITES in art.js), shown at double size;
   // the shapes are drawn huge, filling a 44 x 22 grid with their symbol.
   const big = SPRITES[c.id] && SPRITES[c.id].scare;
@@ -758,7 +1091,7 @@ function loseSmiley() {
   sfx.humOff();
   sfx.scream();
   analytics.death(SMILEY.id, null, false);
-  const message = `You didn't find ${symHtml(SMILEY)} in time. It got you at ${hourLabel(hourOf(G.t))}.`;
+  const message = `You didn't find ${symHtml(SMILEY)} in time. It got you at ${hourLabel(hourOf(G.t))}.` + countKill(SMILEY);
   showScare(message, `<span class="bigface s-smi">${SMILEY.sym}</span>`);
 }
 
@@ -767,6 +1100,6 @@ function loseLenny() {
   sfx.humOff();
   sfx.scream();
   analytics.death(LENNY.id, null, false);
-  const message = `The music box ran down. ${symHtml(LENNY)} got out at ${hourLabel(hourOf(G.t))}.`;
+  const message = `The music box ran down. ${symHtml(LENNY)} got out at ${hourLabel(hourOf(G.t))}.` + countKill(LENNY);
   showScare(message, `<span class="bigface">${LENNY_FACE}</span>`);
 }

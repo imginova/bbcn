@@ -9,7 +9,9 @@
 // Draw everything on the game screen: HUD, then either the office or the camera, then the buttons.
 function renderGame(now) {
   // ----- HUD: clock, power, usage -----
-  $('clock').textContent = hourLabel(hourOf(G.t));
+  // Tasks mode has no 6 AM to reach, so the clock shows how many tasks are done instead.
+  $('clock').textContent = G.mode === 'tasks'
+    ? `TASKS ${G.tasks.filter(T => T.done >= T.need).length}/${G.tasks.length}` : hourLabel(hourOf(G.t));
 
   const p = Math.max(0, Math.ceil(G.power));
   const pw = $('pw');
@@ -29,20 +31,22 @@ function renderGame(now) {
   cams.hidden = !G.cam;
   $('maskView').hidden = !G.mask || G.cam;   // the mask covers the office view, leaving two eye holes
   if (G.cam) {
-    renderFeed(now);
+    renderMonitor(now);
   } else {
-    office.classList.toggle('dark', G.powerOut);
+    office.classList.toggle('dark', !powered());   // after a power-out, or at 0% in Generator mode
     for (const side of ['L', 'R']) {
       $('door' + side).innerHTML = toHtml(doorGrid(side, now));
       $('door' + side).classList.toggle('lit', lightOn(side));   // style.css makes a lit doorway glow
     }
-    const og = grid(officeLines(now, G.powerOut, G.cam), 36);
+    const og = grid(officeLines(now, !powered(), G.cam), 36);
     // Once Lenny is out he flickers on your desk monitor (shown 3 frames out of 4).
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
     // Ψ Visitor's face in the office, right in front of the monitor.
     if (G.visitor.present) sprite(og, ...VISITOR_OFFICE, SPRITES.vis.office, VISITOR);
+    // ¥ Peeker's half-face, peeking in at the left edge.
+    if (G.peeker.present) sprite(og, ...PEEKER_OFFICE, SPRITES.pek.office, PEEKER);
     // Ж Crawler in the office. "crw-hit" is the class input.js listens for when you click it.
-    if (G.crawler.step === CRAWLER.route.length - 1) {
+    if (G.crawler.step === G.crawler.route.length - 1) {
       sprite(og, ...CRAWLER_OFFICE, SPRITES.crw.office, CRAWLER, ' crw-hit');
     }
     // Smiley hiding in its spot, drawn in brown with a glow (the "smi" class in style.css) so it stands out.
@@ -58,35 +62,39 @@ function renderGame(now) {
   }
 
   // ----- buttons -----
+  // `off` = no power right now; `busy` = holding the generator (Generator mode), so nothing else works.
+  const off = !powered(), busy = G.genHeld;
+  const why = off ? 'NO POWER' : busy ? 'CHARGING' : null;   // why a button can't be used, if it can't
   for (const [side, btn, label] of [['L', 'btnL', 'stL'], ['R', 'btnR', 'stR']]) {
     $(btn).classList.toggle('on', G.doors[side]);
     $(btn).setAttribute('aria-pressed', String(G.doors[side]));
-    $(btn).disabled = G.powerOut;
-    $(label).textContent = G.powerOut ? 'NO POWER' : G.doors[side] ? 'CLOSED' : 'OPEN';
+    $(btn).disabled = off;
+    $(label).textContent = why || (G.doors[side] ? 'CLOSED' : 'OPEN');
   }
   // The door lights only work while you're looking at the office (camera down) with that door open.
   for (const [side, btn, label] of [['L', 'btnLightL', 'stLightL'], ['R', 'btnLightR', 'stLightR']]) {
     $(btn).classList.toggle('on', lightOn(side));
-    $(btn).disabled = G.powerOut;
-    $(label).textContent = G.powerOut ? 'NO POWER' : G.cam ? 'CAM UP' : G.doors[side] ? 'DOOR SHUT'
-      : lightOn(side) ? 'ON' : 'HOLD';
+    $(btn).disabled = off;
+    $(label).textContent = why || (G.cam ? 'CAM UP' : G.doors[side] ? 'DOOR SHUT' : lightOn(side) ? 'ON' : 'HOLD');
   }
   // The mask: works whenever the camera is down (it needs no power).
   $('btnMask').classList.toggle('on', G.mask);
   $('btnMask').setAttribute('aria-pressed', String(G.mask));
-  $('stMask').textContent = G.mask ? 'ON' : G.cam ? 'CAM UP' : 'OFF';
+  $('stMask').textContent = busy ? 'CHARGING' : G.mask ? 'ON' : G.cam ? 'CAM UP' : 'OFF';
   $('btnCam').classList.toggle('on', G.cam);
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
-  $('btnCam').disabled = G.powerOut;
-  // When the box runs low, the Camera button names the camera it's on and that map button flashes.
+  $('btnCam').disabled = off;
+  // When the box runs low, the Camera button warns you, but on purpose it doesn't say WHICH camera
+  // the box is on: with the Wanderer modifier you have to remember or find it yourself.
   const boxLow = !G.lenny.out && G.lenny.wind < BOX_LOW;
-  const boxCam = ROOMS[G.lenny.room].cam;
-  $('stCam').textContent = G.powerOut ? 'NO POWER' : G.mask ? 'MASK ON'
-    : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ` · WIND CAM ${boxCam}!` : '');
+  $('stCam').textContent = why || (G.mask ? 'MASK ON'
+    : (G.cam ? 'UP' : 'DOWN') + (boxLow ? ' · WIND THE BOX!' : ''));
   $('stCam').classList.toggle('alert', boxLow && !G.powerOut);
-  for (const b of document.querySelectorAll('#map button')) {
-    b.classList.toggle('alert', boxLow && b.dataset.room === G.lenny.room);
-  }
+  // Generator mode: the wide Generator button.
+  $('btnGen').hidden = G.mode !== 'generator';
+  $('btnGen').classList.toggle('on', busy);
+  $('stGen').textContent = busy ? `CHARGING · ${Math.floor(G.power)}%` : G.power <= 0 ? 'EMPTY! HOLD TO CHARGE' : 'HOLD TO CHARGE';
+  $('stGen').classList.toggle('alert', !busy && G.power <= 0);
 }
 
 // One door of the office as a grid: 12 wide (10 inside the frame) and 16 tall.
@@ -137,6 +145,58 @@ function doorGrid(side, now) {
   return g;
 }
 
+// The raised monitor: its tab bar (hidden when the cameras are its only system), then the tab
+// you're on. The VENTS tab button only shows when a vent crawler is switched on.
+function renderMonitor(now) {
+  $('tabVents').hidden = !ventsOn();
+  $('tabTasks').hidden = G.mode !== 'tasks';
+  $('tabs').hidden = !ventsOn() && G.mode !== 'tasks';
+  for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-current', String(b.dataset.tab === G.tab));
+  $('camPane').hidden = G.tab !== 'cams';
+  $('ventPane').hidden = G.tab !== 'vents';
+  $('taskPane').hidden = G.tab !== 'tasks';
+  if (G.tab === 'vents') renderVents();
+  else if (G.tab === 'tasks') renderTasks();
+  else renderFeed(now);
+  renderAds();
+}
+
+// Tasks mode: the TASKS tab. One button per task with a progress bar; the one you're on is outlined.
+function renderTasks() {
+  const doneCount = G.tasks.filter(T => T.done >= T.need).length;
+  $('taskCount').textContent = `${doneCount}/${G.tasks.length} DONE`;
+  $('taskList').innerHTML = G.tasks.map((T, i) => {
+    const seg = Math.round(T.done / T.need * 10);
+    const state = T.done >= T.need ? 'done' : G.task === i ? 'doing' : '';
+    return `<button type="button" class="${state}" data-task="${i}"><span>${i + 1}. ${T.name}</span>`
+      + `<span class="bars">${T.done >= T.need ? 'DONE ✓' : '[' + '|'.repeat(seg) + '.'.repeat(10 - seg) + ']'}</span></button>`;
+  }).join('');
+}
+
+// © Spammer's ads on top of the monitor. They're only rebuilt when they change (adsVersion),
+// not 15 times a second, so clicking an ad's [X] always lands on the real button.
+let drawnAds = -1, drawnAdsNight = null;
+function renderAds() {
+  if (drawnAdsNight === G && drawnAds === G.adsVersion) return;
+  drawnAdsNight = G;
+  drawnAds = G.adsVersion;
+  $('ads').innerHTML = G.ads.map(ad => `
+    <div class="ad" style="left:${ad.x}%;top:${ad.y}%">
+      <button type="button" class="ad-x ${ad.corner}" data-ad="${ad.id}" aria-label="Close ad">[X]</button>
+      <b>${symHtml(SPAMMER)} ${ad.text}</b>
+    </div>`).join('');
+}
+
+// The VENTS tab: the vent map with the crawlers that are switched on, the room you just lured,
+// and whether the next lure is ready.
+function renderVents() {
+  const crawlers = [[G.echo, ECHO], [G.slink, SLINK]].filter(([V]) => V.level > 0).map(([V, c]) => ({ c, room: V.room }));
+  $('ventMap').innerHTML = toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null));
+  const wait = G.lureReadyAt - G.t;
+  $('lureState').textContent = wait > 0 ? `LURE ${wait.toFixed(1)}s` : 'LURE READY';
+  $('lureState').classList.toggle('dim', wait > 0);
+}
+
 // The camera screen: the room picture (or static), any shapes in it, the music box and its wind bar
 // (on CAM 7, or wherever it wandered), and which map button is highlighted.
 function renderFeed(now) {
@@ -160,7 +220,7 @@ function renderFeed(now) {
     // With the Wanderer modifier the box can be on another camera: draw the small version there.
     else if (room === G.lenny.room) miniBox(g, ...BOX_SPOTS[room], G.lenny);
     // Ж Crawler, if it's in this room: its small drawing, which you can click ("crw-hit", see input.js).
-    if (CRAWLER.route[G.crawler.step] === room) {
+    if (G.crawler.route[G.crawler.step] === room) {
       sprite(g, ...CRAWLER_SLOTS[room], SPRITES.crw.cam, CRAWLER, ' crw-hit');
     }
   }

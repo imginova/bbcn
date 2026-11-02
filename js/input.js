@@ -56,6 +56,55 @@ $('map').addEventListener('click', e => {
   if (e.detail) b.blur();
 });
 
+// The monitor's tabs (CAMS / VENTS). data-tab="vents" says which tab a button opens.
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  setTab(b.dataset.tab);
+  if (e.detail) b.blur();
+});
+
+// Clicking a vent room on the VENTS tab plays an audio lure there. Each room's cells carry a class
+// like "vr-v3" (see ventGrid in art.js); we read the room out of it. pointerdown, like Smiley and the
+// Crawler, because the map is redrawn many times a second.
+$('ventMap').addEventListener('pointerdown', e => {
+  const cell = e.target.closest('.vroom');
+  if (!cell) return;
+  const room = [...cell.classList].find(name => name.startsWith('vr-')).slice(3);   // "vr-v3" → "v3"
+  sfx.init();
+  playLure(room);
+  e.preventDefault();
+});
+
+// Tasks mode: clicking a task on the TASKS tab starts working on it (pointerdown: the list is redrawn often).
+$('taskList').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-task]');
+  if (!b) return;
+  sfx.init();
+  pickTask(Number(b.dataset.task));
+  e.preventDefault();
+});
+
+// Generator mode: the Generator button charges only while it's HELD, like the door lights.
+const btnGen = $('btnGen');
+btnGen.addEventListener('pointerdown', e => {
+  sfx.init();
+  genPointer = true;
+  btnGen.setPointerCapture?.(e.pointerId);
+  e.preventDefault();
+});
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) btnGen.addEventListener(ev, () => { genPointer = false; });
+btnGen.addEventListener('contextmenu', e => e.preventDefault());
+
+// © Spammer's ads: clicking an ad's [X] closes it (pointerdown, so a busy moment can't eat the click).
+$('ads').addEventListener('pointerdown', e => {
+  const x = e.target.closest('.ad-x');
+  if (!x) return;
+  sfx.init();
+  closeAd(Number(x.dataset.ad));
+  e.preventDefault();
+});
+
 // Custom night rows: the − and + buttons change a level; clicking anywhere else on a row selects it.
 $('rows').addEventListener('click', e => {
   const step = e.target.closest('.step');
@@ -105,6 +154,15 @@ $('rows').addEventListener('contextmenu', e => { if (e.target.closest('.step')) 
 // Ticking or unticking a modifier checkbox fires a "change" event.
 $('rows').addEventListener('change', e => {
   if (e.target.matches('[data-mod]')) setMod(Number(e.target.dataset.mod), e.target.checked);
+});
+
+// The mode picker on the custom night screen. data-mode="generator" says which mode a button picks.
+$('modes').addEventListener('click', e => {
+  const b = e.target.closest('[data-mode]');
+  if (!b) return;
+  sfx.init();
+  setMode(b.dataset.mode);
+  if (e.detail) b.blur();
 });
 
 // The challenge buttons under the rows. data-preset="2" means PRESETS[2].
@@ -241,10 +299,18 @@ document.addEventListener('keydown', e => {
     // W does two jobs: on the cameras you HOLD it to wind the music box (released in keyup below);
     // in the office each press puts the mask on or takes it off. e.repeat is true for the extra
     // presses a held-down key sends, so holding W never flips the mask on and off by itself.
-    else if (k === 'w' || k === 'W') { if (G.cam) windKey = true; else if (!e.repeat) toggleMask(); }
+    else if (k === 'w' || k === 'W') { if (G.cam) windKey = true; else if (!e.repeat) toggleMask(); }   // (winding only works on CAMS)
     else if (k === 'q' || k === 'Q') pressLight('L', lightKey);              // left door light, also released in keyup
     else if (k === 'e' || k === 'E') pressLight('R', lightKey);              // right door light
-    else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);            // /^[1-7]$/ means "exactly one digit from 1 to 7"
+    else if (k === 'c' || k === 'C') setTab('cams');                         // the monitor's tabs
+    else if (k === 'v' || k === 'V') setTab('vents');
+    else if (k === 't' || k === 'T') setTab('tasks');
+    else if (k === 'g' || k === 'G') genKey = true;                          // Generator mode: hold G to charge (released in keyup)
+    // On the VENTS tab, 1 to 6 play a lure in vent V1 to V6; on TASKS, 1 to 8 pick a task;
+    // everywhere else, 1 to 7 pick a camera. /^[1-7]$/ means "exactly one digit from 1 to 7".
+    else if (/^[1-6]$/.test(k) && G.cam && G.tab === 'vents') playLure(VENT_ORDER[Number(k) - 1]);
+    else if (/^[1-9]$/.test(k) && G.cam && G.tab === 'tasks') pickTask(Number(k) - 1);
+    else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h' || k === 'H') openHowto();
 
   } else if (currentScreen === 'win') {
@@ -257,6 +323,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
   if (k === 'w') windKey = false;
+  else if (k === 'g') genKey = false;
   else if (k === 'q') releaseLight('L', lightKey);
   else if (k === 'e') releaseLight('R', lightKey);
 });
@@ -264,6 +331,7 @@ document.addEventListener('keyup', e => {
 // If the window loses focus while a key is held, we would never see it being released, so let go of everything.
 window.addEventListener('blur', () => {
   windKey = windPointer = false;
+  genKey = genPointer = false;
   lightKey.L = lightKey.R = lightPointer.L = lightPointer.R = false;
 });
 

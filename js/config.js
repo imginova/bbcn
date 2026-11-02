@@ -50,7 +50,7 @@ const MAX_STREAK = 2;
 // (Eased: level 20 used to unwind twice as fast, emptying in about 17s.)
 const boxDrain = level => (0.6 + (level - 1) * (1.4 / 19)) * PACE * 0.75;
 const WIND_RATE = 50;      // % wound back per second while you hold W (empty to full in 2 seconds)
-const BOX_LOW = 30;        // below this %, the camera button and CAM 7 start warning you
+const BOX_LOW = 30;        // below this %, the camera button starts warning you (without saying which camera)
 const LENNY_DELAY = 4.5;   // seconds between the box running out and Lenny getting you
 
 // ---------- ■ Square and the door lights ----------
@@ -88,6 +88,42 @@ const visitorWait = level => {
   const shortest = 30 - (level - 1) * (18 / 19);
   return shortest + Math.random() * shortest * 0.8;
 };
+
+// ---------- Ξ Echo, § Slink and the vents ----------
+const LURE_COOLDOWN = 2.0; // seconds before you can play another audio lure (lures cost no power)
+const LURE_SHOW = 0.8;     // seconds a lured vent room stays highlighted on the map
+// Seconds a crawler always waits in V6 (after the loud bang) before its next move can take it into
+// your office: the reaction window plus 2s, since you may need to open the VENTS tab first.
+// (Added to ease the vents: without it, an unlucky roll could come right after the bang.)
+const ventWindow = level => reactWindow(level) + 2.0;
+const QUICK_RATE = 1.5;    // § Quick: how much faster Slink moves while you're not on the VENTS tab (was 2)
+
+// ---------- ¥ Peeker ----------
+// It can turn up while the monitor is up, so it gives you half a second more than the doors do.
+const peekWindow = level => reactWindow(level) + 0.5;
+const PEEK_HOLD = 1.0;     // seconds of mask that send it away (Ψ needs MASK_HOLD, twice as long)
+const PEEK_RETURN = 1.5;   // ¥ Double: seconds after leaving before it's back once more
+// Its appearance timer: a random wait between `shortest` and 1.8 times that.
+// The shortest wait is 24s at level 1, down to 12s at level 20.
+const peekerWait = level => {
+  const shortest = 24 - (level - 1) * (12 / 19);
+  return shortest + Math.random() * shortest * 0.8;
+};
+
+// ---------- © Spammer ----------
+const ADS_MAX = 4;         // this many ads open at once crashes the system (and gets you)
+
+// ---------- modes (see MODES in data.js) ----------
+// Generator mode starts at 0% power, so it gets two helps (added so Absolute Nightmare (Generator)
+// can be beaten): the threats stay still for the first GEN_QUIET seconds while you charge, and
+// everything costs GEN_COST times as much power as usual (half).
+const GEN_QUIET = 30;
+const GEN_COST = 0.5;
+const GEN_RATE = 2;        // Generator mode: % power gained per second while you hold the generator (was 5, then 1; 2 on request so Absolute Nightmare (Generator) can be beaten)
+const TASK_COUNT = 4;      // Tasks mode: how many tasks a night has (was 8, then 6; 4 so Absolute Nightmare (Tasks) can be beaten)
+// Tasks mode: seconds of work one task needs (on the TASKS tab): a random 4 to 6, so all of them take
+// about 20 seconds of monitor time. (Was 4-8, then 8-14; shortened so Absolute Nightmare (Tasks) can be beaten.)
+const taskTime = () => 4 + Math.random() * 2;
 
 // ---------- modifiers ----------
 // Ticking a threat's modifier on the custom night screen adds this much to the night's score

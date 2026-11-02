@@ -223,6 +223,55 @@ const sfx = (() => {
     // Putting the mask on (muffled thump) or taking it off (lighter click).
     mask(on) { on ? noise(0.15, { vol: 0.35, freq: 300 }) : tone(600, 0.05, { vol: 0.08 }); },
 
+    // ----- the vents: Ξ Echo and § Slink -----
+    // Something crawling one vent closer: a hollow metal clank. progress goes from 0 (far) to 1 (close).
+    ventMove(progress) {
+      tone(240, 0.16, { type: 'sine', vol: 0.06 + 0.25 * progress, slide: -90 });
+      noise(0.1, { vol: 0.05 + 0.25 * progress, freq: 900 });
+    },
+    // Reaching V6, right next to your office: a loud bang in the vent. Its next move gets you.
+    ventNear() {
+      noise(0.45, { vol: 0.8, freq: 500 });
+      tone(70, 0.45, { type: 'square', vol: 0.25, slide: -25 });
+      tone(180, 0.3, { type: 'sine', vol: 0.3, slide: -120, delay: 0.05 });
+    },
+    // An audio lure playing in a vent: a little three-note "hello?" call.
+    lure() {
+      [660, 880, 740].forEach((f, i) => tone(f, 0.14, { type: 'triangle', vol: 0.16, delay: i * 0.13 }));
+    },
+    // § Slink startled by a lure right on top of it: a sharp hiss and a rising screech.
+    startle() {
+      noise(0.4, { vol: 0.45, freq: 3000, type: 'highpass' });
+      tone(300, 0.3, { type: 'sawtooth', vol: 0.18, slide: 400 });
+    },
+
+    // ----- ¥ Peeker -----
+    // It peeks in: a sharp, high "ting" and a quick whisper. Different from Ψ's low hum on purpose.
+    peekIn() {
+      tone(2093, 0.35, { type: 'triangle', vol: 0.22 });
+      tone(2637, 0.3, { type: 'triangle', vol: 0.12, delay: 0.06 });
+      noise(0.35, { vol: 0.15, freq: 5000, type: 'highpass', delay: 0.1 });
+    },
+    // It ducks away: a short falling ting.
+    peekOut() { tone(1568, 0.25, { type: 'triangle', vol: 0.15, slide: -800 }); },
+
+    // ----- © Spammer -----
+    // An ad pops up: a cheerful (annoying) two-note "bloop".
+    adPop() {
+      tone(523, 0.09, { type: 'square', vol: 0.12 });
+      tone(1046, 0.12, { type: 'square', vol: 0.12, delay: 0.08 });
+    },
+    // Closing one: a quick click down.
+    adClose() { tone(800, 0.06, { type: 'square', vol: 0.08, slide: -400 }); },
+
+    // ----- Generator and Tasks modes -----
+    // Grabbing the generator: a heavy clunk as it kicks in.
+    genStart() { noise(0.3, { vol: 0.5, freq: 250 }); tone(55, 0.35, { type: 'square', vol: 0.2, slide: 30 }); },
+    // While charging: a whirr that climbs in pitch as the battery fills (level 0 to 1).
+    genTick(level) { tone(90 + level * 160, 0.12, { type: 'sawtooth', vol: 0.06 }); },
+    // A task finished: two bright notes.
+    taskDone() { tone(880, 0.12, { type: 'triangle', vol: 0.18 }); tone(1320, 0.2, { type: 'triangle', vol: 0.18, delay: 0.1 }); },
+
     // ----- Lenny's music box -----
     windTick() { tone(2300, 0.025, { vol: 0.05 }); },
     boxWarn() {

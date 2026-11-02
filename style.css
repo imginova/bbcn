@@ -31,7 +31,11 @@
   --c-smi: #b8662e;
   --c-crw: #d6e04a;   /* Ж Crawler: sickly yellow-green */
   --c-flk: #e4f0ff;   /* ¤ Flicker: pale electric white */
-  --c-vis: #ff5fc8;   /* Ψ Visitor: magenta */   /* a reddish brown: darker and redder than the amber, so (: still shows up in the office */
+  --c-vis: #ff5fc8;   /* Ψ Visitor: magenta */
+  --c-ech: #5fe0d0;   /* Ξ Echo: vent teal */
+  --c-slk: #b0c4de;   /* § Slink: cold steel blue */
+  --c-pek: #6f8fff;   /* ¥ Peeker: royal blue (stands out from the amber office) */
+  --c-spm: #ff4fa3;   /* © Spammer: loud pop-up pink */   /* a reddish brown: darker and redder than the amber, so (: still shows up in the office */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --art: min(16px, calc((100vw - 60px) / 37));
@@ -124,6 +128,10 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
 .s-crw { color: var(--c-crw); }
 .s-flk { color: var(--c-flk); text-shadow: 0 0 6px var(--c-flk); }
 .s-vis { color: var(--c-vis); }
+.s-ech { color: var(--c-ech); }
+.s-slk { color: var(--c-slk); }
+.s-pek { color: var(--c-pek); }
+.s-spm { color: var(--c-spm); }
 /* The Crawler can be clicked; the invisible ::after box makes each small symbol easier to hit. */
 .crw-hit { position: relative; cursor: pointer; }
 .crw-hit::after { content: ""; position: absolute; inset: -4px; }
@@ -140,8 +148,6 @@ pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.1
 pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 columns of the 0.6em-wide mono font */
 .bigface { display: block; white-space: pre; font-size: min(15vw, 24vh); line-height: 1.3; color: var(--c-len); text-shadow: 0 0 18px var(--c-len); }
 .alert { color: var(--danger) !important; animation: blink 0.8s steps(2) infinite; }
-.map button.alert { border-color: var(--danger); }
-.map button.alert[aria-current="true"] { background: var(--danger); color: var(--bg) !important; animation: none; }
 .wind { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 .wind .bars { white-space: pre; font-variant-numeric: tabular-nums; }
 #btnWind { touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -176,6 +182,8 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .lvrow .who { min-width: 0; }
 .lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
 .lvrow .who small { color: var(--dim); font-size: 12px; }
+/* How many times this threat has got you (shown only once it has). */
+.lvrow .who small.kills { display: block; color: var(--danger); }
 .ctrl { display: flex; align-items: center; gap: 8px; }
 .ctrl button { padding: 4px 12px; font-size: 18px; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; }   /* hold to repeat on phones too */
 .lv { display: flex; flex-direction: column; align-items: center; min-width: 13ch; font-variant-numeric: tabular-nums; }
@@ -189,10 +197,22 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .lvrow .mod:has(input:checked) { color: var(--fg); font-weight: 600; }
 .lvrow .mod:has(input:disabled) { opacity: .45; }
 .lvrow .mod small { display: block; font-weight: 400; }
+/* The mode picker: the chosen mode is filled in. */
+.modes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.modes .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
+.modes button { padding: 6px 12px; font-size: 12px; }
+.modes button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.modes .dim { flex-basis: 100%; font-size: 12px; }
 /* The row of challenge buttons. */
 .presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
 .presets button { padding: 6px 10px; font-size: 12px; }
+/* The picked challenge is outlined, and its flavour text shows under the list. */
+.presets button.picked { border-color: var(--fg); background: rgba(242,179,91,.1); }
+.flavor { color: var(--dim); font-style: italic; min-height: 1.5em; margin-top: -8px; }
+.flavor b { color: var(--fg); font-style: normal; }
+/* A Generator or Tasks challenge's mode, as a small tag on its button. */
+.mode-tag { font-size: 10px; letter-spacing: .08em; padding: 0 4px; margin-right: 4px; border: 1px solid var(--faint); color: var(--c-ech); }
 /* A beaten challenge: green ✓ and a green border (the same green as Lenny). */
 .tick { color: var(--c-len); font-weight: 600; }
 .presets button.done { border-color: var(--c-len); }
@@ -224,7 +244,26 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 .office.dark .sym { color: inherit; }
 .office.dark .sym.lit { color: var(--danger); text-shadow: 0 0 6px var(--danger); }
 
-.cams { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+/* The raised monitor: the tab bar on top, then the tab you're on. */
+.cams { position: relative; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+/* © Spammer's ads: each one covers the whole monitor (whatever tab you're on), so nothing under it can
+   be seen or clicked. The layer itself lets clicks through when it's empty; each ad blocks them. */
+.ads { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.ad { position: absolute; width: 94%; height: 92%; pointer-events: auto; padding: 30px 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2a0f1e; border: 2px solid var(--c-spm); box-shadow: 0 0 22px rgba(255,79,163,.45);
+  color: #ffe8f3; font-size: clamp(16px, 4vw, 26px); line-height: 1.3; text-align: center; }
+.ad-x { position: absolute; padding: 4px 8px; font-size: 13px; color: #ffe8f3; border-color: var(--c-spm); background: #2a0f1e; }
+.ad-x.tl { top: 2px; left: 2px; } .ad-x.tr { top: 2px; right: 2px; }
+.ad-x.bl { bottom: 2px; left: 2px; } .ad-x.br { bottom: 2px; right: 2px; }
+.cam-pane { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+.tabs { display: flex; gap: 6px; align-self: stretch; justify-content: center; }
+.tabs button { padding: 5px 14px; font-size: 12px; }
+.tabs button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button[aria-current="true"] kbd { color: inherit; border-color: currentColor; }
+/* The vent map: each room can be clicked to play a lure; the room you just lured glows. */
+.vroom { color: var(--fg); cursor: pointer; }
+.vroom.vlure { color: var(--bg); background: var(--fg); }
 .feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; }
 .rec { color: var(--danger); }
@@ -252,6 +291,14 @@ pre .face { font-size: 1.2em; width: 4em; text-align: center; } /* 4em here = 8 
 #btnLightL { grid-column: 1; }
 #btnMask { grid-column: 2; }   /* the mask sits between the two lights */
 #btnLightR { grid-column: 3; }
+#btnGen { grid-column: 1 / -1; }   /* Generator mode: a wide button on its own row */
+/* Tasks mode: the task list on the monitor. The one you're working on is outlined. */
+.task-list { display: flex; flex-direction: column; gap: 4px; width: min(560px, 100%); }
+.task-list button { display: flex; justify-content: space-between; gap: 12px; text-transform: none; letter-spacing: .02em; padding: 6px 10px; font-size: 13px; }
+.task-list button.doing { border-color: var(--fg); background: rgba(242,179,91,.12); }
+.task-list button.done { color: var(--c-len); border-color: var(--faint); cursor: default; }
+.task-list .bars { white-space: pre; font-variant-numeric: tabular-nums; }
+.tasks { width: min(560px, 100%); }
 .controls button.light { touch-action: none; user-select: none; -webkit-user-select: none; }
 .hint { margin-top: 10px; text-align: center; }
 
