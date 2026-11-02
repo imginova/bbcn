@@ -73,9 +73,14 @@ const smileyTime = level => (5 - (level - 1) * (2.5 / 19)) * 1.25;
 // ---------- Ж Crawler, ¤ Flicker, Ψ Visitor ----------
 // (The Visitor gives you reactWindow(level) seconds to get the mask on, like the doors.)
 // Ж seconds to click the Crawler once it's in your office: the reaction window plus 2.5s, because you
-// may have to lower the camera first, and with its Stubborn modifier it takes two clicks. (Eased: it
-// used to be just the reaction window, and it was the bot's deadliest threat on Total Nightmare.)
+// may have to lower the camera first. (Eased: it used to be just the reaction window, and it was the
+// bot's deadliest threat on Total Nightmare.)
 const crawlerWindow = level => reactWindow(level) + 2.5;
+// Ж Vent crawl: the chance it climbs into the vents when it leaves CAM 2 (otherwise east or west hall),
+// and how many times as often it moves while in there. The vent way is 8 moves instead of 3, so it
+// moves 3 times as often to take about as long as the halls.
+const CRAWL_VENT_CHANCE = 1 / 3;
+const CRAWL_VENT_RATE = 3;
 const FLASH_TIME = 0.4;    // ¤ seconds of steady light that make the Flicker jump doors (or leave)
 // ¤ seconds to flash the Flicker before it gets you: a bit longer than a door's reaction window,
 // because you may need to lower the camera and open the door first.
@@ -105,7 +110,7 @@ const QUICK_RATE = 1.5;    // § Quick: how much faster Slink moves while you're
 // It can turn up while the monitor is up, so it gives you half a second more than the doors do.
 const peekWindow = level => reactWindow(level) + 0.5;
 const PEEK_HOLD = 1.0;     // seconds of mask that send it away (Ψ needs MASK_HOLD, twice as long)
-const PEEK_RETURN = 1.5;   // ¥ Double: seconds after leaving before it's back once more
+const PEEK_DOOR_CHANCE = 0.5;   // ¥ Knock knock: the chance a visit is at a door instead (shut it in peekWindow)
 // Its appearance timer: a random wait between `shortest` and 1.8 times that.
 // The shortest wait is 24s at level 1, down to 12s at level 20.
 const peekerWait = level => {

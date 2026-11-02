@@ -380,6 +380,7 @@ const CRAWLER_SLOTS = {
 const CRAWLER_OFFICE = [5, 24];
 const VISITOR_OFFICE = [7, 9];
 const PEEKER_OFFICE = [8, 0];   // ¥ peeks round the left edge of the office, left of the monitor
+const PEEKER_DOOR = [6, 2];     // ¥ Knock knock: its face in a doorway (inside doorGrid's 12-wide door)
 const FLICKER_DOOR = [5, 2];
 
 // ---------- the VENTS tab ----------
@@ -415,9 +416,11 @@ function ventGrid(crawlers, lured) {
     for (let r = r0; r < r0 + 3; r++) for (let c = c0; c < c0 + 5; c++) g[r][c] = { ch: g[r][c].ch, cls };
     Array.from(VENTS[id].name).forEach((ch, k) => { g[r0][c0 + 1 + k] = { ch, cls }; });
     if (lured === id) Array.from(')))').forEach((ch, k) => { g[r0 + 2][c0 + 1 + k] = { ch, cls }; });
-    // The crawlers in this room, side by side (Echo first, then Slink).
-    crawlers.filter(v => v.room === id).forEach((v, k) => {
-      g[r0 + 1][c0 + 1 + k * 2] = { ch: v.c.sym, cls: `sym s-${v.c.id} ${cls}` };
+    // The crawlers in this room, side by side (Echo, then Slink, then Ж). Two get a space between
+    // them; three fill the room's 3-wide inside.
+    const here = crawlers.filter(v => v.room === id);
+    here.forEach((v, k) => {
+      g[r0 + 1][c0 + 1 + k * (here.length > 2 ? 1 : 2)] = { ch: v.c.sym, cls: `sym s-${v.c.id} ${cls}` };
     });
   }
   return g;

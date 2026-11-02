@@ -43,8 +43,8 @@ function renderGame(now) {
     if (G.lenny.out && Math.floor(now / 140) % 4 !== 0) stampFace(og, 9, 11, ' s-len');
     // Ψ Visitor's face in the office, right in front of the monitor.
     if (G.visitor.present) sprite(og, ...VISITOR_OFFICE, SPRITES.vis.office, VISITOR);
-    // ¥ Peeker's half-face, peeking in at the left edge.
-    if (G.peeker.present) sprite(og, ...PEEKER_OFFICE, SPRITES.pek.office, PEEKER);
+    // ¥ Peeker's half-face, peeking in at the left edge (unless this visit is at a door: see doorGrid).
+    if (G.peeker.present && !G.peeker.side) sprite(og, ...PEEKER_OFFICE, SPRITES.pek.office, PEEKER);
     // Ж Crawler in the office. "crw-hit" is the class input.js listens for when you click it.
     if (G.crawler.step === G.crawler.route.length - 1) {
       sprite(og, ...CRAWLER_OFFICE, SPRITES.crw.office, CRAWLER, ' crw-hit');
@@ -137,6 +137,8 @@ function doorGrid(side, now) {
     // A visible shape (not the orb) standing in this doorway.
     const visitor = G.mobs.find(m => atDoor(m) && sideOf(m) === side && !m.c.unseen);
     if (visitor && !G.powerOut) stamp(g, 5, 1, visitor.c, W, 5);
+    // ¥ Peeker's ★ Knock knock: its face in this doorway. Shut the door on it!
+    else if (G.peeker.present && G.peeker.side === side) sprite(g, ...PEEKER_DOOR, SPRITES.pek.office, PEEKER);
     // In the last 3 seconds of a power-out, the shape flickers in the left doorway.
     if (G.powerOut && side === 'L' && G.outTimer < 3 && Math.floor(now / 110) % 3 !== 0) {
       stamp(g, 5, 1, G.outBy.c, W, 5, ' lit');
@@ -191,6 +193,7 @@ function renderAds() {
 // and whether the next lure is ready.
 function renderVents() {
   const crawlers = [[G.echo, ECHO], [G.slink, SLINK]].filter(([V]) => V.level > 0).map(([V, c]) => ({ c, room: V.room }));
+  if (G.crawler.vent) crawlers.push({ c: CRAWLER, room: G.crawler.vent });   // Ж on its ★ Vent crawl
   $('ventMap').innerHTML = toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null));
   const wait = G.lureReadyAt - G.t;
   $('lureState').textContent = wait > 0 ? `LURE ${wait.toFixed(1)}s` : 'LURE READY';
@@ -219,8 +222,9 @@ function renderFeed(now) {
     if (room === 'prize') prizeArt(g, G.lenny);
     // With the Wanderer modifier the box can be on another camera: draw the small version there.
     else if (room === G.lenny.room) miniBox(g, ...BOX_SPOTS[room], G.lenny);
-    // Ж Crawler, if it's in this room: its small drawing, which you can click ("crw-hit", see input.js).
-    if (G.crawler.route[G.crawler.step] === room) {
+    // Ж Crawler, if it's in this room (and not off in the vents): its small drawing, which you can
+    // click ("crw-hit", see input.js).
+    if (!G.crawler.vent && G.crawler.route[G.crawler.step] === room) {
       sprite(g, ...CRAWLER_SLOTS[room], SPRITES.crw.cam, CRAWLER, ' crw-hit');
     }
   }

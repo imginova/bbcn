@@ -194,7 +194,6 @@ const sfx = (() => {
       for (let i = 0; i < 9; i++) noise(0.03, { vol: 0.5, freq: 3000, type: 'highpass', delay: i * 0.035 });
       tone(180, 0.3, { type: 'sawtooth', vol: 0.15, slide: 120 });
     },
-    tap() { tone(700, 0.04, { vol: 0.1 }); },                               // Stubborn: one more click needed
     shoo() { tone(900, 0.12, { type: 'triangle', vol: 0.18, slide: -600 }); },   // pushed back a room
 
     // ----- ¤ Flicker -----
@@ -247,13 +246,15 @@ const sfx = (() => {
 
     // ----- ¥ Peeker -----
     // It peeks in: a sharp, high "ting" and a quick whisper. Different from Ψ's low hum on purpose.
-    peekIn() {
-      tone(2093, 0.35, { type: 'triangle', vol: 0.22 });
-      tone(2637, 0.3, { type: 'triangle', vol: 0.12, delay: 0.06 });
-      noise(0.35, { vol: 0.15, freq: 5000, type: 'highpass', delay: 0.1 });
+    // `side` is 'L' or 'R' when it's at a door (★ Knock knock): then the ting comes from that side.
+    peekIn(side) {
+      const pan = side ? panOf(side) : 0;
+      tone(2093, 0.35, { type: 'triangle', vol: 0.22, pan });
+      tone(2637, 0.3, { type: 'triangle', vol: 0.12, delay: 0.06, pan });
+      noise(0.35, { vol: 0.15, freq: 5000, type: 'highpass', delay: 0.1, pan });
     },
     // It ducks away: a short falling ting.
-    peekOut() { tone(1568, 0.25, { type: 'triangle', vol: 0.15, slide: -800 }); },
+    peekOut(side) { tone(1568, 0.25, { type: 'triangle', vol: 0.15, slide: -800, pan: side ? panOf(side) : 0 }); },
 
     // ----- © Spammer -----
     // An ad pops up: a cheerful (annoying) two-note "bloop".
