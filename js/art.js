@@ -280,6 +280,19 @@ const SPRITES = {
 `),
   },
   ech: {   // Ξ Echo: a big-eared vent creature, all ears for your lures
+    // ★ Roamer: small on a camera, and bigger in a doorway (both only when it's out of the vents).
+    cam: drawing(String.raw`
+/\   /\
+(Ξ v Ξ)
+ '---'
+`),
+    door: drawing(String.raw`
+/\     /\
+| \___/ |
+| Ξ   Ξ |
+ \  v  /
+  '---'
+`),
     scare: drawing(String.raw`
   /\                 /\
  /  \     _____     /  \
@@ -381,6 +394,10 @@ const CRAWLER_OFFICE = [5, 24];
 const VISITOR_OFFICE = [7, 9];
 const PEEKER_OFFICE = [8, 0];   // ¥ peeks round the left edge of the office, left of the monitor
 const PEEKER_DOOR = [6, 2];     // ¥ Knock knock: its face in a doorway (inside doorGrid's 12-wide door)
+// Ξ Roamer: where Echo is drawn on each camera of its door run (clear of the shapes' and Ж's spots),
+// and in a doorway.
+const ECHO_SLOTS = { stage: [6, 26], dining: [7, 23], whall: [7, 4], ehall: [7, 26] };
+const ECHO_DOOR = [5, 1];
 const FLICKER_DOOR = [5, 2];
 
 // ---------- the VENTS tab ----------

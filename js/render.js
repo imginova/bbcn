@@ -148,6 +148,8 @@ function doorGrid(side, now) {
     if (visitor && !G.powerOut) stamp(g, 5, 1, visitor.c, W, 5);
     // ¥ Peeker's ★ Knock knock: its face in this doorway. Shut the door on it!
     else if (G.peeker.present && G.peeker.side === side) sprite(g, ...PEEKER_DOOR, SPRITES.pek.office, PEEKER);
+    // Ξ Echo's ★ Roamer: it's in this doorway at the end of its door run. Shut the door on it!
+    else if (echoAtDoor(side)) sprite(g, ...ECHO_DOOR, SPRITES.ech.door, ECHO);
     // In the last 3 seconds of a power-out, the shape flickers in the left doorway.
     if (G.powerOut && side === 'L' && G.outTimer < 3 && Math.floor(now / 110) % 3 !== 0) {
       stamp(g, 5, 1, G.outBy.c, W, 5, ' lit');
@@ -201,7 +203,7 @@ function renderAds() {
 // The VENTS tab: the vent map with the crawlers that are switched on, the room you just lured,
 // and whether the next lure is ready.
 function renderVents() {
-  const crawlers = [[G.echo, ECHO], [G.slink, SLINK]].filter(([V]) => V.level > 0).map(([V, c]) => ({ c, room: V.room }));
+  const crawlers = [[G.echo, ECHO], [G.slink, SLINK]].filter(([V]) => V.level > 0 && !V.hall).map(([V, c]) => ({ c, room: V.room }));
   if (G.crawler.vent) crawlers.push({ c: CRAWLER, room: G.crawler.vent });   // Ж on its ★ Vent crawl
   setHtml($('ventMap'), toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null)));
   const wait = G.lureReadyAt - G.t;
@@ -231,6 +233,9 @@ function renderFeed(now) {
     if (room === 'prize') prizeArt(g, G.lenny);
     // With the Wanderer modifier the box can be on another camera: draw the small version there.
     else if (room === G.lenny.room) miniBox(g, ...BOX_SPOTS[room], G.lenny);
+    // Ξ Echo, out of the vents on its ★ Roamer door run and passing through this room.
+    const EH = G.echo.hall;
+    if (EH && EH.step < EH.route.length - 1 && EH.route[EH.step] === room) sprite(g, ...ECHO_SLOTS[room], SPRITES.ech.cam, ECHO);
     // Ж Crawler, if it's in this room (and not off in the vents): its small drawing, which you can
     // click ("crw-hit", see input.js).
     if (!G.crawler.vent && G.crawler.route[G.crawler.step] === room) {
