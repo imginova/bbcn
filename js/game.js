@@ -131,6 +131,10 @@ function newGame() {
     tab: 'cams',                   // which of the monitor's tabs is showing: 'cams' or 'vents'
     camRoom: 'whall',              // which camera you are looking at
     lureReadyAt: 0,                // the time the next audio lure can be played
+    // When Ξ and § wake up: 0 (straight away) unless tonight is a challenge with a later `ventsAt`
+    // (only Absolute Nightmare (Generator), on request). Until then they stay put in V1.
+    ventsAt: matchingPreset()?.ventsAt || 0,
+    quiet: matchingPreset()?.quiet || GEN_QUIET,   // Generator mode: seconds of quiet start (a challenge can ask for more)
     lureRoom: null, lureUntil: 0,  // the vent room you last lured, highlighted on the map until lureUntil
     powerOut: false, outTimer: 0, outBy: null,
     over: false, paused: false,
@@ -144,7 +148,7 @@ function newGame() {
     mobs: CREATURES.map((c, i) => ({
       c,                           // its description from data.js
       i,                           // its number (0, 1, 2), used to pick its spot in SLOTS
-      level: levels[i],
+      level: effLevel(levels[i]),
       route: pick(c.routes),       // the orb picks left or right here
       step: 0,                     // how far along the route it is
       timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
@@ -158,7 +162,7 @@ function newGame() {
     })),
 
     lenny: {
-      level: levels[SETUP.indexOf(LENNY)],
+      level: effLevel(levels[SETUP.indexOf(LENNY)]),
       wind: 100,                   // how wound the music box is, in percent
       out: false,                  // has the box run out?
       outTimer: 0,                 // countdown from "out" to game over
@@ -169,7 +173,7 @@ function newGame() {
     },
 
     square: {
-      level: levels[SETUP.indexOf(SQUARE)],
+      level: effLevel(levels[SETUP.indexOf(SQUARE)]),
       side: null,                  // which door it is at: 'L', 'R', or null when it isn't at one
       stage: 0,                    // 0 = away, 1 = far, 2 = medium, 3 = close
       timer: SQUARE.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
@@ -178,7 +182,7 @@ function newGame() {
     },
 
     smiley: {
-      level: levels[SETUP.indexOf(SMILEY)],
+      level: effLevel(levels[SETUP.indexOf(SMILEY)]),
       active: false,               // is (: hiding in the office right now?
       spots: [],                   // which of SMILEY_SPOTS it's in (two of them with the Twins modifier)
       deadline: 0,                 // the moment it gets you if you haven't clicked it
@@ -186,7 +190,7 @@ function newGame() {
     },
 
     crawler: {
-      level: levels[SETUP.indexOf(CRAWLER)],
+      level: effLevel(levels[SETUP.indexOf(CRAWLER)]),
       route: pick(CRAWLER.routes), // its path tonight: east or west side (it picks again at CAM 2)
       step: 0,                     // where it is on its route: 0 = CAM 7 ... last = in your office
       timer: CRAWLER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
@@ -196,7 +200,7 @@ function newGame() {
     },
 
     flicker: {
-      level: levels[SETUP.indexOf(FLICKER)],
+      level: effLevel(levels[SETUP.indexOf(FLICKER)]),
       side: null,                  // which door it's at, or null when it's away
       phase: 0,                    // 0 = away; 1 = first door; 2 = jumped to the other door; 3 = back again (Ping-pong)
       flashT: 0,                   // how long the light has been on it without a break
@@ -205,11 +209,11 @@ function newGame() {
     },
 
     visitor: {
-      level: levels[SETUP.indexOf(VISITOR)],
+      level: effLevel(levels[SETUP.indexOf(VISITOR)]),
       present: false,              // is it in your office right now?
       maskT: 0,                    // how long the mask has been on while it's here
       deadline: 0,                 // the moment it gets you if the mask isn't on
-      timer: visitorWait(levels[SETUP.indexOf(VISITOR)]),   // its appearance timer (see updateVisitor)
+      timer: visitorWait(effLevel(levels[SETUP.indexOf(VISITOR)])),   // its appearance timer (see updateVisitor)
       faked: false,                // Ψ Double take: has it already faked an exit this visit?
       returnT: 0,                  // Ψ Double take: countdown until it's back after a fake exit
     },
@@ -219,16 +223,16 @@ function newGame() {
     slink: ventCrawler(SLINK),
 
     peeker: {
-      level: levels[SETUP.indexOf(PEEKER)],
+      level: effLevel(levels[SETUP.indexOf(PEEKER)]),
       present: false,              // is it peeking in right now?
       maskT: 0,                    // how long the mask has been on while it's here
       deadline: 0,                 // the moment it gets you if the mask isn't on
-      timer: peekerWait(levels[SETUP.indexOf(PEEKER)]),   // its appearance timer
+      timer: peekerWait(effLevel(levels[SETUP.indexOf(PEEKER)])),   // its appearance timer
       side: null,                  // ¥ Knock knock: 'L' or 'R' when this visit is at a door (null: the usual peek)
     },
 
     spammer: {
-      level: levels[SETUP.indexOf(SPAMMER)],
+      level: effLevel(levels[SETUP.indexOf(SPAMMER)]),
       timer: SPAMMER.interval * (0.7 + Math.random() * 0.6),   // countdown to its next ad (only while the monitor is up)
     },
     ads: [],                       // the ads open on the monitor: { id, x, y, text, corner }
@@ -248,7 +252,7 @@ function makeTasks() {
 // A fresh vent crawler (Ξ Echo or § Slink) for newGame.
 function ventCrawler(c) {
   return {
-    level: levels[SETUP.indexOf(c)],
+    level: effLevel(levels[SETUP.indexOf(c)]),
     room: VENT_START,            // which vent room it's in
     timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
     hall: null,                  // Ξ Roamer: { route, step, deadline } while it's out running the halls
@@ -261,9 +265,10 @@ function update(dt) {
   // Made it to 6 AM. (Not in Tasks mode: there you win by finishing the tasks, see updateTasks.)
   if (G.mode !== 'tasks' && G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();
 
-  // Generator mode: a quiet start. For the first GEN_QUIET seconds nothing moves (the music box doesn't
+  // Generator mode: a quiet start. For the first G.quiet seconds (GEN_QUIET, or longer in a challenge with
+  // its own `quiet`, like Absolute Nightmare (Generator)) nothing moves (the music box doesn't
   // unwind either), so you can charge up from 0% before the night really begins.
-  if (G.mode === 'generator' && G.t < GEN_QUIET) { if (!G.powerOut) updatePower(dt); return; }
+  if (G.mode === 'generator' && G.t < G.quiet) { if (!G.powerOut) updatePower(dt); return; }
 
   updateLenny(dt);
   if (G.over) return;
@@ -520,7 +525,10 @@ function updateLenny(dt) {
   const winding = (windKey || windPointer) && onCam(L.room) && !G.powerOut;
   if (modOn('len')) wanderBox(L, dt, winding);
   // At level 0 Lenny is switched off, so the box never unwinds (you can still wind it, harmlessly).
-  const change = winding ? WIND_RATE : L.level === 0 ? 0 : -boxDrain(L.level);
+  // Wanderer: while the box sits on another camera (not CAM 7), it runs down AWAY_DRAIN (25%) slower,
+  // to make up for having to find it (on request).
+  const drain = boxDrain(L.level) * (L.room === 'prize' ? 1 : AWAY_DRAIN);
+  const change = winding ? WIND_RATE : L.level === 0 ? 0 : -drain;
   L.wind = Math.max(0, Math.min(100, L.wind + change * dt));   // keep it between 0 and 100
 
   if (winding && L.wind < 100) {
@@ -852,6 +860,7 @@ function updateVisitor(dt) {
 // vent closer. It's already in V15 (VENT_EXIT), the last vent? Then this move takes it into your office.
 function updateVentCrawler(V, c, dt) {
   if (V.level === 0) return;
+  if (G.t < G.ventsAt) return;   // still asleep in V1 (Absolute Nightmare (Generator) wakes them at 2 AM)
   if (V.hall) return updateEchoHall(V, dt);   // Ξ Roamer: out in the building instead
   V.timer -= dt;
   if (V.timer > 0) return;

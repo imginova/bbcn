@@ -207,8 +207,10 @@ function renderVents() {
   if (G.crawler.vent) crawlers.push({ c: CRAWLER, room: G.crawler.vent });   // Ж on its ★ Vent crawl
   setHtml($('ventMap'), toHtml(ventGrid(crawlers, G.t < G.lureUntil ? G.lureRoom : null)));
   const wait = G.lureReadyAt - G.t;
-  $('lureState').textContent = wait > 0 ? `LURE ${wait.toFixed(1)}s` : 'LURE READY';
-  $('lureState').classList.toggle('dim', wait > 0);
+  // A late start (Absolute Nightmare (Generator)): say when Ξ and § wake up instead.
+  if (G.t < G.ventsAt) $('lureState').textContent = `ASLEEP TILL ${hourLabel(hourOf(G.ventsAt))}`;
+  else $('lureState').textContent = wait > 0 ? `LURE ${wait.toFixed(1)}s` : 'LURE READY';
+  $('lureState').classList.toggle('dim', wait > 0 || G.t < G.ventsAt);
 }
 
 // The camera screen: the room picture (or static), any shapes in it, the music box and its wind bar
