@@ -319,10 +319,10 @@ function updatePower(dt) {
   if (!G.dry) runDry();
 }
 
-// Generator mode: you sent a threat away (shut a shape out, drove ■ off, flashed ¤ away, got rid of
-// Ψ or ¥, caught every (:, pushed Ж back, lured Ξ or § out of V15). That earns GEN_REWARD % power,
-// with a little charging blip as the tell. Winding Lenny and closing ads don't count: you do those
-// over and over, so they'd be a free power supply.
+// Generator mode: you beat a threat (drove ■ off, flashed ¤ away, masked Ψ or ¥ away, caught every
+// (:, pushed Ж back, lured Ξ or § out of V15). That earns GEN_REWARD % power, with a little charging
+// blip as the tell. Blocking doesn't count (on request: shutting a door on ◆ ▲ ● or on ¥), and
+// neither do winding Lenny and closing ads: you do those over and over, so they'd be free power.
 function powerReward() {
   if (G.mode !== 'generator' || G.powerOut || G.over) return;
   G.power = Math.min(100, G.power + GEN_REWARD);
@@ -507,7 +507,6 @@ function stall(m, sides) {
 // It's gone straight away, so you can open the door again right after the knocks.
 function bounce(m) {
   sfx.knock(sideOf(m));
-  powerReward();   // Generator mode: shutting it out earns a little power
   m.waited = false;
   m.recent = [sideOf(m), ...m.recent].slice(0, MAX_STREAK);   // remember the last few doors it visited
   m.route = chooseRoute(m);
@@ -983,7 +982,7 @@ function peekIn() {
 function peekOut() {
   const P = G.peeker;
   sfx.peekOut(P.side);
-  powerReward();
+  if (!P.side) powerReward();   // masked away; shutting a door on it is blocking, which earns nothing
   P.present = false;
   P.maskT = 0;
   P.side = null;
