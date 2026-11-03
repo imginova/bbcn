@@ -32,6 +32,15 @@ const MAX_LEVEL = 20;
 // Used whenever we load or change a level, so a bad value can never sneak in.
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
+// How hard each level really plays (on request: "make all scaling a good amount slower", because
+// the all-20 challenges were unbeatable). Level 0 stays off and level 1 stays level 1, but every step
+// above 1 only counts LEVEL_SCALE (three quarters) of a step, so level 20 plays like the old level
+// 15.25. Everything a level controls goes through this: how often a threat moves, reaction windows,
+// Lenny's drain, Smiley, the mask threats, the vents and the ads. The setup screen, the score and the
+// challenges still use the real level (newGame in game.js turns it into this "playing" level).
+const LEVEL_SCALE = 0.75;
+const effLevel = level => level === 0 ? 0 : 1 + (level - 1) * LEVEL_SCALE;
+
 // Seconds you get to shut the door once a shape is in the doorway.
 // This is a straight line: 4.0s at level 1, sliding down to 2.9s at level 20.
 // (level - 1) goes from 0 to 19, so (level - 1) * (1.1 / 19) goes from 0 to 1.1.
@@ -146,6 +155,7 @@ const TRICK_CHANCE = 0.5;   // ▲ Trickster: chance, on each of its movement ti
 const DOUBLE_TAKE = 0.5;    // Ψ Double take: chance that its first exit each visit is a fake
 const RETURN_DELAY = 1;     // Ψ Double take: seconds after a fake exit before it's back
 const WANDER_TIME = 25;     // Lenny Wanderer: about how many seconds between the box's moves
+const AWAY_DRAIN = 0.75;     // Lenny Wanderer: the box runs down at this times the usual rate while it is away from CAM 7 (25% slower)
 const LURK_EVERY = 4;       // ● Patient: seconds between the soft growls while it waits behind a door
 const PATIENT_WAIT = 2;     // ● Patient: seconds it must wait behind the door (until its first growl) before
                             // open-and-slam sends it away. Open sooner and it just waits again.

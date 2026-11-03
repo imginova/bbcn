@@ -60,7 +60,7 @@ const CREATURES = [
 
 // Lenny never walks anywhere; he lives in the music box on CAM 7 (see updateLenny in game.js).
 const LENNY = { id: 'len', name: 'Lenny', door: 'Sleeps in the music box on CAM 7', path: 'Hold W on CAM 7 to wind it. If it runs out, nothing stops him',
-  mod: { name: 'Wanderer', desc: 'The music box moves between cameras 2, 3, 4 and 7 (only while well wound, with a chime). Find it to wind it' } };
+  mod: { name: 'Wanderer', desc: 'The music box moves between cameras 2, 3, 4 and 7 (only while well wound, with a chime). Find it to wind it. Away from CAM 7 it runs down 25% slower' } };
 
 // The cameras the box can wander to with the Wanderer modifier.
 const BOX_ROOMS = ['prize', 'dining', 'backstage', 'supply'];
@@ -283,7 +283,9 @@ const PRESETS = [
   { name: 'Crank it',        v: 8, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 1 },
   { name: 'Full circuit',    v: 12, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
   { name: '13/20 (Generator)', v: 11, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 11.13 },
-  { name: 'Absolute Nightmare (Generator)', v: 14, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
+  { name: 'Absolute Nightmare (Generator)', v: 14, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15,
+    ventsAt: 60,     // on request: Ξ and § stay asleep in V1 until 2 AM (60 s in), so this one can be beaten
+    quiet: 30 },     // and a 30 s quiet start instead of GEN_QUIET (10 s), also on request
 
   // ---- Tasks mode ----
   { name: 'Night school',    v: 3, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
@@ -353,7 +355,7 @@ const FLAVOR = {
   'Crank it': "The Orb waits, the Square creeps, the Crawler climbs. Charge fast, charge often.",
   'Full circuit': "Everyone at 12, and the only power is the power you make.",
   '13/20 (Generator)': "All thirteen at 20, with a hand-cranked battery.",
-  'Absolute Nightmare (Generator)': "Everything at its worst, and you start in the dark.",
+  'Absolute Nightmare (Generator)': "Everything at its worst, and you start in the dark. You get 30 quiet seconds, and the vents sleep until 2 AM.",
   // Tasks
   'Night school': "Paperwork with a little company at the doors.",
   'Busy work': "Ads keep covering your work. Close them and keep going.",
