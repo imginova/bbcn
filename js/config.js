@@ -126,7 +126,7 @@ const ADS_MAX = 4;         // this many ads open at once crashes the system (and
 // can be beaten): the threats stay still for the first GEN_QUIET seconds while you charge, and
 // everything costs GEN_COST times as much power as usual (0.65; it was half, raised on request "a
 // little faster"). (For a while, beating a threat also gave 3% power back; removed on request.)
-const GEN_QUIET = 30;
+const GEN_QUIET = 10;   // seconds of quiet start (was 30; 10 on request)
 const GEN_COST = 0.65;
 const GEN_RATE = 2;        // Generator mode: % power gained per second while you hold the generator (was 5, then 1; 2 on request so Absolute Nightmare (Generator) can be beaten)
 const TASK_COUNT = 4;      // Tasks mode: how many tasks a night has (was 8, then 6; 4 so Absolute Nightmare (Tasks) can be beaten)

@@ -186,7 +186,7 @@ const SETUP = [...CREATURES, LENNY, SQUARE, SMILEY, CRAWLER, FLICKER, VISITOR, E
 //              progresses while you stay on that tab, so lowering the monitor pauses it.
 const MODES = {
   standard:  { name: 'Standard',  desc: 'Start with 100% power. Survive until 6 AM.' },
-  generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Nothing moves for the first 30 seconds, and power costs a bit less than usual. Survive until 6 AM.' },
+  generator: { name: 'Generator', desc: 'Start with 0% power. Hold the generator (G) to charge, but while you do, both doors open and nothing else works. Nothing moves for the first 10 seconds, and power costs a bit less than usual. Survive until 6 AM.' },
   tasks:     { name: 'Tasks',     desc: 'Finish every task on the monitor\'s TASKS tab to win. A task only fills while you hold it down.' },
 };
 const MODE_ORDER = ['standard', 'generator', 'tasks'];
@@ -266,17 +266,17 @@ const PRESETS = [
 
   // ---- Generator mode ----
   { name: 'Power plant',     v: 6, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
-  { name: 'Brownout',        v: 6, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.15 },
-  { name: 'Static charge',   v: 7, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1.02 },
-  { name: 'Dead battery',    v: 8, mode: 'generator', levels: [12, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 0],  mods: ['len'],             tries: 1 },
-  { name: 'Overload',        v: 9, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 1.8 },
-  { name: 'Running on fumes', v: 6, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 1 },
-  { name: 'Ghost in the wires', v: 8, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 1 },
-  { name: 'Spam generator',  v: 8, mode: 'generator', levels: [0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 1 },
-  { name: 'Crank it',        v: 6, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 1 },
-  { name: 'Full circuit',    v: 9, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
-  { name: '13/20 (Generator)', v: 9, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 11.13 },
-  { name: 'Absolute Nightmare (Generator)', v: 10, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
+  { name: 'Brownout',        v: 7, mode: 'generator', levels: [0, 0, 0, 0, 14, 0, 0, 12],                  mods: ['sqr'],             tries: 1.15 },
+  { name: 'Static charge',   v: 8, mode: 'generator', levels: [0, 0, 0, 0, 0, 10, 0, 0, 14, 0, 0, 16, 0],  mods: ['pek'],             tries: 1.02 },
+  { name: 'Dead battery',    v: 9, mode: 'generator', levels: [12, 0, 0, 10, 0, 0, 14, 0, 0, 0, 0, 0, 0],  mods: ['len'],             tries: 1 },
+  { name: 'Overload',        v: 10, mode: 'generator', levels: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],     mods: ['sqr', 'spm'],      tries: 1.8 },
+  { name: 'Running on fumes', v: 7, mode: 'generator', levels: [12, 12, 0, 10],                          mods: ['tri'],             tries: 1 },
+  { name: 'Ghost in the wires', v: 9, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 1 },
+  { name: 'Spam generator',  v: 9, mode: 'generator', levels: [0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 1 },
+  { name: 'Crank it',        v: 7, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 1 },
+  { name: 'Full circuit',    v: 10, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
+  { name: '13/20 (Generator)', v: 10, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 11.13 },
+  { name: 'Absolute Nightmare (Generator)', v: 11, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
 
   // ---- Tasks mode ----
   { name: 'Night school',    v: 3, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
