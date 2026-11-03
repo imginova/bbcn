@@ -149,11 +149,18 @@ const ECHO = { id: 'ech', sym: 'Ξ', name: 'Echo', door: 'Crawls through the ven
   // (11.0 before the vents grew to 15 rooms; then 2.5 times as often on request (4.4), and on request
   // "a little slower" again: twice as often as before, so 15 rooms still take about as long as 6 did)
   interval: 5.5 / PACE,
-  mod: { name: 'Wise', desc: 'Ignores a lure in the same room it just followed one to. Switch rooms' } };
+  // ★ Roamer: sometimes it leaves V1 and runs the halls to a door instead, at its own (fast) vent pace.
+  // Its footsteps are higher than ▲'s, and it picks a side each trip: West hall → LEFT door or
+  // East hall → RIGHT door (the last item of a route says which door).
+  pitch: 150, loudness: 1.4,
+  routes: [['stage', 'dining', 'whall', 'L'], ['stage', 'dining', 'ehall', 'R']],
+  // (on request it replaced "Wise", which ignored a lure in the room it had just followed one to)
+  mod: { name: 'Roamer', desc: 'Sometimes it climbs out of the vents and runs the halls to either door, faster than the shapes. Shut that door when you see it there' } };
 const SLINK = { id: 'slk', sym: '§', name: 'Slink', door: 'Crawls through the vents', path: 'Lure a room NEXT to it. A lure in its own room startles it one vent closer',
   vent: true, how: 'crawled out of the vent',
-  interval: 7.0 / PACE,   // (was 12.0, eased to 14.0, then 5.6 with the 15-room vents, then "a little slower" like Echo)
-  mod: { name: 'Quick', desc: 'Moves 1.5 times as often while you are not looking at the VENTS tab' } };
+  interval: 9.0 / PACE,   // (was 12.0, eased to 14.0, then 5.6 with the 15-room vents, then 7.0 "a little slower", then 9.0 so the Absolute Nightmares can be beaten)
+  // (on request it replaced "Quick", which made it move faster while you weren't watching the vents)
+  mod: { name: 'Skittish', desc: 'A lure 2 rooms away startles it one vent closer too. Only lure the room right next to it' } };
 
 // The Peeker ¥ is a second mask threat. Unlike Ψ it can turn up at ANY time, even while the monitor
 // is up (then you have to drop the monitor first), but a short moment in the mask sends it away.
@@ -256,13 +263,13 @@ const PRESETS = [
 
   // ---- the vents, ¥ and © drop (Standard) ----
   // In SETUP order: ◆  ▲  ●  Len ■  (:  Ж  ¤  Ψ  Ξ  §  ¥  ©
-  { name: 'Ventilation',     v: 4, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.9 },
+  { name: 'Ventilation',     v: 5, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 12, 0, 0],     mods: ['ech'],                                      tries: 1.9 },
   { name: 'Peekaboo',        v: 3, levels: [0, 0, 0, 0, 0, 10, 0, 0, 12, 0, 0, 18, 0],    mods: ['pek'],                                      tries: 1 },
   { name: 'Pop-up panic',    v: 3, levels: [0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 16],    mods: ['spm'],                                      tries: 1 },
-  { name: 'Crowded vents',   v: 4, levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
-  { name: 'Fresh meat',      v: 6, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 2.58 },
+  { name: 'Crowded vents',   v: 5, levels: [0, 0, 0, 0, 10, 0, 0, 8, 0, 18, 18, 0, 0],    mods: ['slk'],                                      tries: 1.18 },
+  { name: 'Fresh meat',      v: 8, levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14],   mods: ['ech', 'slk', 'pek', 'spm'],                 tries: 2.58 },
   { name: '13/20',           v: 5, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],                                   tries: 12.65 },
-  { name: 'Absolute Nightmare', v: 6, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 55.05 },
+  { name: 'Absolute Nightmare', v: 8, levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id),                tries: 55.05 },
 
   // ---- Generator mode ----
   { name: 'Power plant',     v: 6, mode: 'generator', levels: [10, 10, 8],                                 mods: [],                  tries: 1 },
@@ -274,9 +281,9 @@ const PRESETS = [
   { name: 'Ghost in the wires', v: 10, mode: 'generator', levels: [0, 0, 0, 0, 0, 0, 0, 14, 0, 12, 0, 0, 0], mods: ['flk'],          tries: 1 },
   { name: 'Spam generator',  v: 10, mode: 'generator', levels: [0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 0, 10, 14],   mods: ['spm'],             tries: 1 },
   { name: 'Crank it',        v: 8, mode: 'generator', levels: [0, 0, 14, 0, 12, 0, 10],                    mods: ['orb'],             tries: 1 },
-  { name: 'Full circuit',    v: 11, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
+  { name: 'Full circuit',    v: 12, mode: 'generator', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['ech', 'vis'], tries: 5.68 },
   { name: '13/20 (Generator)', v: 11, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],      tries: 11.13 },
-  { name: 'Absolute Nightmare (Generator)', v: 12, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
+  { name: 'Absolute Nightmare (Generator)', v: 14, mode: 'generator', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 58.15 },
 
   // ---- Tasks mode ----
   { name: 'Night school',    v: 3, mode: 'tasks', levels: [6, 6, 0, 6],                                    mods: [],                  tries: 1 },
@@ -285,12 +292,12 @@ const PRESETS = [
   { name: 'Deadline',        v: 3, mode: 'tasks', levels: [16, 16, 14, 0, 12],                             mods: ['tri'],             tries: 1.02 },
   { name: 'Paperwork',       v: 8, mode: 'tasks', levels: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], mods: ['vis', 'pek', 'spm'], tries: 1.27 },
   { name: 'Inbox zero',      v: 5, mode: 'tasks', levels: [0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 14],      mods: [],                  tries: 1 },
-  { name: 'Vent duty',       v: 5, mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 1 },
+  { name: 'Vent duty',       v: 6, mode: 'tasks', levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 12, 0, 0],     mods: ['slk'],             tries: 1 },
   { name: 'Office party',    v: 3, mode: 'tasks', levels: [0, 0, 0, 0, 0, 14, 0, 0, 12, 0, 0, 10, 0],    mods: ['smi'],             tries: 1 },
   { name: 'Door duty',       v: 3, mode: 'tasks', levels: [14, 14, 10, 0, 0, 0, 0, 8],                    mods: ['dia'],             tries: 1 },
   { name: 'Crunch time',     v: 7, mode: 'tasks', levels: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12], mods: ['len', 'spm'], tries: 1.27 },
   { name: '13/20 (Tasks)',   v: 7, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: [],           tries: 13.8 },
-  { name: 'Absolute Nightmare (Tasks)', v: 8, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 57.13 },
+  { name: 'Absolute Nightmare (Tasks)', v: 10, mode: 'tasks', levels: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20], mods: SETUP.map(c => c.id), tries: 57.13 },
 ];
 // Pad every challenge's levels with 0 (switched off) for any threat it doesn't mention,
 // and give it a mode: a challenge that doesn't say is a standard night.

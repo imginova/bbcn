@@ -105,6 +105,11 @@ const onCam = room => G.cam && G.tab === 'cams' && G.camRoom === room && !adsUp(
 // Is the VENTS tab worth having tonight? Only if a vent crawler is switched on, or Ж with its
 // ★ Vent crawl (it can climb into the vents, so you need the map to follow it).
 const ventsOn = () => G.echo.level > 0 || G.slink.level > 0 || (G.crawler.level > 0 && modOn('crw'));
+// Is Ξ Echo (★ Roamer) standing in the doorway on `side` ('L' or 'R') right now?
+const echoAtDoor = side => {
+  const H = G.echo.hall;
+  return !!H && H.step === H.route.length - 1 && H.route[H.step] === side;
+};
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
@@ -246,7 +251,7 @@ function ventCrawler(c) {
     level: levels[SETUP.indexOf(c)],
     room: VENT_START,            // which vent room it's in
     timer: c.interval * (0.7 + Math.random() * 0.6),   // countdown to its next chance to move
-    followed: null,              // Ξ Wise: the room of the last lure it followed
+    hall: null,                  // Ξ Roamer: { route, step, deadline } while it's out running the halls
   };
 }
 
@@ -847,14 +852,63 @@ function updateVisitor(dt) {
 // vent closer. It's already in V15 (VENT_EXIT), the last vent? Then this move takes it into your office.
 function updateVentCrawler(V, c, dt) {
   if (V.level === 0) return;
-  // § Quick: its countdown runs twice as fast while you're NOT watching the VENTS tab.
-  const quick = c === SLINK && modOn('slk') && !(G.cam && G.tab === 'vents');
-  V.timer -= dt * (quick ? QUICK_RATE : 1);
+  if (V.hall) return updateEchoHall(V, dt);   // Ξ Roamer: out in the building instead
+  V.timer -= dt;
   if (V.timer > 0) return;
   V.timer = c.interval * (0.85 + Math.random() * 0.3);
   if (Math.random() * MAX_LEVEL >= V.level) return;
+  // ★ Roamer: setting off from V1, Echo sometimes climbs out and runs the halls instead.
+  if (c === ECHO && modOn('ech') && V.room === VENT_START && Math.random() < ECHO_HALL_CHANCE) return startEchoHall(V);
   if (V.room === VENT_EXIT) return lose(c, null);
   moveVent(V, closerVent(V.room));
+}
+
+// ---------- Ξ Echo's ★ Roamer: the door run ----------
+// The reverse of Ж's Vent crawl: Echo drops out of V1 onto the stage and runs Stage → Dining → either
+// hall → that door, like the shapes but at its own fast vent pace. It's drawn on the cameras and in the
+// doorway (not invisible like ●). Shut that door within the reaction window and it knocks and goes
+// back into the vents at V1; lures don't reach it while it's out.
+function startEchoHall(V) {
+  V.hall = { route: pick(ECHO.routes), step: 0, deadline: 0 };
+  sfx.ventMove(0.4);   // the tell: a clank as it drops out of the vent...
+  sfx.move(0.2, V.hall.route[V.hall.route.length - 1], ECHO.pitch, ECHO.loudness);   // ...and its first footstep
+  if (G.cam && G.camRoom === 'stage') camStatic(0.35);
+  dirty = true;
+}
+
+function updateEchoHall(V, dt) {
+  const H = V.hall;
+  const door = H.route.length - 1;            // the last step is the doorway
+  const side = H.route[door];                 // 'L' or 'R'
+  if (H.step === door) {
+    if (G.doors[side]) return echoBackToVents(V, side);   // shut out: back into the vents
+    if (G.t >= H.deadline) lose(ECHO, side);
+    return;
+  }
+  V.timer -= dt;
+  if (V.timer > 0) return;
+  V.timer = ECHO.interval * (0.85 + Math.random() * 0.3);
+  if (Math.random() * MAX_LEVEL >= V.level) return;
+  const from = H.route[H.step];
+  H.step++;
+  if (H.step === door) {
+    if (G.doors[side]) return echoBackToVents(V, side);   // the door was already shut
+    H.deadline = G.t + reactWindow(V.level);
+    sfx.arrive(side, ECHO.pitch);
+  } else {
+    sfx.move(H.step / door, side, ECHO.pitch, ECHO.loudness);   // footsteps, louder the closer it gets
+  }
+  if (G.cam && (G.camRoom === from || G.camRoom === H.route[H.step])) camStatic(0.35);
+  dirty = true;
+}
+
+// Shut out (or a power-out): it knocks, if it got to the door, and crawls back into the vents at V1.
+function echoBackToVents(V, side) {
+  if (side) sfx.knock(side);
+  V.hall = null;
+  V.room = VENT_START;
+  V.timer = ECHO.interval * (1 + Math.random() * 0.5);
+  dirty = true;
 }
 
 // One of the rooms next to `room` that is a step closer to your office (a random one if there are two).
@@ -886,7 +940,7 @@ function moveVent(V, room) {
 // Play an audio lure in vent `room` (by clicking it on the VENTS tab).
 // Lures cost no power but need LURE_COOLDOWN seconds to recharge. Each crawler that hears it reacts:
 //   Ξ Echo: up to ECHO_HEAR (2) rooms from it, it goes there and stays put for a good while.
-//           (Wise: not if it just followed a lure to that same room.)
+//           (Not while it's out running the halls with its ★ Roamer: lures don't reach it there.)
 //   § Slink: next to that room, it goes there and stays put for a while; but a lure in its OWN
 //           room startles it one vent closer to you (out of V15 means into your office).
 function playLure(room) {
@@ -902,14 +956,16 @@ function playLure(room) {
 
   const E = G.echo;
   const echoHears = ventSteps(E.room, room) <= ECHO_HEAR;   // up to 2 rooms away
-  if (E.level > 0 && echoHears && !(modOn('ech') && E.followed === room)) {
+  if (E.level > 0 && !E.hall && echoHears) {
     E.room = room;
-    E.followed = room;
     E.timer = rest(ECHO);
   }
 
   const S = G.slink;
-  if (S.level > 0 && S.room === room) {
+  // § Skittish: a lure 2 rooms away startles it too, not just one in its own room. Only the room
+  // right next to it lures it safely (the vent map shows exactly where it is, so careful aim works).
+  const startles = S.room === room || (modOn('slk') && ventSteps(S.room, room) === SLINK_SKITTISH);
+  if (S.level > 0 && startles) {
     sfx.startle();
     if (S.room === VENT_EXIT) return lose(SLINK, null);
     moveVent(S, closerVent(S.room));
@@ -1054,6 +1110,7 @@ function powerOutStart() {
   G.flicker.phase = 0; G.flicker.side = null;             // and the Flicker and Visitor give up too
   G.visitor.present = false; G.visitor.returnT = 0;
   G.peeker.present = false; G.peeker.side = null;
+  if (G.echo.hall) echoBackToVents(G.echo, null);          // Ξ out in the halls slinks back into the vents
   G.peeker.timer = 999;                                   // ¥ doesn't come in the dark either
   sfx.humOff();
   sfx.powerDown();

@@ -104,7 +104,11 @@ const ECHO_HEAR = 2;
 // your office: the reaction window plus 2s, since you may need to open the VENTS tab first.
 // (Added to ease the vents: without it, an unlucky roll could come right after the bang.)
 const ventWindow = level => reactWindow(level) + 2.0;
-const QUICK_RATE = 1.5;    // § Quick: how much faster Slink moves while you're not on the VENTS tab (was 2)
+// Ξ Roamer: the chance that Echo, starting out from V1, climbs out into the building and runs the halls
+// to a door instead of crawling the vents (like Ж's Vent crawl the other way round).
+const ECHO_HALL_CHANCE = 1 / 3;
+const SLINK_SKITTISH = 2; // § Skittish: a lure this many vents away from Slink startles it too (it replaced Quick, which made it
+                          // faster while you weren't watching the VENTS tab, on request)
 
 // ---------- ¥ Peeker ----------
 // It can turn up while the monitor is up, so it gives you half a second more than the doors do.
