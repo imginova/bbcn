@@ -1,0 +1,234 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASCII Nights</title>
+<!--
+  =====================================================================
+  index.html: the page STRUCTURE (what is on the screen).
+
+  ASCII Nights is a fan game. It is not affiliated with Scott Cawthon
+  or Five Nights at Freddy's; the characters belong to their creator.
+
+  This file only lists the pieces of the page: screens, buttons, empty
+  boxes the game draws into. How they look lives in style.css, and what
+  they do lives in the js/ folder (loaded at the very bottom).
+
+  Note: there is no <!doctype>, <html>, <head> or <body> here on purpose.
+  tools/build.js wraps the page in those for the website, and browsers
+  also cope fine when you double-click this file to open it locally.
+  The two <meta> lines at the very top are for that local case:
+  "charset utf-8" makes symbols like ✓ display correctly, and
+  "viewport" makes it fit a phone screen.
+
+  The game has four screens, and only one is visible at a time
+  (the others carry the `hidden` attribute):
+    #scr-title  title screen
+    #scr-setup  custom night: set each character's level
+    #scr-game   the night itself (HUD, office or monitor, controls)
+    #scr-win    6 AM, you survived
+  plus #scare (jumpscare and game over) and #howto ("How to play"),
+  which cover the whole window.
+  =====================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<div class="app">
+  <div class="topbar">
+    <span class="id">ASCII Nights · a FNAF fan game</span>
+    <button id="btnMute" type="button" aria-pressed="false">Sound on</button>
+  </div>
+
+  <div class="monitor">
+
+    <!-- TITLE -->
+    <section id="scr-title" class="title">
+      <p class="eyebrow">Night guard · 12 AM to 6 AM</p>
+      <h1>ASCII NIGHTS</h1>
+      <p class="tag-line">Two doors, one flashlight, one mask, one fan and a battery that never lasts. Twelve of them are out there tonight, and every one of them plays by its own rules.</p>
+      <p class="trio" id="titleTags" aria-hidden="true"></p>
+      <div class="menu">
+        <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
+        <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
+      </div>
+      <p class="keys">Turn sound on: most of them warn you with a sound first.</p>
+      <p class="keys">A fan game. Not affiliated with Scott Cawthon or Five Nights at Freddy's.</p>
+    </section>
+
+    <!-- SETUP -->
+    <section id="scr-setup" class="setup" hidden>
+      <p class="eyebrow">Before your shift</p>
+      <h2>CUSTOM NIGHT</h2>
+      <p class="sub">Set each one from level 0 to 20. Level 0 switches it off for the night; at 20 it acts at every chance it gets and gives you the least time to react. Or pick a ready-made challenge.</p>
+      <div class="rows" id="rows"></div>
+      <div class="presets" id="presets"></div>
+      <!-- The picked challenge's flavour text (FLAVOR in data.js); empty when no challenge is picked. -->
+      <p class="flavor" id="presetFlavor"></p>
+      <p class="score" id="scoreLine"></p>
+      <div class="setup-actions">
+        <button id="btnStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
+        <button id="btnAll0" type="button">All 0</button>
+        <button id="btnAll20" type="button">All 20</button>
+        <button id="btnHowSetup" type="button">How to play</button>
+        <button id="btnBack" type="button">Back</button>
+      </div>
+      <p class="best" id="bestLine"></p>
+      <p class="keys">↑ ↓ pick a character · ← → change its level (or hold − / +) · Enter starts · Esc goes back</p>
+    </section>
+
+    <!-- GAME -->
+    <section id="scr-game" hidden>
+      <div class="hud">
+        <div class="clock" id="clock">12 AM</div>
+        <div class="meter"><span class="lab">POWER</span><b id="pw">100%</b><span class="bars" id="pwbar"></span></div>
+        <div class="meter"><span class="lab">USAGE</span><span class="bars" id="usage"></span></div>
+        <div class="meter" id="heatMeter"><span class="lab">HEAT</span><b id="heat">0%</b></div>
+      </div>
+
+      <div class="viewport" id="viewport">
+        <div class="office" id="office">
+          <pre class="art" id="doorL" data-door="L" aria-label="Left door"></pre>
+          <pre class="art" id="officeArt" aria-hidden="true"></pre>
+          <pre class="art" id="doorR" data-door="R" aria-label="Right door"></pre>
+        </div>
+        <!-- THE MONITOR: raised with the Camera button. A camera feed and the map. -->
+        <div class="cams" id="cams" hidden>
+          <div class="feed">
+            <div class="feed-head"><span id="feedName">CAM 1 · SHOW STAGE</span><span class="rec">REC</span></div>
+            <pre class="art" id="feed"></pre>
+            <div class="wind" id="wind" hidden>
+              <span class="bars" id="windBar"></span>
+              <button id="btnWind" type="button">Wind <kbd>W</kbd></button>
+            </div>
+          </div>
+          <div class="map" id="map">
+            <button type="button" data-room="prize" style="grid-area:prize">CAM 7<br>Prize corner<span class="warn" id="camWarnMap" hidden> ♪!</span></button>
+            <button type="button" data-room="stage" style="grid-area:stage">CAM 1<br>Show stage</button>
+            <button type="button" data-room="back" style="grid-area:back">CAM 3<br>Backstage</button>
+            <button type="button" data-room="cove" style="grid-area:cove">CAM 4<br>Pirate cove</button>
+            <button type="button" data-room="dining" style="grid-area:dining">CAM 2<br>Dining area</button>
+            <button type="button" data-room="whall" style="grid-area:whall">CAM 5<br>West hall</button>
+            <span class="you">YOU</span>
+            <button type="button" data-room="ehall" style="grid-area:ehall">CAM 6<br>East hall</button>
+          </div>
+        </div>
+        <!-- The flashlight's circle of light; render.js moves it to the pointer. -->
+        <div class="beam" id="beam" hidden></div>
+        <!-- Sleepy Moon's darkness and the endo's heat: see-through layers that render.js fades in and out. -->
+        <div class="shade heat-glow" id="heatGlow"></div>
+        <div class="shade sleep-shade" id="sleepShade"></div>
+        <!-- The mask: covers the whole view except two eye holes. An SVG is a drawing made of shapes;
+             "evenodd" means the two ovals are cut OUT of the big rectangle, leaving holes.
+             It sits inside a <div> because only normal page elements understand `hidden`. -->
+        <div class="mask-view" id="maskView" hidden aria-hidden="true">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path fill-rule="evenodd" d="M0 0H100V100H0Z M23 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z M52 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z"/>
+          </svg>
+        </div>
+        <!-- Phantom Chica's jumpscare, when you miss her cupcakes. It costs power, not the night. -->
+        <div class="mini-scare" id="miniScare" hidden><pre class="art shake" id="miniScareArt"></pre></div>
+      </div>
+
+      <div class="controls">
+        <button id="btnL" type="button"><span>Left door<kbd>A</kbd></span><span class="state" id="stL">OPEN</span></button>
+        <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state"><span id="stCam">DOWN</span><span class="warn" id="camWarn" hidden> · ♪! WIND</span></span></button>
+        <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
+        <button id="btnFlash" type="button" class="hold"><span>Flashlight<kbd>F</kbd></span><span class="state" id="stFlash">HOLD</span></button>
+        <button id="btnMask" type="button"><span>Mask<kbd>W</kbd></span><span class="state" id="stMask">OFF</span></button>
+        <button id="btnFan" type="button"><span>Fan<kbd>E</kbd></span><span class="state" id="stFan">OFF</span></button>
+      </div>
+      <p class="keys hint">Hold F or the right mouse button to shine the flashlight where the mouse points · 1–7 pick a camera · W: mask in the office, wind the box on CAM 7 · P pauses · M sound</p>
+
+      <div class="overlay" id="pause" hidden>
+        <h2>PAUSED</h2>
+        <div class="menu">
+          <button id="btnResume" type="button" class="primary">Resume <kbd>P</kbd></button>
+          <button id="btnHowPause" type="button">How to play</button>
+          <button id="btnQuit" type="button">Quit to setup</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WIN -->
+    <section id="scr-win" class="endcard" hidden>
+      <p class="eyebrow">Shift complete</p>
+      <div class="big">6:00 AM</div>
+      <p id="winMsg">You made it to morning.</p>
+      <div class="lvls" id="winLevels"></div>
+      <p class="best" id="winBest"></p>
+      <div class="menu">
+        <button id="btnAgainWin" type="button" class="primary">Play again <kbd>Enter</kbd></button>
+        <button id="btnLevelsWin" type="button">Change levels <kbd>C</kbd></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- JUMPSCARE / GAME OVER -->
+<div id="scare" hidden>
+  <pre class="art" id="scareArt"></pre>
+  <div id="scareMsg" hidden>
+    <h2>GAME OVER</h2>
+    <p id="loseMsg"></p>
+    <div class="menu">
+      <button id="btnRetry" type="button" class="primary">Retry <kbd>Enter</kbd></button>
+      <button id="btnLevelsLose" type="button">Change levels <kbd>C</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="howto" hidden>
+  <div class="howto-card" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <h2 id="howtoTitle">HOW TO PLAY</h2>
+    <ul>
+      <li>Survive from 12 AM to 6 AM. Each hour lasts 30 real seconds.</li>
+      <li>The monitor, each closed door, the flashlight and the fan each use the same amount of power. The mask is free. If the power runs out, everything shuts off and something finds you in the dark.</li>
+      <li>The flashlight lights up the area around your mouse pointer (hold F or the right mouse button). Whatever is in the light gets flashed.</li>
+      <li><b class="c-fre">Freddy</b> laughs every time he moves, but you never see him on the cameras. After the third laugh he's at the right door: shut it.</li>
+      <li><b class="c-bon">Bonnie</b> walks from the stage to either door. Follow him on the cameras and shut the door when he's in the doorway; he goes straight back to the stage.</li>
+      <li><b class="c-gol">Golden Freddy</b> can be sitting in your office when you flip the monitor down. Tap the mask on, quickly.</li>
+      <li><b class="c-pch">Phantom Chica</b> can show up when you flip the monitor down. Find and click her shadow cupcakes <span class="cup">{^}</span> (1 to 3) somewhere in the office. Miss them and she jumpscares you and takes 10% of your power.</li>
+      <li><b class="c-bnt">Bonnet</b> runs across your office floor. Boop her nose (click the <span class="c-bnt">*</span>) before she reaches the other side. She dodges the mouse, but you're faster: come at her from the front.</li>
+      <li><b class="c-wbn">Withered Bonnie</b> turns up on a timer. The monitor doesn't stop the timer, but he only appears once you flip the monitor down. Put the mask on and keep it on for 2 seconds.</li>
+      <li><b class="c-pup">The Puppet</b> waits in the music box on CAM 7. Tap Wind (or W) while you watch it to wind it up. A ♪! on the Camera button means it's getting low.</li>
+      <li><b class="c-stf">The Nightmare staff bot</b> sits on your desk. When it beeps and blinks, its arrow points at a door: shut that one. If that door was already shut, it waits until you open it, and then you have to shut it again.</li>
+      <li><b class="c-nfr">Nightmare Freddy</b>'s Freddles pile up on your desk. Shine the flashlight on each one to send it away. If all three sit there too long, he comes: put the mask on and keep it on until he leaves. Taking it off is deadly.</li>
+      <li><b class="c-wfx">Withered Foxy</b> gets ready in Pirate Cove (CAM 4), then charges the left door. Shut it on him. When you hear him stomp, open the door, flash him with the light, and shut it again. Open it before the stomp and he lunges again!</li>
+      <li><b class="c-mon">Sleepy Moon</b> makes the office darker and darker as you drift off. Use the flashlight or the monitor to stay awake. If he's on, he's who comes when the power runs out.</li>
+      <li><b class="c-end">The Flamethrower endo</b> heats up your office. Turn on the fan to slow the heat down until he leaves. At 100% heat, it's over.</li>
+    </ul>
+    <div class="table-wrap">
+      <table>
+        <tr><td>Left / right door</td><td>A / D, or click the door or its button</td></tr>
+        <tr><td>Monitor up / down</td><td>Space or S, or the Camera button</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 7, or click a room on the map</td></tr>
+        <tr><td>Flashlight</td><td>Hold F or the right mouse button (or hold the Flashlight button) and point with the mouse</td></tr>
+        <tr><td>Mask</td><td>W in the office, or the Mask button (not with the monitor up)</td></tr>
+        <tr><td>Fan</td><td>E, or the Fan button</td></tr>
+        <tr><td>Wind the music box</td><td>Tap W or the Wind button while on CAM 7</td></tr>
+        <tr><td>Cupcakes, Bonnet's nose</td><td>Click them in the office</td></tr>
+        <tr><td>Pause</td><td>P or Esc</td></tr>
+        <tr><td>Sound</td><td>M, or the button at the top</td></tr>
+      </table>
+    </div>
+    <div class="menu"><button id="btnHowClose" type="button" class="primary">Got it <kbd>Esc</kbd></button></div>
+  </div>
+</div>
+
+<!--
+  The game's code, split by job. ORDER MATTERS: each file can use
+  things defined in the files above it, so the basics load first and
+  main.js (which starts the game) loads last.
+-->
+<script src="js/helpers.js"></script>  <!-- tiny tools: $, store, pick, rand, byLevel -->
+<script src="js/config.js"></script>   <!-- numbers to tweak: power, timing, difficulty -->
+<script src="js/data.js"></script>     <!-- rooms, cameras, the characters and the challenges -->
+<script src="js/sound.js"></script>    <!-- every sound effect, generated in code -->
+<script src="js/art.js"></script>      <!-- ASCII pictures and the tools that draw them -->
+<script src="js/game.js"></script>     <!-- the rules: moving, doors, power, winning, losing -->
+<script src="js/render.js"></script>   <!-- draws the night onto the screen -->
+<script src="js/screens.js"></script>  <!-- switching screens, custom night, how to play -->
+<script src="js/input.js"></script>    <!-- mouse and keyboard controls -->
+<script src="js/main.js"></script>     <!-- the game loop, and starting everything up -->

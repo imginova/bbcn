@@ -1,0 +1,309 @@
+/* =====================================================================
+   style.css: how everything LOOKS (colors, fonts, sizes, layout).
+
+   CSS never changes what the game DOES; it only styles the HTML in
+   index.html. Each rule is "selector { property: value; }":
+     .monitor   means "every element with class="monitor""
+     #scare     means "the element with id="scare""
+     button     means "every <button>"
+
+   Layout: one green security monitor, centered. A top bar, then the
+   active screen. In game: HUD strip, ASCII view, control strip.
+   The look is deliberately dark only (an old night-vision screen).
+   ===================================================================== */
+
+/* ---------- design tokens ----------
+   "--name: value" defines a CSS variable; var(--name) uses it.
+   Change a color here and it changes everywhere it is used. */
+:root {
+  --bg: #060a07;
+  --panel: #0b120d;
+  --line: #1d3323;
+  --fg: #8fe39a;      /* the phosphor green of the screen */
+  --dim: #4f8a5a;
+  --faint: #26402c;
+  --danger: #ff5546;
+  /* One color per character (the c- classes below use them). */
+  --c-fre: #c98a4b;   /* Freddy: brown bear */
+  --c-bon: #8f86ff;   /* Bonnie: blue-purple */
+  --c-gol: #ffd84a;   /* Golden Freddy: gold */
+  --c-pch: #b7c48f;   /* Phantom Chica: burnt, ghostly yellow-green */
+  --c-bnt: #ff8fd0;   /* Bonnet: pink */
+  --c-wbn: #7d93c9;   /* Withered Bonnie: faded blue */
+  --c-pup: #f2f2f2;   /* the Puppet: white mask */
+  --c-stf: #ffa21f;   /* the staff bot: caution orange */
+  --c-nfr: #b35c3a;   /* Nightmare Freddy: dark, rotten brown */
+  --c-wfx: #e0603a;   /* Withered Foxy: rusty red */
+  --c-mon: #c8d4ff;   /* Sleepy Moon: moonlight */
+  --c-end: #ff4a24;   /* the Flamethrower endo: fire */
+  --c-cup: #7a4fa8;   /* Phantom Chica's shadow cupcakes: dark violet, hard to spot */
+  --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --art: min(16px, calc((100vw - 60px) / 37));
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  overflow-x: hidden;
+}
+* { box-sizing: border-box; }
+
+/* The game hides screens with the HTML `hidden` attribute. Browsers hide those by default,
+   but any rule that sets `display` (like `#scare { display: flex }`) would win and show
+   them anyway. !important makes `hidden` always win. */
+[hidden] { display: none !important; }
+
+.app { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar button { white-space: nowrap; flex: none; }
+
+.monitor {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 80px rgba(0,0,0,.65);
+}
+/* The faint horizontal "scanlines" of an old monitor: a see-through stripe pattern laid on top. */
+.monitor::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
+}
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+button:hover { border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+button.primary:hover { background: transparent; color: var(--fg); }
+kbd { font: inherit; font-size: 11px; color: var(--dim); border: 1px solid var(--faint); padding: 0 5px; margin-left: 6px; }
+button.primary kbd { color: inherit; border-color: currentColor; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 1; text-wrap: balance; }
+/* clamp(smallest, preferred, largest): 14vw is 14% of the window width, so the title shrinks on phones. */
+h1 { font-size: clamp(40px, 14vw, 120px); letter-spacing: .04em; }
+h2 { font-size: clamp(38px, 8vw, 56px); letter-spacing: .04em; }
+p { margin: 0; }
+.eyebrow { color: var(--dim); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.keys { color: var(--dim); font-size: 12px; }
+.sub { color: var(--dim); max-width: 62ch; }
+
+/* ---------- ASCII art ----------
+   Every drawing lives in a <pre> ("preformatted") block, which keeps spaces and line breaks
+   exactly as written. A monospace font makes every character the same width, so columns line up. */
+pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.18; margin: 0; white-space: pre; }
+/* Each character's color. b.c-bon makes "Bonnie" in a sentence bold in his color too. */
+.c-fre { color: var(--c-fre); } .c-bon { color: var(--c-bon); } .c-gol { color: var(--c-gol); }
+.c-pch { color: var(--c-pch); } .c-bnt { color: var(--c-bnt); } .c-wbn { color: var(--c-wbn); }
+.c-pup { color: var(--c-pup); } .c-stf { color: var(--c-stf); } .c-nfr { color: var(--c-nfr); }
+.c-wfx { color: var(--c-wfx); } .c-mon { color: var(--c-mon); } .c-end { color: var(--c-end); }
+pre .c-fre, pre .c-bon, pre .c-gol, pre .c-pch, pre .c-bnt, pre .c-wbn, pre .c-pup,
+pre .c-stf, pre .c-nfr, pre .c-wfx, pre .c-mon, pre .c-end { font-weight: 600; }
+/* A character's tiny 3-line face on the menus (ICONS in art.js). white-space: pre keeps its lines and
+   spaces exactly as drawn; the mono font keeps its columns lined up. */
+.icon { display: inline-block; white-space: pre; font-family: var(--font-mono); font-weight: 600; font-size: 13px; line-height: 1.05; }
+.icon.big { font-size: 15px; justify-self: center; }
+/* Just the middle line of the face, for one-line places like the "Best:" line. */
+.face-mini { white-space: pre; font-family: var(--font-mono); font-weight: 600; }
+.alert, .blink { animation: blink 0.8s steps(2) infinite; }
+.alert { color: var(--danger) !important; }
+.dim { color: var(--dim); }
+.door { color: var(--dim); }
+/* Withered Foxy, flashed in the doorway: he goes pale. */
+.stunned { color: #f6f0e0; text-shadow: 0 0 8px #fff; }
+/* A Freddle in the flashlight: it glows while it's being shooed away. */
+.shone { text-shadow: 0 0 8px var(--c-nfr); color: #ffd0b0; }
+/* Phantom Chica's shadow cupcakes: dark and dim, so you have to look. The invisible ::after box
+   around each one makes it easier to click than three small characters. */
+.cup { position: relative; cursor: pointer; color: var(--c-cup); font-weight: 600; text-shadow: 0 0 6px rgba(122,79,168,.6); }
+.cup::after { content: ""; position: absolute; inset: -6px -3px; }
+/* Bonnet's nose: the thing to click. Its invisible box is bigger still, because she's moving. */
+.bnt-nose { position: relative; cursor: pointer; text-shadow: 0 0 8px var(--c-bnt); }
+.bnt-nose::after { content: ""; position: absolute; inset: -10px -8px; }
+/* The fan, spinning. */
+.fan.on { color: var(--fg); }
+.fan { color: var(--dim); }
+.wind { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.wind .bars { white-space: pre; font-variant-numeric: tabular-nums; }
+.warn { color: var(--c-pup); font-weight: 600; animation: blink 0.8s steps(2) infinite; }
+
+/* ---------- title ---------- */
+.title { display: flex; flex-direction: column; gap: 18px; padding-block: 24px; }
+.title .tag-line { font-size: 16px; max-width: 46ch; }
+.trio { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.trio .icon { font-size: 16px; }
+.menu { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- setup ---------- */
+.setup { display: flex; flex-direction: column; gap: 18px; }
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.lvrow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.lvrow.sel { border-color: var(--fg); background: rgba(143,227,154,.06); }
+.lvrow.off .icon { opacity: .45; }   /* switched off for tonight */
+.lvrow .who { min-width: 0; }
+.lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
+.lvrow .who small { color: var(--dim); font-size: 12px; }
+.ctrl { display: flex; align-items: center; gap: 8px; }
+.ctrl button { padding: 4px 12px; font-size: 18px; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; }   /* hold to repeat on phones too */
+.lv { display: flex; flex-direction: column; align-items: center; min-width: 13ch; font-variant-numeric: tabular-nums; }
+.lv b { font-family: var(--font-display); font-size: 30px; font-weight: 400; line-height: 1; }
+.lv .bar { font-size: 11px; color: var(--dim); letter-spacing: -.02em; white-space: pre; }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* The row of challenge buttons. */
+.presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
+.presets button { padding: 6px 10px; font-size: 12px; }
+/* The picked challenge is outlined, and its flavour text shows under the list. */
+.presets button.picked { border-color: var(--fg); background: rgba(143,227,154,.1); }
+.flavor { color: var(--dim); font-style: italic; min-height: 1.5em; margin-top: -8px; }
+.flavor b { color: var(--fg); font-style: normal; }
+/* A beaten challenge: a gold ✓ and a gold border. */
+.tick { color: var(--c-gol); font-weight: 600; }
+.presets button.done { border-color: var(--c-gol); }
+.score b { color: var(--fg); font-weight: 600; }
+.best { color: var(--dim); }
+.best b { color: var(--fg); font-weight: 600; }
+
+/* ---------- game ---------- */
+.hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+.meter { display: flex; align-items: baseline; gap: 8px; font-size: 13px; letter-spacing: .06em; }
+.meter .lab { color: var(--dim); font-size: 11px; letter-spacing: .14em; }
+.meter b { font-family: var(--font-display); font-size: 30px; font-weight: 400; min-width: 4ch; text-align: right; }
+.meter .bars { white-space: pre; }
+.low { color: var(--danger); }
+.viewport { position: relative; display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
+.office { display: flex; justify-content: center; transition: color .3s; }
+.office pre[data-door] { cursor: pointer; }
+/* The flashlight shining into a doorway: it glows. */
+.office pre.lit { background: rgba(255,250,220,.12); box-shadow: 0 0 18px rgba(255,250,220,.18); }
+/* After a power-out everything goes dark. */
+.office.dark { color: var(--faint); }
+.office.dark .door, .office.dark .dim, .office.dark .fan { color: #142018; }
+
+/* The flashlight: a soft circle of light centred on the pointer (--x and --y, set by render.js).
+   radial-gradient draws a circle that's bright in the middle and fades out to nothing.
+   pointer-events: none lets clicks pass straight through it. */
+.beam { position: absolute; inset: 0; pointer-events: none; z-index: 1; mix-blend-mode: screen;
+  background: radial-gradient(circle 70px at var(--x) var(--y), rgba(255,248,215,.32), rgba(255,248,215,.12) 60%, transparent 100%); }
+/* Sleepy Moon's darkness and the endo's heat: full-size see-through layers, faded in by render.js. */
+.shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.sleep-shade { background: #000; z-index: 2; }
+.heat-glow { background: radial-gradient(ellipse at 50% 100%, rgba(255,74,36,.9), rgba(255,74,36,.25) 60%, transparent 90%); z-index: 1; }
+/* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
+   through its two eye holes. The holes let clicks through; the mask itself blocks them. */
+.mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.mask-view svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.mask-view path { fill: #0a110c; stroke: var(--dim); stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: visiblePainted; }
+/* Phantom Chica's jumpscare, over the view. */
+.mini-scare { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; background: rgba(6,10,7,.85); pointer-events: none; }
+.mini-scare pre { font-size: calc(var(--art) * 1.8); text-shadow: 0 0 10px currentColor; }
+
+/* The raised monitor: the camera feed and its map. */
+.cams { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+.feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; }
+.rec { color: var(--danger); }
+.rec::before { content: "\25CF  "; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: "prize stage back" "cove dining dining" "whall you ehall";
+  gap: 6px;
+  width: min(270px, 100%);
+  align-self: center;
+}
+.map button { padding: 7px 4px; font-size: 11px; line-height: 1.3; letter-spacing: .04em; text-transform: none; }
+.map button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
+
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.controls button { padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+.controls button.on { border-color: var(--fg); background: rgba(143,227,154,.12); }
+.controls button.on .state { color: var(--fg); }
+.controls button:disabled { opacity: .35; cursor: not-allowed; }
+.controls button.hold { touch-action: none; user-select: none; -webkit-user-select: none; }
+.hint { margin-top: 10px; text-align: center; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(6,10,7,.92);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 20px; text-align: center;
+}
+
+/* ---------- end screens ---------- */
+.endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
+.endcard .big { font-family: var(--font-display); font-size: clamp(72px, 18vw, 140px); line-height: .9; }
+.endcard .lvls { font-size: 16px; display: flex; gap: 10px 18px; flex-wrap: wrap; align-items: center; }
+
+#scare {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center;
+}
+/* The jumpscare drawings are small, so they're shown big: about 2.2 times the usual size. */
+#scareArt { font-size: min(5.4vw, 6.4vh); line-height: 1.1; text-shadow: 0 0 10px currentColor; }
+#scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#scareMsg h2 { color: var(--danger); }
+.shake { animation: shake .07s linear infinite; }
+@keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
+
+/* ---------- help ---------- */
+#howto { position: fixed; inset: 0; z-index: 40; background: rgba(6,10,7,.94); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.howto-card { max-width: 640px; width: 100%; border: 1px solid var(--line); background: var(--panel); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.howto-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.howto-card table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.howto-card td { border-top: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
+.howto-card td:first-child { color: var(--dim); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- small screens ----------
+   @media rules only apply when their condition is true. This one kicks in on phones (560px wide or less). */
+@media (max-width: 560px) {
+  .monitor { padding: 12px; }
+  .lvrow { grid-template-columns: 60px minmax(0, 1fr); }
+  .lvrow .ctrl { grid-column: 1 / -1; justify-content: center; }
+  .lvrow .icon.big { font-size: 12px; }
+  .controls button { font-size: 11px; }
+  .controls kbd { display: none; }
+}
+/* Some players turn on "reduce motion" in their system settings; respect it by switching off shaking and blinking. */
+@media (prefers-reduced-motion: reduce) {
+  .shake, .rec::before, .alert, .blink, .warn { animation: none; }
+}

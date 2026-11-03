@@ -33,8 +33,19 @@ jobs:
         run: |
           node -e "const fs=require('fs');const o=[...fs.readFileSync('index.html','utf8').matchAll(/<script src=\"([^\"]+)\"/g)].map(m=>m[1]);o.forEach(f=>new Function(fs.readFileSync(f,'utf8')));new Function(o.map(f=>fs.readFileSync(f,'utf8')).join('\n;\n'));console.log('OK:',o.join(', '))"
 
+      # The same check for ASCII Nights, the second game, which lives in its own folder.
+      - name: Syntax check (ASCII Nights)
+        working-directory: ascii-nights
+        run: |
+          node -e "const fs=require('fs');const o=[...fs.readFileSync('index.html','utf8').matchAll(/<script src=\"([^\"]+)\"/g)].map(m=>m[1]);o.forEach(f=>new Function(fs.readFileSync(f,'utf8')));new Function(o.map(f=>fs.readFileSync(f,'utf8')).join('\n;\n'));console.log('OK:',o.join(', '))"
+
+      # Build both games, and put ASCII Nights inside the site's dist/ folder, so it goes online
+      # at .../bbcn/ascii-nights/ next to Bare Bones Custom Night.
       - name: Build the site
-        run: node tools/build.js
+        run: |
+          node tools/build.js
+          node ascii-nights/tools/build.js
+          cp -r ascii-nights/dist dist/ascii-nights
 
       - uses: actions/upload-pages-artifact@v3
         with:

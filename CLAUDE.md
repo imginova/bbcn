@@ -8,6 +8,7 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 - **The game is split into files by job:** `index.html` (structure), `style.css` (looks) and eleven scripts in `js/`. The game itself has no build step, no dependencies and no sound files; only the public website gets a small build (see "Hosting, deploy and analytics"). Jake is learning from this code, so every file has a header comment and learning-oriented comments.
 - **Public website:** https://imginova.github.io/bbcn/ (GitHub Pages, redeployed on every push to `main`, with Google Analytics; see "Hosting, deploy and analytics" below and [`ANALYTICS.md`](ANALYTICS.md)).
+- **A second game lives in this repo:** `ascii-nights/` is **ASCII Nights**, a separate FNAF fan game (added 2026-11-03, on request: "just add it to bbcn's github"). It shares no code with BBCN and has its own [`ascii-nights/CLAUDE.md`](ascii-nights/CLAUDE.md); read that one when working on it. It goes online at https://imginova.github.io/bbcn/ascii-nights/. A BBCN change never needs to touch that folder.
 - **Private Claude Artifact link (no analytics):** https://claude.ai/artifact/DVsNPKwUh2H89SCqr5RArG. It's private: only the owner and people they share it with through the page's **Share** menu can open it. It belongs to the Claude account the project moved to on 2026-10-31. The old link (`5qmjeiJHMdgo8STTf2ZAFF`) belongs to the previous account and can't be updated from the new one.
 - **Owner:** Jake Harris started the project. Jake's son now works on it, using the `imginova` GitHub account that owns the repo. Both are new to programming: explain changes in plain language and avoid jargon.
 
@@ -143,7 +144,7 @@ There is **no 5-night story**. Each game is a single custom night, and the setup
 ## Hosting, deploy and analytics
 
 - **Hosting:** GitHub Pages. One-time setting (needs the `imginova` account): repo Settings → Pages → Source = **GitHub Actions**.
-- **Pipeline:** `.github/workflows/deploy.yml`. Every pull request runs the syntax check and `node tools/build.js`. A push to `main` also deploys `dist/` to Pages.
+- **Pipeline:** `.github/workflows/deploy.yml`. Every pull request runs the syntax check and `node tools/build.js`. A push to `main` also deploys `dist/` to Pages. The same workflow checks and builds ASCII Nights (`ascii-nights/tools/build.js`) and copies its `dist/` into the site as `dist/ascii-nights/`; BBCN's analytics tag is only added to BBCN's page.
 - **`tools/build.js`:** copies `style.css` and the scripts listed in `index.html` into `dist/`, and wraps the `index.html` fragment in `<!doctype html><html><head>…<body>` (without a doctype, browsers use quirks mode). If `GA_ID` (a constant at the top of the file, or the `GA_ID` environment variable) is set, it also adds Google's `gtag.js` tag to the head and `window.GA_ID`. **The source `index.html` must stay a fragment.** `dist/` is gitignored.
 - **`js/analytics.js`:**
   - Events: `night_start`, `death` (`killer` = the creature id, `side` L/R/office, `hour`, `seconds`, `power`, `power_out`), `night_win`, `challenge_complete`, `night_quit` (Quit to setup), `night_abandon` (`pagehide` mid-night). Each ends a night at most once (`nightReported`).
