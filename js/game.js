@@ -319,6 +319,18 @@ function updatePower(dt) {
   if (!G.dry) runDry();
 }
 
+// Generator mode: you sent a threat away (shut a shape out, drove ■ off, flashed ¤ away, got rid of
+// Ψ or ¥, caught every (:, pushed Ж back, lured Ξ or § out of V15). That earns GEN_REWARD % power,
+// with a little charging blip as the tell. Winding Lenny and closing ads don't count: you do those
+// over and over, so they'd be a free power supply.
+function powerReward() {
+  if (G.mode !== 'generator' || G.powerOut || G.over) return;
+  G.power = Math.min(100, G.power + GEN_REWARD);
+  G.dry = false;   // it's no longer at 0%, so things can switch back on
+  sfx.genTick(G.power / 100);
+  dirty = true;
+}
+
 // Generator mode: you grabbed the generator. Both doors fly open, the monitor drops and the mask
 // comes off: while you hold it, you're wide open.
 function startGenerator() {
@@ -495,6 +507,7 @@ function stall(m, sides) {
 // It's gone straight away, so you can open the door again right after the knocks.
 function bounce(m) {
   sfx.knock(sideOf(m));
+  powerReward();   // Generator mode: shutting it out earns a little power
   m.waited = false;
   m.recent = [sideOf(m), ...m.recent].slice(0, MAX_STREAK);   // remember the last few doors it visited
   m.route = chooseRoute(m);
@@ -571,7 +584,7 @@ function updateSquare(dt) {
       S.pushT = 0;
       sfx.shove(S.side);
       S.stage--;
-      if (S.stage === 0) S.side = null;   // pushed all the way off the door
+      if (S.stage === 0) { S.side = null; powerReward(); }   // pushed all the way off the door
       dirty = true;
     }
     return;   // frozen while lit
@@ -644,7 +657,7 @@ function catchSmiley(i = 0) {
   if (!S || G.over || G.paused || !S.active || i >= S.spots.length || !free()) return;
   S.spots.splice(i, 1);
   sfx.pop();
-  if (S.spots.length === 0) S.active = false;
+  if (S.spots.length === 0) { S.active = false; powerReward(); }   // caught them all
   dirty = true;
 }
 
@@ -728,6 +741,7 @@ function pushCrawler() {
   }
   C.timer = CRAWLER.interval * (1 + Math.random() * 0.5);   // a short break before it tries again
   sfx.shoo();
+  powerReward();   // Generator mode: each push back earns a little power
   dirty = true;
 }
 
@@ -741,6 +755,7 @@ function pushVentCrawler() {
   if (!C.vent) C.viaVent = false;
   C.timer = CRAWLER.interval * (1 + Math.random() * 0.5);
   sfx.shoo();
+  powerReward();   // Generator mode: each push back earns a little power
   dirty = true;
 }
 
@@ -758,6 +773,7 @@ function updateFlicker(dt) {
         sfx.zap(F.side);
         if (F.phase > (modOn('flk') ? 3 : 2)) {
           F.phase = 0;                                          // flashed enough: it's gone
+          powerReward();
           F.side = null;
           F.timer = FLICKER.interval * (1 + Math.random() * 0.5);
         } else {
@@ -808,6 +824,7 @@ function updateVisitor(dt) {
           V.faked = false;
           V.timer = visitorWait(V.level);   // a fresh random wait until its next visit
           sfx.visitorOut();
+          powerReward();
         }
         dirty = true;
       }
@@ -903,6 +920,7 @@ function playLure(room) {
   const E = G.echo;
   const echoHears = ventSteps(E.room, room) <= ECHO_HEAR;   // up to 2 rooms away
   if (E.level > 0 && echoHears && !(modOn('ech') && E.followed === room)) {
+    if (E.room === VENT_EXIT && room !== VENT_EXIT) powerReward();   // lured out of the last vent
     E.room = room;
     E.followed = room;
     E.timer = rest(ECHO);
@@ -914,6 +932,7 @@ function playLure(room) {
     if (S.room === VENT_EXIT) return lose(SLINK, null);
     moveVent(S, closerVent(S.room));
   } else if (S.level > 0 && VENTS[S.room].next.includes(room)) {
+    if (S.room === VENT_EXIT) powerReward();   // lured out of the last vent
     S.room = room;
     S.timer = rest(SLINK);
   }
@@ -964,6 +983,7 @@ function peekIn() {
 function peekOut() {
   const P = G.peeker;
   sfx.peekOut(P.side);
+  powerReward();
   P.present = false;
   P.maskT = 0;
   P.side = null;
