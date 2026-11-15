@@ -171,7 +171,8 @@ function renderFeed(now) {
   } else {
     g = grid(frame(ROOM_ART[room], 38), 40);
     // Freddy stands on the stage until he sets off (on the way to a door he's only heard, never seen).
-    if (room === 'stage' && G.fre.level > 0 && G.fre.step === 0) sprite(g, ...FREDDY_STAGE, SPRITES.fre.cam, 'c-fre');
+    // Switched off (level 0), he just stays there all night.
+    if (room === 'stage' && G.fre.step === 0) sprite(g, ...FREDDY_STAGE, SPRITES.fre.cam, 'c-fre');
     // Bonnie and Chica, if they're in this room.
     const B = G.bon, C = G.chi;
     if (B.level > 0 && !atDoor(B, BONNIE) && BONNIE.route[B.step] === room) sprite(g, ...BONNIE_SLOTS[room], SPRITES.bon.cam, 'c-bon');
