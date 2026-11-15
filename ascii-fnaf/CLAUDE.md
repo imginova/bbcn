@@ -41,9 +41,9 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 | Character | Rules as built (`game.js`) |
 |---|---|
-| Freddy | Stands on the stage (CAM 1, `FREDDY_STAGE`, `SPRITES.fre.cam`) while `step` is 0, on request, even at level 0 (then he never leaves; the owner didn't see him on Warm-up, where he's off); static on CAM 1 when he leaves or comes back. On a trip he's never on cams. Each trip picks a side; every `FREDDY_INTERVAL` s he may move and laugh (`sfx.laugh(n, side)`: louder and further to that side each time). After `FREDDY_STEPS` (3) he's at that door: shut it within `reactWindow`. Power-out killer |
+| Freddy | On the cameras (on request): `FREDDY.routes` Stage → Dining → West hall (LEFT) or East hall (RIGHT); `freddyRoom()`, drawn at `FREDDY_SLOTS` with `SPRITES.fre.cam`, static when he leaves or enters the camera you watch. At the door (step 3) he isn't drawn; the 3rd laugh is the warning. At level 0 he stays on the stage all night (the owner didn't see him on Warm-up, where he's off). Each trip picks a side; every `FREDDY_INTERVAL` s he may move and laugh (`sfx.laugh(n, side)`: louder and further to that side each time). After `FREDDY_STEPS` (3) he's at that door: shut it within `reactWindow`. Power-out killer |
 | Bonnie | `BONNIE.route` Stage → Dining → Parts & service → West hall → LEFT door. Shut it in time |
-| Chica | `CHICA.route` Stage → Dining → East hall → RIGHT door |
+| Chica | `CHICA.route` Stage → Dining → East hall → RIGHT door. Like Freddy, Bonnie and Chica stand on the stage all night when switched off (on request) |
 | Foxy | Stages 1 peek, 2 half out in Pirate Cove (CAM 3), then runs (`FOXY_RUN` 3 s, shown on CAM 4). Light on the cove picture for `FOXY_FLASH` sends him back to 0 (`foxyLit`). Left door shut: bang, `FOXY_COST` (6%) power. Open: death |
 | Golden Freddy | On lowering the monitor (`lookedBack`), `goldenChance` = level/20 (always at 20, on request). One tap of the mask within `goldenWindow` |
 | Freddy Endo | Wanders between vents every `endoMove`. Harmless; a lure in his vent is refused ("BLOCKED") |

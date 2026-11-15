@@ -170,13 +170,12 @@ function renderFeed(now) {
       Array.from({ length: 40 }, () => ({ ch: chars[Math.floor(Math.random() * chars.length)], cls: 'dim' })));
   } else {
     g = grid(frame(ROOM_ART[room], 38), 40);
-    // Freddy stands on the stage until he sets off (on the way to a door he's only heard, never seen).
-    // Switched off (level 0), he just stays there all night.
-    if (room === 'stage' && G.fre.step === 0) sprite(g, ...FREDDY_STAGE, SPRITES.fre.cam, 'c-fre');
-    // Bonnie and Chica, if they're in this room.
+    // Freddy, Bonnie and Chica, if they're in this room. Switched off (level 0), they never move, so
+    // they stand on the stage all night (on request).
+    if (freddyRoom() === room) sprite(g, ...FREDDY_SLOTS[room], SPRITES.fre.cam, 'c-fre');
     const B = G.bon, C = G.chi;
-    if (B.level > 0 && !atDoor(B, BONNIE) && BONNIE.route[B.step] === room) sprite(g, ...BONNIE_SLOTS[room], SPRITES.bon.cam, 'c-bon');
-    if (C.level > 0 && !atDoor(C, CHICA) && CHICA.route[C.step] === room) sprite(g, ...CHICA_SLOTS[room], SPRITES.chi.cam, 'c-chi');
+    if (!atDoor(B, BONNIE) && BONNIE.route[B.step] === room) sprite(g, ...BONNIE_SLOTS[room], SPRITES.bon.cam, 'c-bon');
+    if (!atDoor(C, CHICA) && CHICA.route[C.step] === room) sprite(g, ...CHICA_SLOTS[room], SPRITES.chi.cam, 'c-chi');
     // Foxy: peeking out of Pirate Cove, half out, gone, or running down the West Hall.
     // While the light is on the cove he glows ("shone").
     const X = G.fox;

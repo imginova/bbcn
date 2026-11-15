@@ -209,11 +209,12 @@ for (const room in ROOM_ART) ROOM_ART[room] = ROOM_ART[room].split('\n').slice(1
 
 // Where people stand in each room: [row, column] of the top-left of their small drawing,
 // counted in the framed 40 x 11 camera picture (row 0 and column 0 are the border).
-const FREDDY_STAGE = [3, 17];   // Freddy, in the middle of the stage between Bonnie and Chica
+// (On the stage Freddy is in the middle, between Bonnie and Chica.)
+const FREDDY_SLOTS = { stage: [3, 17], dining: [7, 30], whall: [5, 21], ehall: [5, 22] };
 const BONNIE_SLOTS = { stage: [3, 10], dining: [3, 14], parts: [5, 15], whall: [5, 16] };
-const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 26] };
-const SHADOW_SLOTS = { stage: [7, 29], dining: [7, 31], cove: [5, 34], whall: [5, 26], ehall: [5, 6], parts: [5, 28], prize: [5, 3] };
-const CHILD_SLOTS = { stage: [7, 4], dining: [7, 1], cove: [5, 1], whall: [5, 6], ehall: [5, 11], parts: [5, 4], prize: [5, 32] };
+const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 28] };
+const SHADOW_SLOTS = { stage: [7, 29], dining: [7, 1], cove: [5, 34], whall: [5, 26], ehall: [5, 6], parts: [5, 28], prize: [5, 3] };
+const CHILD_SLOTS = { stage: [7, 4], dining: [1, 34], cove: [5, 1], whall: [5, 6], ehall: [5, 11], parts: [5, 4], prize: [5, 32] };
 
 // ---------- the characters' drawings ----------
 // Each one is a list of lines. `cam` is the small camera version, `door` fits a doorway,

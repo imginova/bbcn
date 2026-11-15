@@ -47,7 +47,10 @@ const ventSteps = (a, b) => Math.abs(ventRow(a) - ventRow(b)) + Math.abs(ventCol
 // They're in the order of the roster, which is also the order of the setup rows.
 const FREDDY = {
   id: 'fre', name: 'Freddy', where: 'EITHER DOOR',
-  desc: 'Stands on the stage (CAM 1) until he sets off; then he\'s only heard. He laughs each time he moves: the side of the laugh is the door he\'s going to, and the louder it is, the closer he is. Shut that door on the 3rd laugh.',
+  desc: 'Walks from the stage through the dining area and a hall to either door, and laughs each time he moves: the side of the laugh is the door he\'s going to, and the louder it is, the closer he is. You can follow him on the cameras. Shut that door on the 3rd laugh.',
+  // The rooms he passes through on his way to each door (step 0, 1 and 2; step 3 is the doorway,
+  // where he isn't seen: his 3rd laugh is the warning).
+  routes: { L: ['stage', 'dining', 'whall'], R: ['stage', 'dining', 'ehall'] },
 };
 const BONNIE = {
   id: 'bon', name: 'Bonnie', where: 'LEFT DOOR',

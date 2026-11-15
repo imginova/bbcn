@@ -193,8 +193,11 @@ function updatePower(dt) {
 
 // ---------- Freddy ----------
 // Every so often he may move, and each move is a laugh from the side he's heading to (it gets louder
-// as he gets closer). After the third laugh he's at that door: shut it in time and he bonks and goes
-// back. Between trips he stands on the stage (CAM 1); on his way he's never on the cameras.
+// as he gets closer). He walks FREDDY.routes (stage, dining area, then the hall on that side), so you can
+// follow him on the cameras. After the third laugh he's at that door (not seen there): shut it in time
+// and he bonks and goes back to the stage.
+// The room he's in now, or null while he's at the door.
+const freddyRoom = () => G.fre.step < FREDDY_STEPS ? FREDDY.routes[G.fre.side][G.fre.step] : null;
 function updateFreddy(dt) {
   const F = G.fre;
   if (F.level === 0) return;
@@ -212,12 +215,11 @@ function updateFreddy(dt) {
   if (F.timer > 0) return;
   F.timer = FREDDY_INTERVAL * rand(0.7, 1.3);
   if (Math.random() >= moveChance(F.level)) return;   // this time he stays put
-  if (F.step === 0) {
-    F.side = pick(['L', 'R']);              // a new trip: which door this time?
-    if (onCam('stage')) camStatic(0.5);     // static as he leaves the stage you're watching
-    dirty = true;
-  }
+  if (F.step === 0) F.side = pick(['L', 'R']);   // a new trip: which door this time?
+  const from = freddyRoom();
   F.step++;
+  if (onCam(from) || onCam(freddyRoom())) camStatic(0.5);   // static when he leaves or enters the room you're watching
+  dirty = true;
   sfx.laugh(F.step, F.side);
   if (F.step === FREDDY_STEPS) F.deadline = G.t + reactWindow(F.level);
 }
