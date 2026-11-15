@@ -47,7 +47,7 @@ const ventSteps = (a, b) => Math.abs(ventRow(a) - ventRow(b)) + Math.abs(ventCol
 // They're in the order of the roster, which is also the order of the setup rows.
 const FREDDY = {
   id: 'fre', name: 'Freddy', where: 'EITHER DOOR',
-  desc: 'Never seen, only heard. He laughs each time he moves: the side of the laugh is the door he\'s going to, and the louder it is, the closer he is. Shut that door on the 3rd laugh.',
+  desc: 'Stands on the stage (CAM 1) until he sets off; then he\'s only heard. He laughs each time he moves: the side of the laugh is the door he\'s going to, and the louder it is, the closer he is. Shut that door on the 3rd laugh.',
 };
 const BONNIE = {
   id: 'bon', name: 'Bonnie', where: 'LEFT DOOR',

@@ -41,7 +41,7 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 | Character | Rules as built (`game.js`) |
 |---|---|
-| Freddy | Never on cams. Each trip picks a side; every `FREDDY_INTERVAL` s he may move and laugh (`sfx.laugh(n, side)`: louder and further to that side each time). After `FREDDY_STEPS` (3) he's at that door: shut it within `reactWindow`. Power-out killer |
+| Freddy | Stands on the stage (CAM 1, `FREDDY_STAGE`, `SPRITES.fre.cam`) while `step` is 0, on request; static on CAM 1 when he leaves or comes back. On a trip he's never on cams. Each trip picks a side; every `FREDDY_INTERVAL` s he may move and laugh (`sfx.laugh(n, side)`: louder and further to that side each time). After `FREDDY_STEPS` (3) he's at that door: shut it within `reactWindow`. Power-out killer |
 | Bonnie | `BONNIE.route` Stage → Dining → Parts & service → West hall → LEFT door. Shut it in time |
 | Chica | `CHICA.route` Stage → Dining → East hall → RIGHT door |
 | Foxy | Stages 1 peek, 2 half out in Pirate Cove (CAM 3), then runs (`FOXY_RUN` 3 s, shown on CAM 4). Light on the cove picture for `FOXY_FLASH` sends him back to 0 (`foxyLit`). Left door shut: bang, `FOXY_COST` (6%) power. Open: death |

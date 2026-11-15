@@ -209,6 +209,7 @@ for (const room in ROOM_ART) ROOM_ART[room] = ROOM_ART[room].split('\n').slice(1
 
 // Where people stand in each room: [row, column] of the top-left of their small drawing,
 // counted in the framed 40 x 11 camera picture (row 0 and column 0 are the border).
+const FREDDY_STAGE = [3, 17];   // Freddy, in the middle of the stage between Bonnie and Chica
 const BONNIE_SLOTS = { stage: [3, 10], dining: [3, 14], parts: [5, 15], whall: [5, 16] };
 const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 26] };
 const SHADOW_SLOTS = { stage: [7, 29], dining: [7, 31], cove: [5, 34], whall: [5, 26], ehall: [5, 6], parts: [5, 28], prize: [5, 3] };
@@ -220,6 +221,11 @@ const CHILD_SLOTS = { stage: [7, 4], dining: [7, 1], cove: [5, 1], whall: [5, 6]
 const art = s => s.split('\n').slice(1);   // same trick as ROOM_ART: drop the first empty line
 const SPRITES = {
   fre: {
+    // On the stage (CAM 1), until he sets off on a trip.
+    cam: art(String.raw`
+ [_]
+(o^o)
+ >=<`),
     scare: art(String.raw`
         _______
        |       |
@@ -536,6 +542,7 @@ SPRITES.fre.scare.accent = art(String.raw`
 
 
           xxx`);
+SPRITES.fre.cam.accent = [' xxx', ' b b', ' xxx'];
 SPRITES.gol.scare.accent = SPRITES.fre.scare.accent.map(line => line.replace(/b/g, ' '));
 SPRITES.sfr.scare.accent = SPRITES.fre.scare.accent.map(line => line.replace(/b/g, 'w'));
 SPRITES.gol.office.accent = art(String.raw`
