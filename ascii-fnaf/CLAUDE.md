@@ -63,6 +63,8 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 **Challenges:** 13 in `PRESETS` (`data.js`), hand-ordered, with `FLAVOR` text. **All 20** (340 points) is the maximum.
 
+**Kill tally** (on request, like modern ASCII Nights): every death adds one to that character's count in `kills` (`countKill` in `game.js`, called from `lose`; a power-out death counts for Freddy). The game over screen adds "Bonnie has got you 3 times.", and each custom night row shows "☠ Got you 3 times" in red once it's above 0 (`#kills{i}`, filled by `renderSetup`). Saved in `store` key `kills`. BB taking the flashlight isn't a death, so it doesn't count.
+
 ## How the code is organized
 
 Same pattern as ASCII Nights: `index.html` (a page **fragment**), `style.css`, and classic scripts in `js/` sharing the global scope (so **names must be unique across files**): `helpers.js` (`store` prefix `asciifnaf:`), `config.js`, `data.js`, `sound.js`, `art.js`, `game.js`, `render.js`, `screens.js`, `input.js`, `main.js`. `window.asciiFnaf` is a test hook (`.state`, `.speed`).

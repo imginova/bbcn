@@ -76,7 +76,8 @@ function buildSetup() {
   $('rows').innerHTML = SETUP.map((c, i) => `
     <div class="lvrow" data-i="${i}">
       ${iconHtml(c, ' big')}
-      <span class="who"><b>${c.name.toUpperCase()} · ${c.where}</b><small>${c.desc}</small></span>
+      <span class="who"><b>${c.name.toUpperCase()} · ${c.where}</b><small>${c.desc}</small>
+        <small class="kills" id="kills${i}"></small></span>
       <span class="ctrl">
         <button type="button" class="step" data-i="${i}" data-d="-1" aria-label="Lower ${c.name} level">−</button>
         <span class="lv"><b id="lv${i}"></b><span class="bar" id="bar${i}"></span></span>
@@ -99,6 +100,11 @@ function renderSetup() {
     // 5 shows as "LEVEL 05"; 0 means switched off, so it just says OFF.
     $('lv' + i).textContent = lv === 0 ? 'OFF' : 'LEVEL ' + String(lv).padStart(2, '0');
     $('bar' + i).textContent = '|'.repeat(lv) + '.'.repeat(MAX_LEVEL - lv);
+  });
+  // Each character's kill tally (kills, in game.js). Nothing is shown until it has got you at least once.
+  SETUP.forEach((c, i) => {
+    const n = kills[c.id] || 0;
+    $('kills' + i).textContent = n ? `☠ Got you ${n === 1 ? 'once' : n + ' times'}` : '';
   });
   // A ✓ on every challenge you've survived, and how many that is.
   const picked = matchingPreset();
