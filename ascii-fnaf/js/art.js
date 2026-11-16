@@ -781,7 +781,9 @@ const TBONNIE_SPOT = [2, 1];       // Toy Bonnie, on the left
 const TCHICA_SPOT = [2, 26];       // Toy Chica, on the right
 const BB_SPOT = [11, 3];           // BB, sitting in front of the desk on the left
 const SCREEN_SPOT = [8, 14];       // the monitor's screen: 9 characters wide
-const MANGLE_ROW = 1;              // Mangle crawls across the ceiling, rows 1 to 3
+// Where Mangle can turn up (their drawing is 9 wide and 3 tall): the left and right walls, on top of
+// the monitor, and the floor on either side. Each flash sends them to a different one.
+const MANGLE_SPOTS = [[5, 1], [5, 27], [5, 13], [12, 1], [12, 26]];
 // Where Shadow Bonnie's eyes can be (never over the vent). [row, column] of the left eye.
 const SHADOW_EYES = [[2, 3], [5, 6], [6, 28], [8, 16], [11, 5], [11, 27], [12, 16], [14, 9], [14, 24], [3, 30]];
 

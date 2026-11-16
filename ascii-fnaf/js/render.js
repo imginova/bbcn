@@ -125,9 +125,9 @@ function drawVisitors(g) {
   if (G.tfr.present) sprite(g, ...TFREDDY_SPOT, SPRITES.tfr.office, 'c-tfr');
   if (G.gol.present) sprite(g, ...GOLDEN_SPOT, SPRITES.gol.office, 'c-gol');
   if (G.bb.present) sprite(g, ...BB_SPOT, SPRITES.bb.office, 'c-bb');
-  // Mangle on the ceiling. Right after a flash they glow ("shone"), until the light leaves them.
+  // Mangle at their spot. They glow ("shone") while the light is on them.
   const M = G.mng;
-  if (M.active) sprite(g, MANGLE_ROW, Math.round(M.x), SPRITES.mng.office, 'c-mng' + (M.needOff ? ' shone' : ''));
+  if (M.active) sprite(g, ...MANGLE_SPOTS[M.spot], SPRITES.mng.office, 'c-mng' + (M.shineT > 0 ? ' shone' : ''));
   // Shadow Bonnie's white eyes, hidden in the dark (see #darkShade). They glow while the light is on them.
   const S = G.sbn;
   if (S.active) write(g, S.eyes[0], S.eyes[1], SPRITES.sbn.eyes, 'c-sbn acc-white' + (S.shineT > 0 ? ' shone' : ''));

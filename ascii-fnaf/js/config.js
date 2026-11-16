@@ -100,10 +100,10 @@ const ENDO_STAY = 0.2;       // the chance he stays where he is on a move
 const ENDO_REACH = 2;
 
 // ---------- Mangle ----------
-// Seconds between visits, how long Mangle takes to cross the office, how many flashes send them
-// away, and how long each flash must last. Between flashes the light has to come off Mangle.
+// Seconds between visits, how long you have to flash Mangle at each spot before they get you, how
+// many flashes send them away, and how long each flash must last (steady light on them).
 const mangleWait = level => rand(byLevel(level, 45, 14), byLevel(level, 70, 24));
-const mangleTime = level => byLevel(level, 10, 5.5);
+const mangleSpotTime = level => byLevel(level, 4.5, 2.5);
 const MANGLE_FLASHES = 3;
 const MANGLE_SHINE = 0.25;
 

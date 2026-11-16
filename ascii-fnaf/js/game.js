@@ -142,9 +142,9 @@ function newGame() {
     tch: crawler(TCHICA),
     bb: { ...crawler(BB), stolenUntil: 0 },
     spr: crawler(SPRING),
-    // Mangle: position (x = column of their left edge), which way they crawl, and the flashes so far.
-    // `needOff` is true right after a flash: the light has to leave them before the next one counts.
-    mng: { level: levelOf(MANGLE), active: false, x: 0, dir: 1, speed: 0, flashes: 0, shineT: 0, needOff: false,
+    // Mangle: which of MANGLE_SPOTS they're at, the flashes so far, the light on them so far, and the
+    // time (G.t) by which this spot's flash must land.
+    mng: { level: levelOf(MANGLE), active: false, spot: 0, flashes: 0, shineT: 0, deadline: 0,
       radioT: 0, timer: mangleWait(levelOf(MANGLE)) },
     // The Puppet's music box: how wound it is (percent), and the countdown once it's empty.
     pup: { level: levelOf(PUPPET), wind: 100, out: false, outTimer: 0, warnT: 0 },
@@ -503,8 +503,10 @@ function playLure(room) {
 }
 
 // ---------- Mangle ----------
-// Crawls across the ceiling from one side to the other. Every MANGLE_SHINE seconds of light on them
-// is a flash; between flashes the light has to come off them. MANGLE_FLASHES flashes send them away.
+// Turns up at one of MANGLE_SPOTS in the office (on request; they used to crawl across the ceiling).
+// MANGLE_SHINE seconds of steady light on them is a flash: they jump to a different spot, where you
+// have to find them and flash them again. MANGLE_FLASHES flashes in all send them away. Each spot
+// gives you mangleSpotTime seconds; run out at any of them and they get you.
 function updateMangle(dt) {
   const M = G.mng;
   if (M.level === 0) return;
@@ -512,39 +514,44 @@ function updateMangle(dt) {
     M.timer -= dt;
     if (M.timer > 0) return;
     M.active = true;
-    M.dir = Math.random() < 0.5 ? 1 : -1;
-    M.x = M.dir > 0 ? -8 : 36;   // start just outside the side they come from
-    M.speed = 44 / mangleTime(M.level);   // 44 columns: all the way across, plus their own width
     M.flashes = 0;
-    M.shineT = 0;
-    M.needOff = false;
     M.radioT = 0;
-    dirty = true;
+    mangleTo(Math.floor(Math.random() * MANGLE_SPOTS.length));
     return;
   }
-  M.x += M.dir * M.speed * dt;
-  // Their broken radio crackles from wherever they are (left speaker to right speaker).
+  // Their broken radio crackles from their side of the office (left speaker to right speaker).
+  const [row, col] = MANGLE_SPOTS[M.spot];
   M.radioT -= dt;
-  if (M.radioT <= 0) { sfx.mangleRadio(Math.max(-1, Math.min(1, (M.x + 4 - 18) / 18))); M.radioT = 0.8; }
-  const lit = beamOn(MANGLE_ROW + 1, M.x + 4);   // + 4: the middle of their 8-wide drawing
-  if (!lit) { M.needOff = false; M.shineT = 0; }
-  else if (!M.needOff) {
+  if (M.radioT <= 0) { sfx.mangleRadio(Math.max(-1, Math.min(1, (col + 4 - 18) / 18))); M.radioT = 0.8; }
+  if (beamOn(row + 1, col + 4)) {   // + 1, + 4: the middle of their 9-wide, 3-tall drawing
     M.shineT += dt;
     if (M.shineT >= MANGLE_SHINE) {
       M.flashes++;
-      M.needOff = true;
-      M.shineT = 0;
       sfx.mangleHit();
       if (M.flashes >= MANGLE_FLASHES) {
         M.active = false;
         M.timer = mangleWait(M.level);
         sfx.mangleOut();
+        dirty = true;
+      } else {
+        // Off to any other spot (never the one they're on).
+        const others = MANGLE_SPOTS.map((_, i) => i).filter(i => i !== M.spot);
+        mangleTo(pick(others));
       }
-      dirty = true;
       return;
     }
+  } else {
+    M.shineT = 0;
   }
-  if ((M.dir > 0 && M.x >= 36) || (M.dir < 0 && M.x <= -8)) lose(MANGLE);
+  if (G.t >= M.deadline) lose(MANGLE);
+}
+// Put Mangle at spot number i, with a fresh clock for that spot.
+function mangleTo(i) {
+  const M = G.mng;
+  M.spot = i;
+  M.shineT = 0;
+  M.deadline = G.t + mangleSpotTime(M.level);
+  dirty = true;
 }
 
 // ---------- the Puppet's music box ----------

@@ -98,8 +98,8 @@ const TCHICA = {
 };
 const MANGLE = {
   id: 'mng', name: 'Mangle', where: 'OFFICE',
-  desc: 'Crawls across the office ceiling. Flash them 3 times (light off in between) before they reach the other side.',
-  how: 'made it across your ceiling',
+  desc: 'Turns up somewhere in your office. Shine the flashlight on them and they jump to a different spot: find them and shine again. 3 times sends them away. Be quick at every spot.',
+  how: 'dropped down on you',
 };
 const BB = {
   id: 'bb', name: 'BB', where: 'VENTS',
