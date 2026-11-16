@@ -124,7 +124,7 @@ const SBONNIE = {
 };
 const CHILD = {
   id: 'cry', name: 'Crying Child', where: 'CAMERAS',
-  desc: 'A sticky note in the office says which camera he\'s on. Don\'t watch that camera too long. He never moves to the camera you last put the monitor down on.',
+  desc: 'A sticky note in the office says which camera he\'s on. Don\'t watch that camera too long. He moves every time you put the monitor down (so check the note again), but never to the camera you put it down on.',
   how: 'caught you watching too long',
 };
 const SPRING = {
@@ -149,35 +149,63 @@ const CRAWLERS = [TBONNIE, TCHICA, BB, SPRING];
 // lv({ fre: 10, bon: 5 }) turns a list of levels by id into the full list, with 0 for everyone else.
 const lv = byId => SETUP.map(c => byId[c.id] || 0);
 const everyone = level => lv(Object.fromEntries(SETUP.map(c => [c.id, level])));
+// The list is in rough order of difficulty, easiest first, and All 20 must stay last (the maximum).
+// No two challenges may have exactly the same levels, or the second could never be matched.
 const PRESETS = [
   { name: 'Warm-up', v: 1, levels: lv({ bon: 3, chi: 3, pup: 3, fox: 2 }) },
+  { name: 'Night watch', v: 1, levels: lv({ fre: 5, bon: 5, chi: 5, pup: 5 }) },
   { name: 'The originals', v: 1, levels: lv({ fre: 10, bon: 10, chi: 10, fox: 10 }) },
+  { name: 'Fox hunt', v: 1, levels: lv({ fox: 18, mng: 18 }) },                       // the two foxes
+  { name: 'Hall monitors', v: 1, levels: lv({ fre: 15, bon: 15, chi: 15 }) },         // doors only
+  { name: 'Fresh paint', v: 1, levels: lv({ tfr: 15, tbn: 15, tch: 15 }) },           // mask only
   { name: 'Toy box', v: 1, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
+  { name: 'Pizza party', v: 1, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
+  { name: 'Balloon trouble', v: 1, levels: lv({ bb: 16, fen: 12, pup: 8 }) },
   { name: 'Vent party', v: 1, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
-  { name: 'Camera shy', v: 1, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
+  { name: 'Camera shy', v: 2, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
+  { name: 'Don\'t stare', v: 1, levels: lv({ cry: 20, fox: 12, pup: 10 }) },
   { name: 'Lights out', v: 1, levels: lv({ sbn: 12, mng: 12, sfr: 12, fox: 8 }) },
+  { name: 'Shadow play', v: 1, levels: lv({ sfr: 15, sbn: 15, gol: 8 }) },
   { name: 'Mask on', v: 1, levels: lv({ gol: 10, tfr: 14, tbn: 12, tch: 12 }) },
   { name: 'Springtime', v: 1, levels: lv({ spr: 18, fen: 20, bb: 10, pup: 10 }) },
   { name: 'Golden hour', v: 1, levels: lv({ gol: 20, fre: 12, cup: 12 }) },
-  { name: 'Everyone at 10', v: 1, levels: everyone(10) },
+  { name: 'Bunny trouble', v: 1, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
+  { name: 'Bear trap', v: 1, levels: lv({ fre: 15, gol: 15, tfr: 15, fen: 15, sfr: 15 }) }, // every bear
+  { name: 'Haunted', v: 1, levels: lv({ gol: 15, sfr: 15, sbn: 15, cry: 12, pup: 12 }) },
+  { name: 'Everyone at 5', v: 1, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 2, levels: everyone(10) },
   { name: 'Old and new', v: 1, levels: lv({ fre: 18, bon: 18, chi: 18, fox: 18, tfr: 18, tbn: 18, tch: 18, mng: 18 }) },
-  { name: 'Everyone at 15', v: 1, levels: everyone(15) },
-  { name: 'All 20', v: 1, levels: everyone(20) },
+  { name: 'Crawl space', v: 1, levels: lv({ spr: 20, tbn: 20, tch: 20, bb: 20, fen: 20 }) },
+  { name: 'Everyone at 15', v: 2, levels: everyone(15) },
+  { name: 'All 20', v: 2, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.
 const FLAVOR = {
   'Warm-up': 'Your first shift. Close the doors, wind the box.',
+  'Night watch': 'A quiet night. Mostly.',
   'The originals': 'The old crew, back on their feet.',
+  'Fox hunt': 'One runs, one crawls across the ceiling.',
+  'Hall monitors': 'Just you, two doors and three visitors.',
+  'Fresh paint': 'They still smell new. Keep the mask close.',
   'Toy box': 'Brand new, very friendly, very rude.',
+  'Pizza party': 'Somebody ordered extra cupcakes.',
+  'Balloon trouble': 'Hold on to your flashlight.',
   'Vent party': 'Something is always moving in the vents.',
   'Camera shy': 'Look, but not for too long.',
+  'Don\'t stare': 'The note is watching which camera you pick.',
   'Lights out': 'Keep that flashlight handy.',
+  'Shadow play': 'Not everything here has a body.',
   'Mask on': 'You will be wearing this a lot.',
   'Springtime': 'He is slow. He is patient. He is coming.',
   'Golden hour': 'Every time you look up, he is there.',
+  'Bunny trouble': 'Every rabbit in the building wants in.',
+  'Bear trap': 'Five bears, one office.',
+  'Haunted': 'The ones who aren\'t really there.',
+  'Everyone at 5': 'The whole line shows up, half asleep.',
   'Everyone at 10': 'The whole line, taking it easy. Sort of.',
   'Old and new': 'Originals and toys, both at their worst.',
+  'Crawl space': 'The vents are full, and they are all in a hurry.',
   'Everyone at 15': 'Nobody is taking it easy now.',
   'All 20': 'Everyone, at their worst. Good luck.',
 };

@@ -661,8 +661,8 @@ function updateShadowBonnie(dt) {
 
 // ---------- the Crying Child ----------
 // He sits on one camera (the sticky note in the office says which). Watching that camera fills up
-// `stare`; looking away lets it drain. While the monitor is down he sometimes moves to another
-// camera, but never to the one you last put the monitor down on.
+// `stare`; looking away lets it drain. He moves to another camera every time you put the monitor
+// down, and now and then while it's down, but never to the one you last put the monitor down on.
 function updateChild(dt) {
   const K = G.cry;
   if (K.level === 0) return;
@@ -678,7 +678,15 @@ function updateChild(dt) {
   }
   if (G.cam) return;
   K.timer -= dt;
-  if (K.timer > 0) return;
+  if (K.timer <= 0) moveChild();
+}
+
+// The Crying Child goes to another camera (and the sticky note changes). It happens on his timer and
+// also every time you put the monitor down (toggleCam, on request), but never to the camera you were
+// just on, so flipping the monitor straight back up is always safe for a moment.
+function moveChild() {
+  const K = G.cry;
+  if (K.level === 0) return;
   K.timer = childMove(K.level);
   K.room = pick(CAM_ORDER.filter(r => r !== K.room && r !== G.closedOn));
   dirty = true;
@@ -734,7 +742,7 @@ function toggleCam() {
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
-  else { G.closedOn = G.camRoom; lookedBack(); }
+  else { G.closedOn = G.camRoom; moveChild(); lookedBack(); }
   dirty = true;
 }
 
