@@ -270,8 +270,13 @@ document.addEventListener('keydown', e => {
 // Letting go of F switches the flashlight off.
 document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'f') flashKey = false; });
 
-// If the window loses focus while a key is held, we would never see it being released, so let go.
-window.addEventListener('blur', () => { flashKey = flashMouse = flashButton = false; });
+// If the window loses focus (you clicked another window or alt-tabbed away), pause the night so
+// nothing gets you while you're not looking. Also, a key held down at that moment would never be
+// seen being released, so let go of the flashlight.
+window.addEventListener('blur', () => {
+  flashKey = flashMouse = flashButton = false;
+  if (currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+});
 
 // Switching to another tab pauses the game and puts the sound engine to sleep, so a copy of the
 // game left open in the background uses (almost) no computer power. Coming back wakes the sound;
