@@ -222,6 +222,14 @@ const sfx = (() => {
       tone(880, 0.25, { type: 'square', vol: 0.15, delay: 0.2 });
       for (let i = 0; i < 4; i++) tone(1100 + i * 80, 0.06, { type: 'triangle', vol: 0.12, delay: 0.5 + i * 0.08 });
     },
+    // BB in the last vent, about to climb in: a muffled "ha-ha-ha" from inside the vent, each
+    // "ha" a short wobbly note that drops a little (lowpass = muffled, like it's behind metal).
+    bbNear() {
+      for (let i = 0; i < 4; i++) {
+        tone(950 - i * 40, 0.1, { type: 'square', vol: 0.14, slide: -120, delay: i * 0.15 });
+        noise(0.06, { vol: 0.08, freq: 1200, type: 'lowpass', delay: i * 0.15 });
+      }
+    },
     // BB running off with your flashlight: a giggle that runs away.
     bbSteal() { for (let i = 0; i < 6; i++) tone(1300 - i * 90, 0.07, { type: 'triangle', vol: 0.16, delay: i * 0.08 }); },
     // An audio lure: a short, tinny voice clip from the vent speaker.

@@ -89,7 +89,7 @@ function renderGame(now) {
   $('btnFlash').classList.toggle('on', flashOn());
   $('btnFlash').disabled = off;
   $('stFlash').textContent = off ? 'NO POWER'
-    : lightStolen() ? `BB HAS IT ${Math.ceil(G.bb.stolenUntil - G.t)}s`
+    : lightStolen() ? 'BB HAS IT'
     : flashOn() ? 'ON' : 'HOLD';
   $('btnMask').classList.toggle('on', G.mask);
   $('btnMask').setAttribute('aria-pressed', String(G.mask));

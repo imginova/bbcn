@@ -89,7 +89,6 @@ const LURE_COOLDOWN = 2;     // seconds before you can play another lure
 const LURE_SHOW = 1.5;       // seconds the lure shows on the vent map
 const VENT_EXIT_WAIT = 2.5;  // a crawler waits at least this long in V15 before climbing in (lure it back!)
 const VENT_HOLD = 3;         // seconds of mask before a vent visitor makes a sound and leaves
-const BB_STEAL = 20;         // seconds BB keeps your flashlight if he gets you
 
 // ---------- Freddy Endo ----------
 // He wanders the vents and never attacks; you can't play a lure in the vent he's in.

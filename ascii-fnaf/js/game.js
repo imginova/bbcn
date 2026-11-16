@@ -71,8 +71,8 @@ const aim = { where: null, r: 0, c: 0, x: 0, y: 0 };
 
 // Is there power to use things right now? Not after a power-out.
 const powered = () => !G.powerOut;
-// Has BB run off with the flashlight?
-const lightStolen = () => G.t < G.bb.stolenUntil;
+// Has BB run off with the flashlight? Once he has it, it's gone for the rest of the night.
+const lightStolen = () => G.bb.stole;
 // Is the flashlight on? It needs power, and BB mustn't have it. It works on the office AND the cameras.
 const flashOn = () => (flashKey || flashMouse || flashButton) && powered() && !lightStolen();
 // Is the light's oval around the pointer on row r, column c? (dx / BEAM_COLS)² + (dy / BEAM_ROWS)² <= 1
@@ -137,10 +137,10 @@ function newGame() {
     fen: { level: levelOf(FENDO), room: pick(VENT_LIST.filter(n => n !== VENT_START && n !== VENT_EXIT)), timer: endoMove(levelOf(FENDO)) },
     // Toy Freddy: his appearance timer, and how long the mask has been on while he's here.
     tfr: { level: levelOf(TFREDDY), present: false, maskT: 0, deadline: 0, timer: toyFreddyWait(levelOf(TFREDDY)) },
-    // The vent crawlers (see crawler() above). BB also remembers until when he has your flashlight.
+    // The vent crawlers (see crawler() above). BB also remembers whether he has your flashlight.
     tbn: crawler(TBONNIE),
     tch: crawler(TCHICA),
-    bb: { ...crawler(BB), stolenUntil: 0 },
+    bb: { ...crawler(BB), stole: false },
     spr: crawler(SPRING),
     // Mangle: which of MANGLE_SPOTS they're at, the flashes so far, the light on them so far, and the
     // time (G.t) by which this spot's flash must land.
@@ -405,11 +405,12 @@ function updateCrawler(c, V, dt) {
     return;
   }
   V.room = closerVent(V.room);
-  // BB is hidden: no sound at all until he's in your office.
+  // BB is hidden: no sound as he crawls, only a giggle once he reaches the last vent and is about to
+  // climb in (on request), so you get a warning (and can still lure him back).
   if (!c.hidden) {
     sfx.ventMove(1 - ventDist(V.room) / ventDist(VENT_START));
     if (V.room === VENT_EXIT) sfx.ventNear();
-  }
+  } else if (V.room === VENT_EXIT) sfx.bbNear();
   if (V.room === VENT_EXIT) V.readyAt = G.t + VENT_EXIT_WAIT;
   dirty = true;
 }
@@ -426,7 +427,7 @@ function climbIn(c, V) {
 }
 
 // In your office: keep the mask on until it makes a sound and goes back to V1. If not, it gets
-// you, except BB, who takes your flashlight instead.
+// you, except BB, who takes your flashlight for the rest of the night instead.
 function crawlerInOffice(c, V, dt) {
   const result = maskCheck(V, VENT_HOLD, dt);
   if (result === 'gone') {
@@ -434,7 +435,7 @@ function crawlerInOffice(c, V, dt) {
     crawlerBack(c, V);
   } else if (result === 'fail') {
     if (c !== BB) { lose(c); return; }
-    V.stolenUntil = G.t + BB_STEAL;
+    V.stole = true;   // for the rest of the night (on request; it used to be 20 seconds)
     G.scareUntil = performance.now() + 900;   // render.js shows his face until then
     sfx.miniScream();
     sfx.bbSteal();
