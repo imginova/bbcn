@@ -55,7 +55,7 @@ const CHICA_INTERVAL = 6;    // (Chica's route is a room shorter, so she moves a
 const FOXY_INTERVAL = 5;     // seconds between his chances to get ready in Pirate Cove
 const FOXY_STAGES = 3;       // after his 3rd step he runs: 1 peeking, 2 half out, 3 gone
 const FOXY_RUN = 3;          // seconds from leaving the cove to reaching the left door
-const FOXY_FLASH = 0.4;      // seconds of steady light on the cove that send him back behind the curtain
+const FOXY_FLASH = 0.4;      // seconds of steady light on the cove that push him back one stage
 const FOXY_COST = 6;         // % power he knocks off when he bangs on the shut left door
 
 // ---------- Golden Freddy ----------

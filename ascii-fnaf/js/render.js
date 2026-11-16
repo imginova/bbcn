@@ -95,7 +95,10 @@ const boxLow = () => G.pup.level > 0 && !G.pup.out && G.pup.wind < BOX_LOW;
 // ---------- the office ----------
 function renderOffice() {
   $('office').classList.toggle('dark', G.powerOut);
-  for (const side of ['L', 'R']) setHtml($('door' + side), toHtml(doorGrid(side)));
+  for (const side of ['L', 'R']) {
+    setHtml($('door' + side), toHtml(doorGrid(side)));
+    $('door' + side).classList.toggle('lit', doorLit(side) && !G.doors[side]);   // the doorway glows in the light
+  }
   const g = officeGrid();
   if (!G.powerOut) drawVisitors(g);
   setHtml($('officeArt'), toHtml(g));
@@ -141,9 +144,16 @@ function doorGrid(side) {
   for (let r = 1; r <= H; r++) for (let c = 1; c <= W; c++) g[r][c].cls = shut ? 'door' : 'dim';
   if (shut || G.powerOut) return g;
   // Bonnie in the left doorway, Chica in the right one.
-  if (side === 'L' && G.bon.level > 0 && atDoor(G.bon, BONNIE)) sprite(g, 4, 1, SPRITES.bon.door, 'c-bon');
-  if (side === 'R' && G.chi.level > 0 && atDoor(G.chi, CHICA)) sprite(g, 5, 1, SPRITES.chi.door, 'c-chi');
+  if (side === 'L' && G.bon.level > 0 && atDoor(G.bon, BONNIE)) inDoorway(g, side, 4, 1, SPRITES.bon.door, 'c-bon');
+  if (side === 'R' && G.chi.level > 0 && atDoor(G.chi, CHICA)) inDoorway(g, side, 5, 1, SPRITES.chi.door, 'c-chi');
   return g;
+}
+
+// Someone standing in a doorway. The doorway is dark, so only their two glowing eyes show, unless the
+// flashlight is shining into it: then you see all of them.
+function inDoorway(g, side, row, col, drawing, cls) {
+  if (doorLit(side)) { sprite(g, row, col, drawing, cls); return; }
+  for (const [r, c] of drawing.eyes.at) g[row + r][col + c] = { ch: 'o', cls: ACCENT[drawing.eyes.color] + ' door-eyes' };
 }
 
 // ---------- the monitor ----------

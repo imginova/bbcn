@@ -158,6 +158,8 @@ pre [class*="c-"] { font-weight: 600; }
 .door { color: var(--dim); }
 /* Something in the flashlight's beam (Foxy, Mangle, Shadow Freddy, Shadow Bonnie's eyes): it glows. */
 .shone { text-shadow: 0 0 8px #fff; color: #fffbe8; }
+/* Bonnie's and Chica's eyes in a dark doorway: a soft glow in their own color (currentColor). */
+.door-eyes { font-weight: 600; text-shadow: 0 0 6px currentColor, 0 0 2px currentColor; }
 /* Shadow Bonnie's darkness, like ASCII Nights: almost black, except a hole where the flashlight shines
    (--x, --y and --r, the hole's size, are set by render.js; --r is 0 when the flashlight is off). */
 .dark-shade { position: absolute; inset: 0; pointer-events: none; z-index: 2;

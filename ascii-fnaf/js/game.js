@@ -86,6 +86,8 @@ const beamOn = (r, c) => flashOn() && !G.cam && aim.where === 'office' && inBeam
 // Is the flashlight shining on row r, column c of the camera picture you're looking at?
 const camsShowing = () => G.cam && G.tab === 'cams';
 const beamOnFeed = (r, c) => flashOn() && camsShowing() && aim.where === 'feed' && inBeam(r, c);
+// Is the flashlight shining into doorway `side` ('L' or 'R')? Anywhere over the doorway counts.
+const doorLit = side => flashOn() && !G.cam && aim.where === 'door' + side;
 // Are you looking at camera `room` right now?
 const onCam = room => camsShowing() && G.camRoom === room;
 // Is the VENTS tab worth showing tonight? Only if something with a level is in the vents.
@@ -264,8 +266,10 @@ const updateChica = dt => updateWalker(G.chi, CHICA, CHICA_INTERVAL, 160, dt);
 
 // ---------- Foxy ----------
 // He gets ready in Pirate Cove one stage at a time. Shining the flashlight on the cove (CAM 3, the
-// pointer over the picture) for FOXY_FLASH seconds sends him back behind the curtain. After his last
-// stage he runs to the left door: if it's shut, he bangs on it and that costs power; if not, he gets you.
+// pointer over the picture) pushes him back the same way, one stage for every FOXY_FLASH seconds of
+// steady light (on request: "shined in stages"), so from half out it takes two pushes to get him
+// behind the curtain. He can't step forward while the light is on him. After his last stage he runs
+// to the left door: if it's shut, he bangs on it and that costs power; if not, he gets you.
 const foxyLit = () => onCam('cove') && flashOn() && aim.where === 'feed';
 function updateFoxy(dt) {
   const X = G.fox;
@@ -283,18 +287,19 @@ function updateFoxy(dt) {
     dirty = true;
     return;
   }
-  // In the cove: the light pushes him back.
-  if (foxyLit()) {
+  // In the cove: the light pushes him back one stage at a time, and holds him still meanwhile.
+  if (foxyLit() && X.stage > 0) {
     X.flashT += dt;
-    if (X.flashT >= FOXY_FLASH && X.stage > 0) {
-      X.stage = 0;
+    if (X.flashT >= FOXY_FLASH) {
+      X.stage--;
+      X.flashT = 0;   // the next stage needs its own FOXY_FLASH of light
       X.timer = FOXY_INTERVAL * rand(0.7, 1.3);
       sfx.foxyBack();
       dirty = true;
     }
-  } else {
-    X.flashT = 0;
+    return;
   }
+  X.flashT = 0;
   X.timer -= dt;
   if (X.timer > 0) return;
   X.timer = FOXY_INTERVAL * rand(0.7, 1.3);

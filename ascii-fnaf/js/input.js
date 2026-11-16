@@ -86,7 +86,8 @@ $('cupcake').addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse
 // the camera picture, and which row and column of characters in it.
 // getBoundingClientRect() gives an element's position and size on the screen in pixels.
 const view = $('viewport');
-const AIM_AREAS = [['office', 'officeArt', 36, 16], ['feed', 'feed', 40, 11]];   // [name, element id, columns, rows]
+const AIM_AREAS = [['office', 'officeArt', 36, 16], ['feed', 'feed', 40, 11],   // [name, element id, columns, rows]
+  ['doorL', 'doorL', 12, 16], ['doorR', 'doorR', 12, 16]];                       // the doorways (doorLit in game.js)
 function updateAim(e) {
   const box = view.getBoundingClientRect();
   aim.x = e.clientX - box.left;

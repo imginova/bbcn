@@ -54,17 +54,17 @@ const FREDDY = {
 };
 const BONNIE = {
   id: 'bon', name: 'Bonnie', where: 'LEFT DOOR',
-  desc: 'Walks down the west side to the left door. Shut it when he\'s in the doorway.',
+  desc: 'Walks down the west side to the left door. In the dark doorway you only see his glowing eyes (the flashlight shows all of him). Shut the door when he\'s there.',
   route: ['stage', 'dining', 'parts', 'whall', 'L'],   // the last step is the doorway he ends up at
 };
 const CHICA = {
   id: 'chi', name: 'Chica', where: 'RIGHT DOOR',
-  desc: 'Walks down the east side to the right door. Shut it when she\'s in the doorway.',
+  desc: 'Walks down the east side to the right door. In the dark doorway you only see her glowing eyes (the flashlight shows all of her). Shut the door when she\'s there.',
   route: ['stage', 'dining', 'ehall', 'R'],
 };
 const FOXY = {
   id: 'fox', name: 'Foxy', where: 'LEFT DOOR',
-  desc: 'Gets ready in Pirate Cove (CAM 3). Shine the flashlight on the cove to send him back. If he runs, shut the left door: his bang costs some power.',
+  desc: 'Gets ready in Pirate Cove (CAM 3), one stage at a time. Keep the flashlight on the cove to push him back one stage at a time. If he runs, shut the left door: his bang costs some power.',
 };
 const GOLDEN = {
   id: 'gol', name: 'Golden Freddy', where: 'OFFICE',
@@ -152,32 +152,32 @@ const everyone = level => lv(Object.fromEntries(SETUP.map(c => [c.id, level])));
 // The list is in rough order of difficulty, easiest first, and All 20 must stay last (the maximum).
 // No two challenges may have exactly the same levels, or the second could never be matched.
 const PRESETS = [
-  { name: 'Warm-up', v: 1, levels: lv({ bon: 3, chi: 3, pup: 3, fox: 2 }) },
-  { name: 'Night watch', v: 1, levels: lv({ fre: 5, bon: 5, chi: 5, pup: 5 }) },
-  { name: 'The originals', v: 1, levels: lv({ fre: 10, bon: 10, chi: 10, fox: 10 }) },
-  { name: 'Fox hunt', v: 1, levels: lv({ fox: 18, mng: 18 }) },                       // the two foxes
-  { name: 'Hall monitors', v: 1, levels: lv({ fre: 15, bon: 15, chi: 15 }) },         // doors only
+  { name: 'Warm-up', v: 2, levels: lv({ bon: 3, chi: 3, pup: 3, fox: 2 }) },
+  { name: 'Night watch', v: 2, levels: lv({ fre: 5, bon: 5, chi: 5, pup: 5 }) },
+  { name: 'The originals', v: 2, levels: lv({ fre: 10, bon: 10, chi: 10, fox: 10 }) },
+  { name: 'Fox hunt', v: 2, levels: lv({ fox: 18, mng: 18 }) },                       // the two foxes
+  { name: 'Hall monitors', v: 2, levels: lv({ fre: 15, bon: 15, chi: 15 }) },         // doors only
   { name: 'Fresh paint', v: 1, levels: lv({ tfr: 15, tbn: 15, tch: 15 }) },           // mask only
   { name: 'Toy box', v: 1, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
-  { name: 'Pizza party', v: 1, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
+  { name: 'Pizza party', v: 2, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
   { name: 'Balloon trouble', v: 1, levels: lv({ bb: 16, fen: 12, pup: 8 }) },
   { name: 'Vent party', v: 1, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
-  { name: 'Camera shy', v: 2, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
-  { name: 'Don\'t stare', v: 1, levels: lv({ cry: 20, fox: 12, pup: 10 }) },
-  { name: 'Lights out', v: 1, levels: lv({ sbn: 12, mng: 12, sfr: 12, fox: 8 }) },
+  { name: 'Camera shy', v: 3, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
+  { name: 'Don\'t stare', v: 2, levels: lv({ cry: 20, fox: 12, pup: 10 }) },
+  { name: 'Lights out', v: 2, levels: lv({ sbn: 12, mng: 12, sfr: 12, fox: 8 }) },
   { name: 'Shadow play', v: 1, levels: lv({ sfr: 15, sbn: 15, gol: 8 }) },
   { name: 'Mask on', v: 1, levels: lv({ gol: 10, tfr: 14, tbn: 12, tch: 12 }) },
   { name: 'Springtime', v: 1, levels: lv({ spr: 18, fen: 20, bb: 10, pup: 10 }) },
   { name: 'Golden hour', v: 1, levels: lv({ gol: 20, fre: 12, cup: 12 }) },
-  { name: 'Bunny trouble', v: 1, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
+  { name: 'Bunny trouble', v: 2, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
   { name: 'Bear trap', v: 1, levels: lv({ fre: 15, gol: 15, tfr: 15, fen: 15, sfr: 15 }) }, // every bear
   { name: 'Haunted', v: 1, levels: lv({ gol: 15, sfr: 15, sbn: 15, cry: 12, pup: 12 }) },
-  { name: 'Everyone at 5', v: 1, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 2, levels: everyone(10) },
-  { name: 'Old and new', v: 1, levels: lv({ fre: 18, bon: 18, chi: 18, fox: 18, tfr: 18, tbn: 18, tch: 18, mng: 18 }) },
+  { name: 'Everyone at 5', v: 2, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 3, levels: everyone(10) },
+  { name: 'Old and new', v: 2, levels: lv({ fre: 18, bon: 18, chi: 18, fox: 18, tfr: 18, tbn: 18, tch: 18, mng: 18 }) },
   { name: 'Crawl space', v: 1, levels: lv({ spr: 20, tbn: 20, tch: 20, bb: 20, fen: 20 }) },
-  { name: 'Everyone at 15', v: 2, levels: everyone(15) },
-  { name: 'All 20', v: 2, levels: everyone(20) },
+  { name: 'Everyone at 15', v: 3, levels: everyone(15) },
+  { name: 'All 20', v: 3, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.

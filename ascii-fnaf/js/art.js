@@ -594,6 +594,10 @@ SPRITES.chi.door.accent = art(String.raw`
   v   v
    oo
    oo`);
+// In a dark doorway only their eyes show (on request): [row, column] of each eye inside the door
+// drawing, plus the accent letter for the eyes' color. The flashlight shows the whole drawing.
+SPRITES.bon.door.eyes = { at: [[4, 2], [4, 5]], color: 'p' };
+SPRITES.chi.door.eyes = { at: [[2, 2], [2, 6]], color: 'v' };
 SPRITES.chi.cam.accent = ['', ' vov'];
 // Foxy: yellow eyes and gold teeth.
 SPRITES.fox.scare.accent = art(String.raw`
