@@ -89,7 +89,7 @@ const ICONS = {
   cup: [' ,^, ', '(o.o)', '\\===/'],         // Toy cupcake: pink frosting, a lit candle, blue eyes
   sfr: [' [_] ', '(o^o)', ' >=< '],          // Shadow Freddy: a dark purple Freddy with white eyes
   sbn: ['/\\ /\\', '(o o)', ' VVV '],        // Shadow Bonnie: a black Toy Bonnie with white eyes and teeth
-  cry: [' ___ ', '(;_;)', ' /|\\ '],         // the Crying Child: blue tears, a striped shirt
+  cry: [' .-. ', '(;_;)', ' /|\\ '],         // the Crying Child: the grey FNAF 3 child, black tears
   spr: [' |\\ |', '(o#o)', ' |W| '],         // Springtrap: torn ear, wires in his face, white pinprick eyes
 };
 // Which line of the icon is the face (the middle one for everyone; kept so a new drawing can change it).
@@ -115,7 +115,7 @@ const ICON_ACCENTS = {
   cup: ['  y', ' b b'],                   // Toy cupcake: a yellow flame, blue eyes
   sfr: [' xxx', ' w w', ' xxx'],          // Shadow Freddy: black hat and bow tie, white eyes
   sbn: ['', ' w w', ' www'],              // Shadow Bonnie: white eyes and teeth on black
-  cry: ['', ' b b'],                      // the Crying Child: blue tears
+  cry: ['', ' x x'],                      // the Crying Child: black tears
   spr: ['', ' w w'],                      // Springtrap: white pinprick eyes
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
@@ -215,7 +215,7 @@ const BONNIE_SLOTS = { stage: [3, 10], dining: [3, 14], parts: [5, 15], whall: [
 const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 28] };
 const SHADOW_SLOTS = { stage: [7, 29], dining: [7, 1], cove: [5, 34], whall: [5, 26], ehall: [5, 6], parts: [5, 28], prize: [5, 3] };
 // The Crying Child fills most of his camera's picture (on request), at the same spot on every camera.
-const CHILD_SPOT = [1, 7];
+const CHILD_SPOT = [1, 5];
 
 // ---------- the characters' drawings ----------
 // Each one is a list of lines. `cam` is the small camera version, `door` fits a doorway,
@@ -719,27 +719,29 @@ SPRITES.cup.scare.accent = art(String.raw`
 
 
        bbb   bbb`);
-// The Crying Child: blue tears.
-SPRITES.cry.cam.accent = ['', ' b b'];
-// His big camera picture: 9 lines, as tall as a camera's room. (The last line ends in a space, because
-// a \ right before the closing ` would hide it.)
-SPRITES.cry.big = art(String.raw`
-          _________
-       .-'         '-.
-      /   ;       ;   \
-     |    ;       ;    |
-     |    ;  ___  ;    |
-      \     /   \     /
-       '-.  '---'  .-'
-     ___/ '-------' \___
-    /    |  |||||  |    \ `);
-// Its tears are every ; in the drawing, so the mask is made from it: each ; becomes b (blue).
-SPRITES.cry.big.accent = SPRITES.cry.big.map(line => line.replace(/[^;]/g, ' ').replace(/;/g, 'b'));
-SPRITES.cry.scare.accent = art(String.raw`
-
-
-        b     b
-        b     b`);
+// The Crying Child: black tears.
+SPRITES.cry.cam.accent = ['', ' x x'];
+// His big picture: the grey crying child from FNAF 3 (Happiest Day) and FNAF World, copied as a pixel
+// picture instead of redrawn in our own style (on request: "just the original design in ascii").
+// Each letter below is one pixel: G is his grey, a dot is empty. The eyes and tear streaks are holes
+// in the grey, so the dark screen shows through them, black like in the game. 9 rows, as tall as a
+// camera's room. The jumpscare uses it too (shown bigger).
+const CRY_PIXELS = [
+  '.....GGGGG.....',
+  '...GGGGGGGGG...',
+  '..GGGGGGGGGGG..',
+  '..GG..GGG..GG..',   // the eyes
+  '..GG..GGG..GG..',
+  '..GGG.GGG.GGG..',   // the tears, running straight down...
+  '...GG.GGG.GG...',
+  '.GGGG.GGG.GGGG.',   // ...past his chin
+  'GG.GGGGGGGGG.GG',   // his shoulders and arms
+];
+// A text character is about twice as tall as it is wide, so each pixel is two characters wide (##) to
+// keep it square. Empty pixels become spaces: sprite() leaves spaces outside the drawing see-through,
+// and blanks out the ones inside it (the eyes and tears).
+SPRITES.cry.big = CRY_PIXELS.map(row => row.replace(/G/g, '##').replace(/\./g, '  '));
+SPRITES.cry.scare = SPRITES.cry.big;
 // Springtrap: white pinprick eyes, grey wires.
 SPRITES.spr.scare.accent = art(String.raw`
 
