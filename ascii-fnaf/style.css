@@ -179,28 +179,30 @@ pre [class*="c-"] { font-weight: 600; }
 
 /* ---------- setup ---------- */
 .setup { display: flex; flex-direction: column; gap: 18px; }
-.rows { display: flex; flex-direction: column; gap: 8px; }
+/* The character cards. repeat(auto-fill, minmax(120px, 1fr)) fits as many 120px-or-wider columns as
+   the screen has room for (6 on a computer, 3 on a phone) and shares out the space left over. */
+.rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
 .lvrow {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 6px 8px;
   border: 1px solid var(--line);
   cursor: pointer;
+  text-align: center;
 }
+.lvrow:hover { border-color: var(--dim); }
 .lvrow.sel { border-color: var(--fg); background: rgba(143,227,154,.06); }
-.lvrow.off .icon { opacity: .45; }   /* switched off for tonight */
-.lvrow .who { min-width: 0; }
-.lvrow .who b { display: block; font-weight: 600; letter-spacing: .06em; }
-.lvrow .who small { color: var(--dim); font-size: 12px; }
-/* How many times this character has got you (shown only once it has). */
-.lvrow .who small.kills { display: block; color: var(--danger); }
-.ctrl { display: flex; align-items: center; gap: 8px; }
-.ctrl button { padding: 4px 12px; font-size: 18px; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; }   /* hold to repeat on phones too */
-.lv { display: flex; flex-direction: column; align-items: center; min-width: 13ch; font-variant-numeric: tabular-nums; }
-.lv b { font-family: var(--font-display); font-size: 30px; font-weight: 400; line-height: 1; }
-.lv .bar { font-size: 11px; color: var(--dim); letter-spacing: -.02em; white-space: pre; }
+.lvrow.off .icon, .lvrow.off .name { opacity: .45; }   /* switched off for tonight */
+.lvrow .name { font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; line-height: 1.2; min-height: 2.4em; display: grid; place-items: center; }
+/* How many times this character has got you, in the card's top right corner (only once it has). */
+.lvrow .kills { position: absolute; top: 4px; right: 6px; color: var(--danger); font-size: 11px; }
+.ctrl { display: flex; align-items: center; gap: 6px; }
+.ctrl button { padding: 2px 9px; font-size: 18px; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; }   /* hold to repeat on phones too */
+.lv { font-family: var(--font-display); font-size: 28px; font-weight: 400; line-height: 1; min-width: 3ch; font-variant-numeric: tabular-nums; }
+/* The info box under the grid (and on the pause panel): how the pointed-at character works. */
+.who-box { border: 1px solid var(--line); padding: 10px 12px; min-height: 6.2em; color: var(--fg); font-size: 13px; line-height: 1.45; text-align: left; }
+.who-box b { font-weight: 600; letter-spacing: .06em; }
+.who-box .kills { color: var(--danger); }
 .setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 /* The row of challenge buttons. */
 .presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -308,7 +310,20 @@ pre [class*="c-"] { font-weight: 600; }
   background: rgba(6,10,7,.92);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
   padding: 20px; text-align: center;
+  overflow-y: auto;   /* a long roster can scroll */
 }
+/* "safe center" centres the pause panel, but starts at the top if it's taller than the screen. */
+#pause { justify-content: safe center; gap: 12px; }
+/* flex-shrink: 0 stops the panel squashing its parts to fit; it scrolls instead. */
+#pause > * { flex-shrink: 0; }
+#pause .who-box { width: min(560px, 100%); min-height: 4.6em; }
+/* Tonight's characters on the pause panel: small cards that wrap onto more lines when needed. */
+.mini-roster { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 640px; }
+.mini-card { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 84px; padding: 6px 2px; border: 1px solid var(--line); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.mini-card:hover { border-color: var(--fg); }
+.mini-card .icon { font-size: 11px; }
+.mini-card b { font-weight: 600; line-height: 1.2; }
+.mini-card .lvtag { color: var(--dim); }
 
 /* ---------- end screens ---------- */
 .endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
@@ -343,9 +358,12 @@ pre [class*="c-"] { font-weight: 600; }
    @media rules only apply when their condition is true. This one kicks in on phones (560px wide or less). */
 @media (max-width: 560px) {
   .monitor { padding: 12px; }
-  .lvrow { grid-template-columns: 60px minmax(0, 1fr); }
-  .lvrow .ctrl { grid-column: 1 / -1; justify-content: center; }
+  .rows { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
   .lvrow .icon.big { font-size: 12px; }
+  .ctrl button { padding: 2px 7px; }
+  .lv { font-size: 24px; }
+  .mini-card { width: 66px; font-size: 9px; }
+  .mini-card .icon { font-size: 10px; }
   .controls button { font-size: 11px; }
   .controls kbd { display: none; }
 }

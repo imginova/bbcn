@@ -63,7 +63,11 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 **Challenges:** 13 in `PRESETS` (`data.js`), hand-ordered, with `FLAVOR` text. **All 20** (340 points) is the maximum.
 
-**Kill tally** (on request, like modern ASCII Nights): every death adds one to that character's count in `kills` (`countKill` in `game.js`, called from `lose`; a power-out death counts for Freddy). The game over screen adds "Bonnie has got you 3 times.", and each custom night row shows "☠ Got you 3 times" in red once it's above 0 (`#kills{i}`, filled by `renderSetup`). Saved in `store` key `kills`. BB taking the flashlight isn't a death, so it doesn't count.
+**Kill tally** (on request, like modern ASCII Nights): every death adds one to that character's count in `kills` (`countKill` in `game.js`, called from `lose`; a power-out death counts for Freddy). The game over screen adds "Bonnie has got you 3 times.", and each custom night card shows "☠3" in red in its corner once it's above 0 (`#kills{i}`, filled by `renderSetup`; the info box spells it out as "☠ Got you 3 times"). Saved in `store` key `kills`. BB taking the flashlight isn't a death, so it doesn't count.
+
+**Custom night grid** (on request, "like in the games"): the setup screen is a grid of cards (`.rows` with `repeat(auto-fill, minmax(120px, 1fr))`: 6 across on a computer, 3 on a phone), each with the face, name, level and − / +. How a character works isn't on the card: pointing at a card shows its name, where it comes from, its `desc` and kill tally in the info box under the grid (`#who`, `renderWho`, `whoHtml` in `screens.js`; `hoverCard` is the card under the pointer, and the selected card shows when the pointer is off the grid). Keys are unchanged: ↑ ↓ move through the cards in order, ← → change the level.
+
+**Pause roster** (on request): the pause panel lists everyone on tonight (level above 0) as small cards (`#pauseRoster`, filled by `showPause`), and pointing at one (or tapping it on a phone) shows how it works in `#pauseInfo`. The buttons sit above the roster so Resume stays in view on a phone, where all 17 cards make the panel scroll.
 
 ## How the code is organized
 

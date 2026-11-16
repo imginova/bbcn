@@ -143,6 +143,21 @@ $('rows').addEventListener('click', e => {
   if (row) { sel = Number(row.dataset.i); renderSetup(); }
 });
 
+// Pointing at a card shows how that character works in the info box; moving off the grid goes back
+// to the selected card. "pointerover" fires each time the pointer moves onto a new element.
+$('rows').addEventListener('pointerover', e => {
+  const row = e.target.closest('.lvrow');
+  const i = row ? Number(row.dataset.i) : -1;
+  if (i !== hoverCard) { hoverCard = i; renderWho(); }
+});
+$('rows').addEventListener('pointerleave', () => { hoverCard = -1; renderWho(); });
+
+// The same on the pause panel's cards (it has no "selected" card, so leaving shows the hint again).
+$('pauseRoster').addEventListener('pointerover', e => {
+  const card = e.target.closest('.mini-card');
+  if (card) $('pauseInfo').innerHTML = whoHtml(Number(card.dataset.i));
+});
+
 // Holding − or + keeps changing the level, like holding down a key: one step straight away,
 // then after a short pause (400 ms) one step every 70 ms until you let go or it hits 0 / 20.
 let holdTimer = 0;

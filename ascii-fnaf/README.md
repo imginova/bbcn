@@ -24,7 +24,7 @@ The game is split into files by job, the same way as ASCII Nights. Every file st
 | `js/art.js` | The ASCII pictures: rooms, the office and every character's drawings |
 | `js/game.js` | The rules: what each character does, doors, power, lures, winning and losing |
 | `js/render.js` | Draws the night onto the screen (never changes the rules) |
-| `js/screens.js` | Switching screens, the custom night screen, the win and game over screens |
+| `js/screens.js` | Switching screens, the custom night grid (with its info box), the pause panel's roster, the win and game over screens |
 | `js/input.js` | Mouse and keyboard controls, including aiming the flashlight |
 | `js/main.js` | The game loop and start-up |
 
