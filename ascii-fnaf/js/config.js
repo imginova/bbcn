@@ -119,6 +119,7 @@ const PUPPET_DELAY = 4.5;    // seconds from the box running out to the Puppet g
 const cupcakeWait = level => rand(byLevel(level, 40, 12), byLevel(level, 60, 22));
 const cupcakeTime = level => byLevel(level, 5, 2.5);
 const CUP_BEEP = 0.5;        // seconds between its beeps
+const CUP_EXTRA = 1;        // extra seconds when it pops up while the monitor is up (you have to flip it down)
 
 // ---------- Shadow Freddy ----------
 // Seconds between visits, how long he sits on a camera before he gets you, and how long the

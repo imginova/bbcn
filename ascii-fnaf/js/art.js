@@ -214,7 +214,8 @@ const FREDDY_SLOTS = { stage: [3, 17], dining: [7, 30], whall: [5, 21], ehall: [
 const BONNIE_SLOTS = { stage: [3, 10], dining: [3, 14], parts: [5, 15], whall: [5, 16] };
 const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 28] };
 const SHADOW_SLOTS = { stage: [7, 29], dining: [7, 1], cove: [5, 34], whall: [5, 26], ehall: [5, 6], parts: [5, 28], prize: [5, 3] };
-const CHILD_SLOTS = { stage: [7, 4], dining: [1, 34], cove: [5, 1], whall: [5, 6], ehall: [5, 11], parts: [5, 4], prize: [5, 32] };
+// The Crying Child fills most of his camera's picture (on request), at the same spot on every camera.
+const CHILD_SPOT = [1, 7];
 
 // ---------- the characters' drawings ----------
 // Each one is a list of lines. `cam` is the small camera version, `door` fits a doorway,
@@ -720,6 +721,20 @@ SPRITES.cup.scare.accent = art(String.raw`
        bbb   bbb`);
 // The Crying Child: blue tears.
 SPRITES.cry.cam.accent = ['', ' b b'];
+// His big camera picture: 9 lines, as tall as a camera's room. (The last line ends in a space, because
+// a \ right before the closing ` would hide it.)
+SPRITES.cry.big = art(String.raw`
+          _________
+       .-'         '-.
+      /   ;       ;   \
+     |    ;       ;    |
+     |    ;  ___  ;    |
+      \     /   \     /
+       '-.  '---'  .-'
+     ___/ '-------' \___
+    /    |  |||||  |    \ `);
+// Its tears are every ; in the drawing, so the mask is made from it: each ; becomes b (blue).
+SPRITES.cry.big.accent = SPRITES.cry.big.map(line => line.replace(/[^;]/g, ' ').replace(/;/g, 'b'));
 SPRITES.cry.scare.accent = art(String.raw`
 
 

@@ -112,8 +112,8 @@ const PUPPET = {
   desc: 'Waits in the music box on CAM 7. One click of Wind fills it all the way. When it gets low, a ♪! shows on the Camera button.',
 };
 const TCUP = {
-  id: 'cup', name: 'Toy cupcake', where: 'ANYWHERE',
-  desc: 'Pops up anywhere on the screen, even with the monitor up, and blinks and beeps. Tap it before time runs out.',
+  id: 'cup', name: 'Toy cupcake', where: 'OFFICE',
+  desc: 'Pops up somewhere in the office and blinks and beeps. On the monitor you can only hear it, so flip it down, find it and tap it before time runs out.',
   how: 'went off',
 };
 const SFREDDY = {
@@ -162,8 +162,8 @@ const PRESETS = [
   { name: 'Fox hunt', v: 2, levels: lv({ fox: 18, mng: 18 }) },                       // the two foxes
   { name: 'Hall monitors', v: 2, levels: lv({ fre: 15, bon: 15, chi: 15 }) },         // doors only
   { name: 'Fresh paint', v: 1, levels: lv({ tfr: 15, tbn: 15, tch: 15 }) },           // mask only
-  { name: 'Toy box', v: 1, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
-  { name: 'Pizza party', v: 2, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
+  { name: 'Toy box', v: 2, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
+  { name: 'Pizza party', v: 3, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
   { name: 'Balloon trouble', v: 1, levels: lv({ bb: 16, fen: 12, pup: 8 }) },
   { name: 'Vent party', v: 1, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
   { name: 'Camera shy', v: 3, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
@@ -172,16 +172,16 @@ const PRESETS = [
   { name: 'Shadow play', v: 1, levels: lv({ sfr: 15, sbn: 15, gol: 8 }) },
   { name: 'Mask on', v: 1, levels: lv({ gol: 10, tfr: 14, tbn: 12, tch: 12 }) },
   { name: 'Springtime', v: 1, levels: lv({ spr: 18, fen: 20, bb: 10, pup: 10 }) },
-  { name: 'Golden hour', v: 1, levels: lv({ gol: 20, fre: 12, cup: 12 }) },
+  { name: 'Golden hour', v: 2, levels: lv({ gol: 20, fre: 12, cup: 12 }) },
   { name: 'Bunny trouble', v: 2, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
   { name: 'Bear trap', v: 1, levels: lv({ fre: 15, gol: 15, tfr: 15, fen: 15, sfr: 15 }) }, // every bear
   { name: 'Haunted', v: 1, levels: lv({ gol: 15, sfr: 15, sbn: 15, cry: 12, pup: 12 }) },
-  { name: 'Everyone at 5', v: 2, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 3, levels: everyone(10) },
+  { name: 'Everyone at 5', v: 3, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 4, levels: everyone(10) },
   { name: 'Old and new', v: 2, levels: lv({ fre: 18, bon: 18, chi: 18, fox: 18, tfr: 18, tbn: 18, tch: 18, mng: 18 }) },
   { name: 'Crawl space', v: 1, levels: lv({ spr: 20, tbn: 20, tch: 20, bb: 20, fen: 20 }) },
-  { name: 'Everyone at 15', v: 3, levels: everyone(15) },
-  { name: 'All 20', v: 3, levels: everyone(20) },
+  { name: 'Everyone at 15', v: 4, levels: everyone(15) },
+  { name: 'All 20', v: 4, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.

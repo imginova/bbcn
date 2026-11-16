@@ -583,8 +583,9 @@ function windBox() {
 }
 
 // ---------- the Toy cupcake ----------
-// Pops up at a random place on the screen (over the office or the monitor), blinking and beeping.
-// Tap it before time runs out.
+// Pops up at a random place in the office (on request: only there, not over the monitor), blinking
+// and beeping. Tap it before time runs out. On the monitor you can't see it, only hear it, so flip
+// the monitor down to find it; if it pops up while the monitor is up you get CUP_EXTRA seconds more.
 function updateCupcake(dt) {
   const C = G.cup;
   if (C.level === 0) return;
@@ -592,9 +593,9 @@ function updateCupcake(dt) {
     C.timer -= dt;
     if (C.timer > 0) return;
     C.active = true;
-    C.x = rand(4, 86);     // percent across the view
-    C.y = rand(6, 78);     // percent down the view
-    C.deadline = G.t + cupcakeTime(C.level);
+    C.x = rand(0, 100);    // how far across the office picture (render.js keeps it all inside)
+    C.y = rand(0, 100);    // how far down the office picture
+    C.deadline = G.t + cupcakeTime(C.level) + (G.cam ? CUP_EXTRA : 0);
     C.beepT = 0;
     dirty = true;
   }

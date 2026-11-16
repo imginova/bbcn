@@ -60,10 +60,17 @@ function renderGame(now) {
     sprite(g, 0, 0, big, 'c-bb');
     setHtml($('miniScareArt'), toHtml(g));
   }
-  // The Toy cupcake, wherever it popped up (over the office or the monitor).
-  const cup = $('cupcake');
-  cup.hidden = !G.cup.active;
-  if (G.cup.active) { cup.style.left = G.cup.x + '%'; cup.style.top = G.cup.y + '%'; }
+  // The Toy cupcake, wherever it popped up in the office. It's only there while you're looking at the
+  // office: with the monitor up you can only hear it. Its x and y (0 to 100) say how far across and
+  // down the office picture (#officeArt) it is, turned into pixels inside the view: offsetLeft/offsetTop
+  // say where that picture starts, offsetWidth/offsetHeight how big things are. The cupcake's own size
+  // is taken off first, so even at 100 the whole cupcake stays inside the picture.
+  const cup = $('cupcake'), room = $('officeArt');
+  cup.hidden = !G.cup.active || G.cam;
+  if (!cup.hidden) {
+    cup.style.left = room.offsetLeft + G.cup.x / 100 * (room.offsetWidth - cup.offsetWidth) + 'px';
+    cup.style.top = room.offsetTop + G.cup.y / 100 * (room.offsetHeight - cup.offsetHeight) + 'px';
+  }
 
   // ----- buttons -----
   const off = !powered();
@@ -180,6 +187,9 @@ function renderFeed(now) {
       Array.from({ length: 40 }, () => ({ ch: chars[Math.floor(Math.random() * chars.length)], cls: 'dim' })));
   } else {
     g = grid(frame(ROOM_ART[room], 38), 40);
+    // The Crying Child, if this is his camera: big, filling most of the picture. He's drawn first, so
+    // anyone else in the room (Foxy, Shadow Freddy, the music box...) still shows in front of him.
+    if (G.cry.level > 0 && G.cry.room === room) sprite(g, ...CHILD_SPOT, SPRITES.cry.big, 'c-cry');
     // Freddy, Bonnie and Chica, if they're in this room. Switched off (level 0), they never move, so
     // they stand on the stage all night (on request).
     if (freddyRoom() === room) sprite(g, ...FREDDY_SLOTS[room], SPRITES.fre.cam, 'c-fre');
@@ -205,8 +215,6 @@ function renderFeed(now) {
     // Shadow Freddy, slumped in this room. He glows while the light is on him.
     const S = G.sfr;
     if (S.present && S.room === room) sprite(g, ...SHADOW_SLOTS[room], SPRITES.sfr.cam, 'c-sfr' + (S.flashT > 0 ? ' shone' : ''));
-    // The Crying Child, if this is his camera.
-    if (G.cry.level > 0 && G.cry.room === room) sprite(g, ...CHILD_SLOTS[room], SPRITES.cry.cam, 'c-cry');
   }
   setHtml($('feed'), toHtml(g));
 
