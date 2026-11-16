@@ -121,6 +121,7 @@ function newGame() {
     staticUntil: 0,                // camera shows static until this time (milliseconds)
     lure: null, lureReady: 0,      // the audio lure playing now ({ room, until }), and when the next one is allowed
     blocked: null,                 // a lure refused because Freddy Endo is in that vent ({ room, until })
+    ventSel: VENT_EXIT,            // the vent the arrow keys have picked on the VENTS tab (Enter lures it)
     scareUntil: 0,                 // BB's little jumpscare shows until this time (milliseconds)
 
     // Freddy: `step` counts his laughs on this trip, `side` is the door he's heading for.
@@ -133,7 +134,7 @@ function newGame() {
     // Golden Freddy: only there right after you flip the monitor down.
     gol: { level: levelOf(GOLDEN), present: false, deadline: 0 },
     // Freddy Endo: the vent he's wandering in.
-    fen: { level: levelOf(FENDO), room: pick([2, 3, 6, 7]), timer: endoMove(levelOf(FENDO)) },
+    fen: { level: levelOf(FENDO), room: pick(VENT_LIST.filter(n => n !== VENT_START && n !== VENT_EXIT)), timer: endoMove(levelOf(FENDO)) },
     // Toy Freddy: his appearance timer, and how long the mask has been on while he's here.
     tfr: { level: levelOf(TFREDDY), present: false, maskT: 0, deadline: 0, timer: toyFreddyWait(levelOf(TFREDDY)) },
     // The vent crawlers (see crawler() above). BB also remembers until when he has your flashlight.
@@ -376,7 +377,7 @@ function updateToyFreddy(dt) {
 }
 
 // ---------- the vents ----------
-// One step closer to V8: any next-door vent that's nearer (picked at random when there are two).
+// One step closer to V15: any next-door vent that's nearer (picked at random when there are two).
 const closerVent = n => pick(ventNeighbors(n).filter(m => ventDist(m) < ventDist(n)));
 // Each crawler's voice when it climbs in (and when the mask sends it back).
 const VENT_PITCH = { tbn: 340, tch: 260, bb: 500, spr: 120 };
@@ -388,7 +389,7 @@ function updateCrawlers(dt) {
   }
 }
 
-// Toy Bonnie, Toy Chica, BB and Springtrap: crawl toward V8 a vent at a time, wait there a moment,
+// Toy Bonnie, Toy Chica, BB and Springtrap: crawl toward V15 a vent at a time, wait there a moment,
 // then climb into your office.
 function updateCrawler(c, V, dt) {
   if (V.level === 0) return;
@@ -448,19 +449,32 @@ function crawlerBack(c, V) {
 }
 
 // ---------- Freddy Endo ----------
-// He wanders from vent to vent at random. He never comes out; he just blocks lures in his vent.
+// He does whatever he wants: each move he may stay put, or go to any vent up to ENDO_REACH moves
+// away, in any direction. Lures never move him (playLure only moves the CRAWLERS). He never comes
+// out; he just blocks lures in his vent.
 function updateEndo(dt) {
   const E = G.fen;
   if (E.level === 0) return;
   E.timer -= dt;
   if (E.timer > 0) return;
   E.timer = endoMove(E.level);
-  E.room = pick(ventNeighbors(E.room));
+  if (Math.random() < ENDO_STAY) return;
+  E.room = pick(VENT_LIST.filter(n => n !== E.room && ventSteps(n, E.room) <= ENDO_REACH));
   sfx.endoMove();
   dirty = true;
 }
 
-// Playing an audio lure in vent `room` (1 to 8). It's free, but needs the monitor up on VENTS,
+// The arrow keys on the VENTS tab: [rows down, columns across] for each key.
+const VENT_ARROWS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+// Move the picked vent one step, staying on the map (Math.min / Math.max keep it inside the edges).
+function moveVentSel(dRow, dCol) {
+  const row = Math.min(VENT_ROWS - 1, Math.max(0, ventRow(G.ventSel) + dRow));
+  const col = Math.min(VENT_COLS - 1, Math.max(0, ventCol(G.ventSel) + dCol));
+  G.ventSel = row * VENT_COLS + col + 1;
+  dirty = true;
+}
+
+// Playing an audio lure in vent `room` (1 to 15). It's free, but needs the monitor up on VENTS,
 // can't be played in Freddy Endo's vent, and needs LURE_COOLDOWN seconds between lures.
 // Each crawler in that vent or next to it may follow it (LURE_FOOLED says how likely) and then
 // stays to listen for LURE_STALL of its move chances.

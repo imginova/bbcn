@@ -71,20 +71,22 @@ const toyFreddyWait = level => rand(byLevel(level, 35, 14), byLevel(level, 55, 2
 const MASK_HOLD = 2.0;
 
 // ---------- the vents ----------
-// 8 vent rooms in 2 rows of 4 (see VENTS in data.js). Everyone starts in V1 and climbs toward V8,
-// the vent that opens into your office.
+// 15 vent rooms in 3 rows of 5 (see the vents in data.js). Everyone starts in V1 and climbs toward
+// V15, the vent that opens into your office.
 // Seconds between each vent crawler's chances to move one vent closer:
 const TOY_BONNIE_INTERVAL = 3;     // fast
 const TOY_CHICA_INTERVAL = 5;      // medium
 const BB_INTERVAL = 4.5;
 const SPRINGTRAP_INTERVAL = 8;     // slow
 // How easily each one is fooled by an audio lure (the chance it follows one): 0 never, 1 always.
-const LURE_FOOLED = { tbn: 0.9, tch: 0.45, bb: 0.45, spr: 0.95 };
+// Each went down by 0.1 when the vents grew to 15 (on request: the longer way in gives you more time,
+// so lures got a little weaker). They were 0.9, 0.45, 0.45 and 0.95.
+const LURE_FOOLED = { tbn: 0.8, tch: 0.35, bb: 0.35, spr: 0.85 };
 const LURE_REACH = 1;        // a lure works on crawlers in that vent or one vent away
 const LURE_STALL = 2;        // a fooled crawler skips this many of its move chances
 const LURE_COOLDOWN = 2;     // seconds before you can play another lure
 const LURE_SHOW = 1.5;       // seconds the lure shows on the vent map
-const VENT_EXIT_WAIT = 2.5;  // a crawler waits at least this long in V8 before climbing in (lure it back!)
+const VENT_EXIT_WAIT = 2.5;  // a crawler waits at least this long in V15 before climbing in (lure it back!)
 const VENT_HOLD = 3;         // seconds of mask before a vent visitor makes a sound and leaves
 const BB_STEAL = 20;         // seconds BB keeps your flashlight if he gets you
 
@@ -92,6 +94,10 @@ const BB_STEAL = 20;         // seconds BB keeps your flashlight if he gets you
 // He wanders the vents and never attacks; you can't play a lure in the vent he's in.
 // Seconds between his moves (he moves more at higher levels).
 const endoMove = level => byLevel(level, 9, 3) * rand(0.7, 1.3);
+// He goes wherever he likes (on request): each move he may stay put, or go to any vent up to
+// ENDO_REACH moves away, in any direction. Lures never move him.
+const ENDO_STAY = 0.2;       // the chance he stays where he is on a move
+const ENDO_REACH = 2;
 
 // ---------- Mangle ----------
 // Seconds between visits, how long Mangle takes to cross the office, how many flashes send them

@@ -230,17 +230,18 @@ function renderFeed(now) {
   }
 }
 
-// The VENTS tab: 8 vent buttons in 2 rows of 4, with who's in each (never BB), the lure that's
+// The VENTS tab: 15 vent buttons in 3 rows of 5, with who's in each (never BB), the lure that's
 // playing, and a "BLOCKED" when you tried to lure Freddy Endo's vent.
 function renderVents() {
   let html = '';
-  for (let n = 1; n <= 8; n++) {
+  for (const n of VENT_LIST) {
     const tags = [TBONNIE, TCHICA, SPRING]
       .filter(c => G[c.id].level > 0 && !G[c.id].present && G[c.id].room === n)
       .map(c => `<b class="c-${c.id}">${VENT_TAGS[c.id]}</b>`);
     if (G.fen.level > 0 && G.fen.room === n) tags.push(`<b class="c-fen">${VENT_TAGS.fen}</b>`);
     const lured = G.lure && G.lure.room === n, blocked = G.blocked && G.blocked.room === n;
-    html += `<button type="button" class="vent${lured ? ' lured' : ''}${blocked ? ' blocked' : ''}" data-vent="${n}" style="grid-area:v${n}">` +
+    const picked = G.ventSel === n ? ' picked' : '';   // the arrow keys' choice
+    html += `<button type="button" class="vent${lured ? ' lured' : ''}${blocked ? ' blocked' : ''}${picked}" data-vent="${n}" style="grid-area:v${n}">` +
       `<span class="vn">V${n}</span><span class="occ">${tags.join(' ') || '&nbsp;'}</span>` +
       `<span class="mark">${lured ? '~ lure ~' : blocked ? 'BLOCKED' : '&nbsp;'}</span></button>`;
   }
@@ -248,5 +249,5 @@ function renderVents() {
   setHtml($('ventMap'), html);
   $('ventNote').textContent = G.t < G.lureReady
     ? 'Lure recharging...'
-    : 'Click a vent (or press its number) to play an audio lure there.';
+    : 'Click a vent (or pick one with the arrow keys and press Enter) to play an audio lure there.';
 }

@@ -253,10 +253,12 @@ document.addEventListener('keydown', e => {
     // W does two jobs: on the monitor it winds the music box (on CAM 7); in the office it puts the
     // mask on or takes it off. That works because the mask can't be worn with the monitor up.
     else if (k === 'w') { if (G.cam) windBox(); else toggleMask(); }
-    // Number keys: on the VENTS tab, 1 to 8 play a lure in that vent; anywhere else 1 to 7 pick a camera.
-    // /^[1-8]$/ means "exactly one digit from 1 to 8".
-    else if (/^[1-8]$/.test(k) && G.cam && G.tab === 'vents') playLure(Number(k));
-    else if (/^[1-7]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
+    // On the VENTS tab there are 15 vents, too many for the number keys: the arrow keys move a
+    // highlight around the map and Enter plays a lure in that vent. The number keys do nothing there.
+    else if (G.cam && G.tab === 'vents' && k in VENT_ARROWS) { e.preventDefault(); moveVentSel(...VENT_ARROWS[k]); }
+    else if (G.cam && G.tab === 'vents' && k === 'Enter') { e.preventDefault(); playLure(G.ventSel); }
+    // Anywhere else, 1 to 7 pick a camera. /^[1-7]$/ means "exactly one digit from 1 to 7".
+    else if (/^[1-7]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h') openHowto();
 
   } else if (currentScreen === 'win') {

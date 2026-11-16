@@ -193,7 +193,7 @@ const sfx = (() => {
       tone(320 + 200 * progress, 0.08, { type: 'square', vol: vol * 0.5, pan: 0.5 * progress });
       noise(0.12, { vol, freq: 1400, type: 'highpass', pan: 0.5 * progress });
     },
-    // Something reached V8, right next to your office: a loud BANG in the vent.
+    // Something reached V15, right next to your office: a loud BANG in the vent.
     ventNear() {
       noise(0.35, { vol: 0.8, freq: 900 });
       tone(90, 0.35, { type: 'square', vol: 0.3, slide: -40 });

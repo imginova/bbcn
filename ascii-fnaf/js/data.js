@@ -19,23 +19,27 @@ const ROOMS = {
 const CAM_ORDER = ['stage', 'dining', 'cove', 'whall', 'ehall', 'parts', 'prize'];
 
 // ---------- the vents ----------
-// 8 vent rooms in 2 rows of 4, numbered like this:
-//     V1  V2  V3  V4
-//     V5  V6  V7  V8 -> your office
+// 15 vent rooms in 3 rows of 5 (on request; it was 2 rows of 4), numbered like this:
+//     V1   V2   V3   V4   V5
+//     V6   V7   V8   V9   V10
+//     V11  V12  V13  V14  V15 -> your office
 // Each vent joins the ones beside it, above it and below it. Everyone starts in V1 (top left) and
-// climbs toward V8 (bottom right), the vent that opens into your office.
-const VENT_COLS = 4;
+// climbs toward V15 (bottom right), the vent that opens into your office: 6 moves away.
+const VENT_ROWS = 3;
+const VENT_COLS = 5;
+const VENT_COUNT = VENT_ROWS * VENT_COLS;
 const VENT_START = 1;
-const VENT_EXIT = 8;
-const ventRow = n => Math.floor((n - 1) / VENT_COLS);   // 0 = top row, 1 = bottom row
-const ventCol = n => (n - 1) % VENT_COLS;               // 0 = left ... 3 = right
-// The vents next to vent n.
-const ventNeighbors = n => [1, 2, 3, 4, 5, 6, 7, 8].filter(m =>
-  Math.abs(ventRow(m) - ventRow(n)) + Math.abs(ventCol(m) - ventCol(n)) === 1);
-// How many moves vent n is from V8 (V8 itself is 0).
-const ventDist = n => (1 - ventRow(n)) + (VENT_COLS - 1 - ventCol(n));
-// How many moves apart two vents are.
+const VENT_EXIT = VENT_COUNT;
+// Every vent number. Array.from({ length: 15 }, (_, i) => i + 1) builds [1, 2, ..., 15].
+const VENT_LIST = Array.from({ length: VENT_COUNT }, (_, i) => i + 1);
+const ventRow = n => Math.floor((n - 1) / VENT_COLS);   // 0 = top row ... 2 = bottom row
+const ventCol = n => (n - 1) % VENT_COLS;               // 0 = left ... 4 = right
+// How many moves apart two vents are (rows apart plus columns apart).
 const ventSteps = (a, b) => Math.abs(ventRow(a) - ventRow(b)) + Math.abs(ventCol(a) - ventCol(b));
+// The vents next to vent n.
+const ventNeighbors = n => VENT_LIST.filter(m => ventSteps(m, n) === 1);
+// How many moves vent n is from the exit (the exit itself is 0).
+const ventDist = n => ventSteps(n, VENT_EXIT);
 
 // ---------- the characters ----------
 // Every character has:
@@ -73,7 +77,7 @@ const GOLDEN = {
 };
 const FENDO = {
   id: 'fen', name: 'Freddy Endo', where: 'VENTS',
-  desc: 'Wanders the vents and never attacks, but you can\'t play an audio lure in the vent he\'s in.',
+  desc: 'Wanders the vents wherever he likes, and lures don\'t move him. He never attacks, but you can\'t play an audio lure in the vent he\'s in.',
 };
 const TFREDDY = {
   id: 'tfr', name: 'Toy Freddy', where: 'OFFICE',
