@@ -164,7 +164,7 @@ const PRESETS = [
   { name: 'Fresh paint', v: 2, levels: lv({ tfr: 15, tbn: 15, tch: 15 }) },           // mask only
   { name: 'Toy box', v: 4, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
   { name: 'Pizza party', v: 4, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
-  { name: 'Balloon trouble', v: 2, levels: lv({ bb: 16, fen: 12, pup: 8 }) },
+  { name: 'Balloon trouble', v: 3, levels: lv({ bb: 16, mng: 12, pup: 10, cup: 10, tfr: 10 }) }, // FNAF 2's kids' side
   { name: 'Vent party', v: 3, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
   { name: 'Camera shy', v: 3, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
   { name: 'Don\'t stare', v: 2, levels: lv({ cry: 20, fox: 12, pup: 10 }) },
@@ -194,7 +194,7 @@ const FLAVOR = {
   'Fresh paint': 'They still smell new. Keep the mask close.',
   'Toy box': 'Brand new, very friendly, very rude.',
   'Pizza party': 'Somebody ordered extra cupcakes.',
-  'Balloon trouble': 'Hold on to your flashlight.',
+  'Balloon trouble': 'Balloons, prizes and party favours. Hold on to your flashlight.',
   'Vent party': 'Something is always moving in the vents.',
   'Camera shy': 'Look, but not for too long.',
   'Don\'t stare': 'The note is watching which camera you pick.',
