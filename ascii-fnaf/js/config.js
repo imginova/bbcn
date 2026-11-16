@@ -81,7 +81,8 @@ const SPRINGTRAP_INTERVAL = 8;     // slow
 // How easily each one is fooled by an audio lure (the chance it follows one): 0 never, 1 always.
 // Each went down by 0.1 when the vents grew to 15 (on request: the longer way in gives you more time,
 // so lures got a little weaker). They were 0.9, 0.45, 0.45 and 0.95.
-const LURE_FOOLED = { tbn: 0.8, tch: 0.35, bb: 0.35, spr: 0.85 };
+// Later Toy Bonnie and Toy Chica got a lot harder to fool (on request): they were 0.8 and 0.35.
+const LURE_FOOLED = { tbn: 0.5, tch: 0.15, bb: 0.35, spr: 0.85 };
 const LURE_REACH = 1;        // a lure works on crawlers in that vent or one vent away
 const LURE_STALL = 2;        // a fooled crawler skips this many of its move chances
 const LURE_COOLDOWN = 2;     // seconds before you can play another lure
