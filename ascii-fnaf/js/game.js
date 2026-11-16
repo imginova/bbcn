@@ -280,6 +280,7 @@ function updateFoxy(dt) {
     if (X.runT > 0) return;
     if (!G.doors.L) { lose(FOXY, 'L'); return; }
     sfx.bang();
+    sfx.bonk('L');   // and the bonk, like everyone else who runs into a shut door
     G.power -= FOXY_COST;
     X.phase = 'cove';
     X.stage = 0;

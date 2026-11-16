@@ -131,10 +131,14 @@ const sfx = (() => {
     mask(on) { on ? noise(0.15, { vol: 0.35, freq: 300 }) : tone(600, 0.05, { vol: 0.08 }); },
 
     // ----- doors -----
-    // Something gave up at a shut door: one hollow BONK.
+    // Something ran into a shut door and gave up: a cartoon BONK, the same as modern ASCII Nights'
+    // (on request). It's higher and brighter than the door slam, and starts a moment after it (delay),
+    // so you hear it clearly even when you shut the door right as it arrives.
     bonk(side) {
-      tone(180, 0.18, { type: 'triangle', vol: 0.5, slide: -90, pan: panOf(side) });
-      noise(0.12, { vol: 0.5, freq: 500, pan: panOf(side) });
+      const pan = panOf(side), d = 0.15;
+      noise(0.04, { vol: 0.5, freq: 3000, type: 'highpass', delay: d, pan });       // the hit
+      tone(700, 0.12, { type: 'sine', vol: 0.6, slide: -380, delay: d, pan });       // "bo-"
+      tone(350, 0.3, { type: 'triangle', vol: 0.5, slide: -150, delay: d + 0.03, pan });   // "-onk"
     },
     // Something in a doorway, trying to get in: a thud, a rattling handle and a creak.
     arrive(side, pitch = 110) {
