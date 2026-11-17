@@ -18,7 +18,8 @@ const NIGHT_HOURS = 6;     // 12 AM to 6 AM
 // ---------- power ----------
 // The monitor, each closed door and the flashlight each cost this much per second while in use.
 // The mask and the audio lures are free.
-const UNIT_DRAIN = 0.45;
+// It was 0.45; lowered on request so power lasts longer (50% longer: the monitor alone, all night, costs 54%).
+const UNIT_DRAIN = 0.3;
 const POWER_OUT_WAIT = [5, 13];   // seconds of darkness after a power-out before Freddy gets you
 
 // ---------- difficulty levels (custom night) ----------
@@ -77,12 +78,13 @@ const MASK_HOLD = 2.0;
 const TOY_BONNIE_INTERVAL = 3;     // fast
 const TOY_CHICA_INTERVAL = 5;      // medium
 const BB_INTERVAL = 4.5;
-const SPRINGTRAP_INTERVAL = 6.5;   // slow (it was 8; a little faster on request)
+const SPRINGTRAP_INTERVAL = 6;     // slow (it was 8, then 6.5; a little faster each time, on request)
 // How easily each one is fooled by an audio lure (the chance it follows one): 0 never, 1 always.
 // Each went down by 0.1 when the vents grew to 15 (on request: the longer way in gives you more time,
 // so lures got a little weaker). They were 0.9, 0.45, 0.45 and 0.95.
 // Later Toy Bonnie and Toy Chica got a lot harder to fool (on request): they were 0.8 and 0.35.
-const LURE_FOOLED = { tbn: 0.5, tch: 0.15, bb: 0.35, spr: 0.85 };
+// Then Springtrap a little harder to fool (on request): he was 0.85.
+const LURE_FOOLED = { tbn: 0.5, tch: 0.15, bb: 0.35, spr: 0.75 };
 const LURE_REACH = 1;        // a lure works on crawlers in that vent or one vent away
 const LURE_STALL = 2;        // a fooled crawler skips this many of its move chances
 const LURE_COOLDOWN = 2;     // seconds before you can play another lure

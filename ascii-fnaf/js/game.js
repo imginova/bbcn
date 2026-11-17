@@ -95,7 +95,13 @@ const ventsOn = () => [...CRAWLERS, FENDO].some(c => levelOf(c) > 0);
 
 // Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
-const hourLabel = h => (h === 0 ? 12 : h) + ' AM';
+// The clock to the minute (on request), like "2:07 AM". With 30-second hours, an in-game minute
+// is half a real second. padStart(2, '0') turns 7 into "07".
+function clockLabel(t) {
+  const minutes = Math.min(NIGHT_HOURS * 60, Math.floor(t / HOUR_SECONDS * 60));
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return `${h === 0 ? 12 : h}:${String(m).padStart(2, '0')} AM`;
+}
 
 // The level of character c tonight (c is one of the descriptions in data.js, like BONNIE).
 const levelOf = c => levels[SETUP.indexOf(c)];
@@ -858,7 +864,7 @@ function lose(c, side = null, dark = false) {
   G.over = true;
   sfx.humOff();
   sfx.scream();
-  const when = hourLabel(hourOf(G.t));
+  const when = clockLabel(G.t);
   const who = `<b class="c-${c.id}">${c.name}</b>`;
   let message;
   if (dark) message = `The power ran out. ${who} found you in the dark at ${when}.`;

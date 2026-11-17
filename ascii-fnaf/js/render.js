@@ -24,7 +24,7 @@ const VENT_TAGS = { tbn: 'TB', tch: 'TC', spr: 'ST', fen: 'EN' };
 // Draw everything on the game screen: HUD, then either the office or the monitor, then the buttons.
 function renderGame(now) {
   // ----- HUD: clock, power, usage -----
-  $('clock').textContent = hourLabel(hourOf(G.t));
+  $('clock').textContent = clockLabel(G.t);
   const p = Math.max(0, Math.ceil(G.power));
   const pw = $('pw');
   pw.textContent = G.powerOut ? 'OUT' : p + '%';

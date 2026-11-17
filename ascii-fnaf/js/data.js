@@ -165,23 +165,23 @@ const PRESETS = [
   { name: 'Toy box', v: 4, levels: lv({ tfr: 10, tbn: 10, tch: 10, mng: 8, bb: 8, cup: 8 }) },
   { name: 'Pizza party', v: 4, levels: lv({ chi: 12, tch: 12, cup: 12, bon: 8, fre: 8 }) },
   { name: 'Balloon trouble', v: 6, levels: lv({ bb: 16, fen: 12, tbn: 12, fox: 10, pup: 8 }) }, // v3 and v4 were lineups taken back
-  { name: 'Vent party', v: 4, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
+  { name: 'Vent party', v: 5, levels: lv({ tbn: 12, tch: 12, bb: 10, spr: 10, fen: 15 }) },
   { name: 'Camera shy', v: 3, levels: lv({ cry: 14, pup: 12, fox: 10, sfr: 10 }) },
   { name: 'Don\'t stare', v: 2, levels: lv({ cry: 20, fox: 12, pup: 10 }) },
   { name: 'Lights out', v: 2, levels: lv({ sbn: 12, mng: 12, sfr: 12, fox: 8 }) },
   { name: 'Shadow play', v: 1, levels: lv({ sfr: 15, sbn: 15, gol: 8 }) },
   { name: 'Mask on', v: 2, levels: lv({ gol: 10, tfr: 14, tbn: 12, tch: 12 }) },
-  { name: 'Springtime', v: 3, levels: lv({ spr: 18, fen: 20, bb: 10, pup: 10 }) },
+  { name: 'Springtime', v: 4, levels: lv({ spr: 18, fen: 20, bb: 10, pup: 10 }) },
   { name: 'Golden hour', v: 2, levels: lv({ gol: 20, fre: 12, cup: 12 }) },
-  { name: 'Bunny trouble', v: 4, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
+  { name: 'Bunny trouble', v: 5, levels: lv({ bon: 15, tbn: 15, sbn: 15, spr: 12 }) }, // every rabbit
   { name: 'Bear trap', v: 1, levels: lv({ fre: 15, gol: 15, tfr: 15, fen: 15, sfr: 15 }) }, // every bear
   { name: 'Haunted', v: 1, levels: lv({ gol: 15, sfr: 15, sbn: 15, cry: 12, pup: 12 }) },
-  { name: 'Everyone at 5', v: 6, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 7, levels: everyone(10) },
+  { name: 'Everyone at 5', v: 7, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 8, levels: everyone(10) },
   { name: 'Old and new', v: 3, levels: lv({ fre: 18, bon: 18, chi: 18, fox: 18, tfr: 18, tbn: 18, tch: 18, mng: 18 }) },
-  { name: 'Crawl space', v: 4, levels: lv({ spr: 20, tbn: 20, tch: 20, bb: 20, fen: 20 }) },
-  { name: 'Everyone at 15', v: 7, levels: everyone(15) },
-  { name: 'All 20', v: 7, levels: everyone(20) },
+  { name: 'Crawl space', v: 5, levels: lv({ spr: 20, tbn: 20, tch: 20, bb: 20, fen: 20 }) },
+  { name: 'Everyone at 15', v: 8, levels: everyone(15) },
+  { name: 'All 20', v: 8, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.
