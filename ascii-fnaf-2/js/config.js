@@ -87,9 +87,12 @@ const BABY_CLOSE = 2.5;
 
 // ---------- Ballora ----------
 // Her music plays from the side she's coming from, louder each step. Shut that door before she arrives.
-const BALLORA_INTERVAL = 5;
+const BALLORA_INTERVAL = 5;       // seconds between her chances to set off (her level is the chance)
 const BALLORA_STEPS = 3;
 const BALLORA_MUSIC = 1.3;      // seconds between the phrases of her music while she's coming (it plays all the way)
+// Once she's set off, seconds between her steps: 3 at level 1, 2 at level 20 (on request; she used to
+// take one step per successful chance, so at low levels a trip could drag on for half a minute).
+const balloraStep = level => byLevel(level, 3, 2);
 
 // ---------- Funtime Freddy ----------
 // His script (shown in the office) has a line every so often. The important lines ("Bon-Bon, go get

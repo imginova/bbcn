@@ -411,9 +411,14 @@ function updateBallora(dt) {
   }
   B.timer -= dt;
   if (B.timer > 0) return;
-  B.timer = BALLORA_INTERVAL * rand(0.7, 1.3);
-  if (Math.random() >= moveChance(B.level)) return;
-  if (B.step === 0) B.side = pick(['L', 'R']);
+  // Her level decides how often she SETS OFF; once she's dancing toward a door, every step comes at a
+  // steady pace (balloraStep), so a trip doesn't drag on (on request: "Ballora stays way too long").
+  if (B.step === 0) {
+    B.timer = BALLORA_INTERVAL * rand(0.7, 1.3);
+    if (Math.random() >= moveChance(B.level)) return;
+    B.side = pick(['L', 'R']);
+  }
+  B.timer = balloraStep(B.level) * rand(0.85, 1.15);
   B.step++;
   B.musicT = 0;   // a step closer: her music swells straight away (updateBallora plays it next frame)
   if (B.step > BALLORA_STEPS) {
