@@ -131,7 +131,7 @@ function newGame() {
     // Ballora: her step toward the side she picked, and her clock once she's there.
     bal: { level: levelOf(BALLORA), step: 0, side: 'L', timer: BALLORA_INTERVAL * rand(0.7, 1.3), deadline: 0, musicT: 0 },
     // Funtime Freddy: his script, where he stands in the auditorium ('C', 'L' or 'R') and what he's doing.
-    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, pos: 'C', phase: 'idle', goT: 0, stepped: false, deadline: 0 },
+    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, home: 'L', pos: 'L', phase: 'idle', goT: 0, stepped: false, deadline: 0 },
     // Funtime Foxy: the time (G.t) of the next show, and whether its fanfare has played.
     ffx: { level: levelOf(FFOXY), show: roundShow(ffxGap(levelOf(FFOXY)) * rand(0.8, 1.1)), played: false },
     // Ennard: null between visits, then 'hall' (walking to a door), 'door' (at it) or 'air' (in the oxygen room).
@@ -150,6 +150,8 @@ function newGame() {
     nbb: { level: levelOf(NBB), awake: false },
     lampUntil: 0,                  // the lamp's flash shows until this time (milliseconds)
   };
+  // Funtime Freddy's side of the auditorium for tonight (his lines are about this side).
+  G.ffr.home = G.ffr.pos = pick(['L', 'R']);
 }
 
 // ---------- Nightmare BB ----------
@@ -426,9 +428,11 @@ function balloraHome() {
 }
 
 // ---------- Funtime Freddy ----------
-// He reads his script (shown in the office) line by line. An important line sends him to a door: he
-// walks to that side of the auditorium (CAM 4) with steps you hear from that side, and ffrRun seconds
-// later he's at the door. Shut it (normal or heavy) in time.
+// He stands on one side of the auditorium (CAM 4), picked at the start of the night (`home`). He reads
+// his script (shown in the office) line by line. An important line sends him to a door (on request):
+// "Bon-Bon, go get 'em!" the door on his side, "Let's give him a surprise!" the other one. He walks to
+// that side of the auditorium with steps you hear from that side, and ffrRun seconds later he's at the
+// door. Shut it (normal or heavy) in time; then he goes back to his side.
 function updateFuntimeFreddy(dt) {
   const F = G.ffr;
   if (F.level === 0) return;
@@ -441,7 +445,8 @@ function updateFuntimeFreddy(dt) {
     sfx.voice(line.important);
     if (line.important && F.phase === 'idle') {
       F.phase = 'going';
-      F.pos = pick(['L', 'R']);
+      const other = F.home === 'L' ? 'R' : 'L';
+      F.pos = line.text === FFR_SAME_SIDE ? F.home : other;
       F.goT = ffrRun(F.level);
       F.stepped = false;
       sfx.ffrStep(F.pos, 0);
@@ -464,7 +469,7 @@ function updateFuntimeFreddy(dt) {
 function freddyBack() {
   const F = G.ffr;
   F.phase = 'idle';
-  F.pos = 'C';
+  F.pos = F.home;   // back to his side of the auditorium
   dirty = true;
 }
 

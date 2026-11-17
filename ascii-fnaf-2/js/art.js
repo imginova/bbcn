@@ -357,7 +357,7 @@ const ROOM_TINTS = {
 
 // Where the characters are drawn on the cameras ([row, column] of the drawing's top-left corner).
 const FFX_SPOT = [3, 24];                                  // Funtime Foxy on the show stage
-const FFR_SPOTS = { C: [4, 23], L: [5, 4], R: [5, 44] };   // Funtime Freddy in the auditorium: middle, left side, right side
+const FFR_SPOTS = { L: [5, 4], R: [5, 44] };               // Funtime Freddy in the auditorium: left side, right side
 const PTR_SPOT = [9, 20];                                  // Plushtrap in the oxygen room
 const MRN_SPOTS = [[9, 4], [9, 11], [9, 47], [9, 53]];     // the Minireenas, dancing around the oxygen room (on request)
 const ENNARD_O2_SPOT = [2, 38];                            // Ennard, wrapped around the air supply panel in the oxygen room (on request)

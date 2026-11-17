@@ -72,7 +72,7 @@ const BALLORA = {
 };
 const FFREDDY = {
   id: 'ffr', name: 'Funtime Freddy', where: 'EITHER DOOR',
-  desc: 'His script for the night is on the office wall. When an important line comes up ("Bon-Bon, go get him!" or "Let\'s give him a surprise!"), he heads for a door. Watch CAM 4 (if he goes to the left of the room, it\'s the left door) or listen for his steps, and shut that door.',
+  desc: 'He stands on one side of the auditorium (CAM 4; the script on the office wall says which). "Bon-Bon, go get \'em!" sends him to the door on his side, "Let\'s give him a surprise!" to the other door. Shut that door before he gets there.',
 };
 const FFOXY = {
   id: 'ffx', name: 'Funtime Foxy', where: 'CAM 3',
@@ -140,7 +140,11 @@ const NIGHTMARES = [NBONNIE, NCHICA, NFOXY, NFREDBEAR];
 
 // ---------- Funtime Freddy's script ----------
 // The lines that send him to a door, and the ones that are just talk.
-const FFR_ATTACK_LINES = ['Bon-Bon, go get him!', 'Let\'s give him a surprise!'];
+// He stands on one side of the auditorium (on request). "Bon-Bon, go get 'em!" attacks the door on HIS
+// side; "Let's give him a surprise!" attacks the OTHER side.
+const FFR_SAME_SIDE = 'Bon-Bon, go get \'em!';
+const FFR_OTHER_SIDE = 'Let\'s give him a surprise!';
+const FFR_ATTACK_LINES = [FFR_SAME_SIDE, FFR_OTHER_SIDE];
 const FFR_TALK = ['Hey there, buddy!', 'Is it time for the show?', 'Bon-Bon, are you there?',
   'Who\'s ready to party?', 'Ha ha ha!', 'Oh, Bon-Bon...', 'Let\'s have some fun!', 'Did you hear that?',
   'Stay right there!', 'What a night!', 'Shhh... listen.', 'Bon-Bon, quiet down!'];

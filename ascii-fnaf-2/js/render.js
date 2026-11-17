@@ -190,6 +190,7 @@ function listenText(side) {
 function renderBoard() {
   const F = G.ffr;
   if (F.level > 0) {
+    $('ffrSide').textContent = F.home === 'L' ? 'LEFT' : 'RIGHT';   // which side of the auditorium he's on tonight
     setHtml($('scriptLines'), F.script.map((line, i) =>
       `<li class="${line.important ? 'important' : ''}${line.done ? ' done' : ''}${i === F.said ? ' now' : ''}">` +
       `<span class="t">${clockLabel(line.t)}</span> ${escText(line.text)}</li>`).join(''));
