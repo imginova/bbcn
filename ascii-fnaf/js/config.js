@@ -77,7 +77,7 @@ const MASK_HOLD = 2.0;
 const TOY_BONNIE_INTERVAL = 3;     // fast
 const TOY_CHICA_INTERVAL = 5;      // medium
 const BB_INTERVAL = 4.5;
-const SPRINGTRAP_INTERVAL = 8;     // slow
+const SPRINGTRAP_INTERVAL = 6.5;   // slow (it was 8; a little faster on request)
 // How easily each one is fooled by an audio lure (the chance it follows one): 0 never, 1 always.
 // Each went down by 0.1 when the vents grew to 15 (on request: the longer way in gives you more time,
 // so lures got a little weaker). They were 0.9, 0.45, 0.45 and 0.95.
