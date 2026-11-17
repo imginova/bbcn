@@ -272,7 +272,11 @@ pre [class*="c-"] { font-weight: 600; }
 .board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
 .board-head { font-size: 11px; letter-spacing: .14em; color: var(--dim); }
 .script { border: 1px solid var(--line); padding: 6px 10px; flex: 1 1 380px; max-width: 560px; background: rgba(255,255,255,.012); }
-.script ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 14px; font-size: 12px; line-height: 1.5; }
+/* The lines read top to bottom down the left column, then down the right one (on request, easier to
+   read than left-right-left-right). `columns: 2 220px` means at most 2 columns, each at least 220px
+   wide, so a narrow phone screen gets just one. */
+.script ol { list-style: none; margin: 4px 0 0; padding: 0; columns: 2 220px; column-gap: 14px; font-size: 12px; line-height: 1.5; }
+.script li { break-inside: avoid; }   /* never split one line across the two columns */
 .script li .t { color: var(--dim); font-variant-numeric: tabular-nums; }
 .script li.important { color: var(--c-ffr); font-weight: 600; }
 .script li.important::before { content: "! "; color: var(--magenta); }
