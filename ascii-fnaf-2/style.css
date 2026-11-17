@@ -279,8 +279,6 @@ pre [class*="c-"] { font-weight: 600; }
 .script li.done { opacity: .4; }
 .script li.now { opacity: 1; color: var(--magenta); }
 .important-key { color: var(--magenta); }
-.ffr-side { color: var(--c-ffr); }   /* the side Funtime Freddy is on tonight */
-
 /* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
    through its two eye holes. The holes let clicks through; the mask itself blocks them. */
 .mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 3; }

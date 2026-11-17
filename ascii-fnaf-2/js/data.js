@@ -72,7 +72,7 @@ const BALLORA = {
 };
 const FFREDDY = {
   id: 'ffr', name: 'Funtime Freddy', where: 'EITHER DOOR',
-  desc: 'He stands on one side of the auditorium (CAM 4; the script on the office wall says which). "Bon-Bon, go get \'em!" sends him to the door on his side, "Let\'s give him a surprise!" to the other door. Shut that door before he gets there.',
+  desc: 'He stands on one side of the auditorium: check CAM 4 to see which. His script is on the office wall. "Bon-Bon, go get \'em!" sends him to the door on his side, "Let\'s give him a surprise!" to the other door. Shut that door before he gets there.',
 };
 const FFOXY = {
   id: 'ffx', name: 'Funtime Foxy', where: 'CAM 3',
@@ -164,18 +164,18 @@ const PRESETS = [
   { name: 'First shift', v: 1, levels: lv({ nfr: 5, nbn: 5, nch: 5, bab: 5 }) },
   { name: 'Circus', v: 2, levels: lv({ bab: 12, bdb: 12, ffx: 8 }) },                     // Baby and her Bidybabs
   { name: 'Ballerina', v: 3, levels: lv({ bal: 12, mrn: 12, end: 8 }) },                   // Ballora and her Minireenas
-  { name: 'Showtime', v: 2, levels: lv({ ffr: 12, ffx: 15, bal: 8 }) },                    // the Funtime Auditorium
+  { name: 'Showtime', v: 3, levels: lv({ ffr: 12, ffx: 15, bal: 8 }) },                    // the Funtime Auditorium
   { name: 'Heavy doors', v: 1, levels: lv({ nbn: 15, nch: 15, nfx: 10, nfb: 10 }) },       // the nightmares only
   { name: 'Mask up', v: 1, levels: lv({ wbn: 15, bab: 12, nfr: 8 }) },
   { name: 'Short of breath', v: 2, levels: lv({ mrn: 12, nmt: 10, jck: 10, ptr: 10 }) },  // everything that takes oxygen
   { name: 'Brownout', v: 1, levels: lv({ ncp: 15, nmg: 15, nfr: 10, bdb: 8 }) },           // everything that takes power
-  { name: 'Sister Location', v: 4, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
+  { name: 'Sister Location', v: 5, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
   { name: 'Bedroom', v: 1, levels: lv({ nfr: 15, nbn: 15, nch: 15, nfx: 15, nfb: 15, ptr: 12 }) },   // FNAF 4
   { name: 'Halloween', v: 2, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10, nbb: 12 }) },   // Nightmare BB joined on v2
-  { name: 'Everyone at 5', v: 5, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 5, levels: everyone(10) },
-  { name: 'Everyone at 15', v: 5, levels: everyone(15) },
-  { name: 'All 20', v: 5, levels: everyone(20) },
+  { name: 'Everyone at 5', v: 6, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 6, levels: everyone(10) },
+  { name: 'Everyone at 15', v: 6, levels: everyone(15) },
+  { name: 'All 20', v: 6, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.
