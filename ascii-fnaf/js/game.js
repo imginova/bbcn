@@ -484,8 +484,9 @@ function moveVentSel(dRow, dCol) {
 
 // Playing an audio lure in vent `room` (1 to 15). It's free, but needs the monitor up on VENTS,
 // can't be played in Freddy Endo's vent, and needs LURE_COOLDOWN seconds between lures.
-// Each crawler in that vent or next to it may follow it (LURE_FOOLED says how likely) and then
-// stays to listen for LURE_STALL of its move chances.
+// Each crawler in a vent next to it may follow it (LURE_FOOLED says how likely) and then stays to
+// listen for LURE_STALL of its move chances. A lure in a crawler's OWN vent does nothing to it (on
+// request: it used to hold them in place, which made stalling them forever too easy).
 function playLure(room) {
   if (!ready()) return;
   if (!G.cam || G.tab !== 'vents' || G.t < G.lureReady) { sfx.deny(); return; }
@@ -500,7 +501,8 @@ function playLure(room) {
   sfx.lure();
   for (const c of CRAWLERS) {
     const V = G[c.id];
-    if (V.level === 0 || V.present || ventSteps(V.room, room) > LURE_REACH) continue;
+    const steps = ventSteps(V.room, room);   // 0 means it's already in that vent
+    if (V.level === 0 || V.present || steps === 0 || steps > LURE_REACH) continue;
     if (Math.random() >= LURE_FOOLED[c.id]) continue;   // not fooled this time
     V.room = room;
     V.stall = LURE_STALL;

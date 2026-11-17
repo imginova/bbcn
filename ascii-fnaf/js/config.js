@@ -85,7 +85,7 @@ const SPRINGTRAP_INTERVAL = 6;     // slow (it was 8, then 6.5; a little faster 
 // Later Toy Bonnie and Toy Chica got a lot harder to fool (on request): they were 0.8 and 0.35.
 // Then Springtrap a little harder to fool (on request): he was 0.85.
 const LURE_FOOLED = { tbn: 0.5, tch: 0.15, bb: 0.35, spr: 0.75 };
-const LURE_REACH = 1;        // a lure works on crawlers in that vent or one vent away
+const LURE_REACH = 1;        // a lure works on crawlers one vent away (not in that vent itself)
 const LURE_STALL = 2;        // a fooled crawler skips this many of its move chances
 const LURE_COOLDOWN = 2;     // seconds before you can play another lure
 const LURE_SHOW = 1.5;       // seconds the lure shows on the vent map

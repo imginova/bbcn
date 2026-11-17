@@ -84,8 +84,10 @@ function renderGame(now) {
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
   $('btnCam').disabled = off;
   // When the music box runs low, a ♪! warning shows on the Camera button (and on CAM 7's map button).
+  // While Shadow Freddy sits on a camera, a red ! shows there too (on request), like on his map button.
   $('stCam').textContent = off ? 'NO POWER' : G.mask ? 'MASK ON' : G.cam ? 'UP' : 'DOWN';
   $('camWarn').hidden = !boxLow() || off;
+  $('camAlert').hidden = !G.sfr.present || off;
   $('btnFlash').classList.toggle('on', flashOn());
   $('btnFlash').disabled = off;
   $('stFlash').textContent = off ? 'NO POWER'
