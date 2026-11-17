@@ -191,7 +191,7 @@ function renderBoard() {
   const F = G.ffr;
   if (F.level > 0) {
     setHtml($('scriptLines'), F.script.map((line, i) =>
-      `<li class="${line.important ? 'important' : ''}${line.done ? ' done' : ''}${i === F.said ? ' now' : ''}">` +
+      `<li class="${line.done ? 'done' : ''}${i === F.said ? ' now' : ''}">` +   // important lines aren't marked (on request)
       `<span class="t">${clockLabel(line.t)}</span> ${escText(line.text)}</li>`).join(''));
   }
 }

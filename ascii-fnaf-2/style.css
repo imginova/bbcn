@@ -278,11 +278,10 @@ pre [class*="c-"] { font-weight: 600; }
 .script ol { list-style: none; margin: 4px 0 0; padding: 0; columns: 2 220px; column-gap: 14px; font-size: 12px; line-height: 1.5; }
 .script li { break-inside: avoid; }   /* never split one line across the two columns */
 .script li .t { color: var(--dim); font-variant-numeric: tabular-nums; }
-.script li.important { color: var(--c-ffr); font-weight: 600; }
-.script li.important::before { content: "! "; color: var(--magenta); }
+/* Every line looks the same (on request: the important ones aren't highlighted; read them yourself).
+   Lines already said fade, and the one he just said lights up. */
 .script li.done { opacity: .4; }
 .script li.now { opacity: 1; color: var(--magenta); }
-.important-key { color: var(--magenta); }
 /* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
    through its two eye holes. The holes let clicks through; the mask itself blocks them. */
 .mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
