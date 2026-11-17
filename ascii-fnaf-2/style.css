@@ -27,25 +27,27 @@
   --danger: #ff4466;
   --magenta: #ff3fb4; /* the neon lights */
   --teal: #3fe0d0;    /* the screens and gauges */
-  /* One color per character (the c- classes below use them). */
-  --c-nfr: #a8743f;   /* Nightmare Freddy: dark brown (red eyes as accents) */
-  --c-nbn: #5b5be6;   /* Nightmare Bonnie: deep blue-purple */
-  --c-nch: #e8d23c;   /* Nightmare Chica: dirty yellow */
-  --c-nfx: #d2413a;   /* Nightmare Foxy: dark red */
-  --c-nfb: #d9a521;   /* Nightmare Fredbear: gold (purple hat as an accent) */
-  --c-bab: #ff7a5c;   /* Circus Baby: her red-orange hair and face paint */
-  --c-bal: #5aa8ff;   /* Ballora: blue */
-  --c-ffr: #f4eef8;   /* Funtime Freddy: white (pink and purple as accents) */
-  --c-ffx: #ffb3d9;   /* Funtime Foxy: white and pink */
-  --c-end: #9aa6b2;   /* Ennard: bare grey wires */
-  --c-mrn: #c9a8ff;   /* Minireenas: light purple */
-  --c-nmt: #e8e8ee;   /* the Nightmarionette: a white face on black */
-  --c-wbn: #6a76c9;   /* Withered Bonnie: faded blue */
-  --c-bdb: #ff9ad5;   /* Bidybabs: pink */
-  --c-jck: #ff8c1a;   /* Jack-o Chica: glowing orange */
-  --c-ptr: #6ccf5a;   /* Plushtrap: green */
-  --c-ncp: #ff4fa3;   /* Nightmare Cupcake: hot pink */
-  --c-nmg: #f0dfee;   /* Nightmare Mangle: white and pink */
+  /* One color per character (the c- classes below use them), following the official designs (on
+     request: "more accurate"). The second colors (eyes, hats, bow ties, hair...) are the accent masks
+     in art.js. */
+  --c-nfr: #6e4526;   /* Nightmare Freddy: dark, worn brown (black hat and bow tie, pale eyes) */
+  --c-nbn: #3d3fa8;   /* Nightmare Bonnie: deep indigo blue (magenta eyes, red bow tie) */
+  --c-nch: #d9b928;   /* Nightmare Chica: dirty dark yellow (violet eyes, white bib, pink cupcake) */
+  --c-nfx: #a8302b;   /* Nightmare Foxy: dark rusty red (yellow eyes, a steel hook) */
+  --c-nfb: #d6a630;   /* Nightmare Fredbear: gold (purple hat and bow tie, pale eyes) */
+  --c-bab: #f3dccf;   /* Circus Baby: her pale face (red-orange pigtails, green eyes, red outfit) */
+  --c-bal: #e2d6f5;   /* Ballora: pale face (dark blue hair, eyes closed, purple dress) */
+  --c-ffr: #f4eef8;   /* Funtime Freddy: white (magenta hat, bow tie and cheeks, blue eyes, Bon-Bon in blue) */
+  --c-ffx: #f7eef3;   /* Funtime Foxy: white (pink snout, ears and belly, yellow eyes) */
+  --c-end: #8f99a6;   /* Ennard: a tangle of grey wires behind a white mask */
+  --c-mrn: #b9a2f0;   /* Minireenas: lilac dancers with white faces */
+  --c-nmt: #141414;   /* the Nightmarionette: black (outlined in white so it shows), a white face */
+  --c-wbn: #4f5ca8;   /* Withered Bonnie: faded dark blue, no face, red eye glints */
+  --c-bdb: #f2cdb8;   /* Bidybabs: peachy dolls with blue eyes */
+  --c-jck: #ff8c1a;   /* Jack-o Chica: glowing orange, like a lit pumpkin */
+  --c-ptr: #7d9b3c;   /* Plushtrap: olive green */
+  --c-ncp: #ff6fb1;   /* Nightmare Cupcake: pink frosting (blue eyes, a lit candle) */
+  --c-nmg: #f2e8f0;   /* Nightmare Mangle: white and pink, torn apart */
   --font-display: "Share Tech Mono", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   /* The ASCII art's font size. Smaller than Line 1 (on request) so the pictures can have more detail:
@@ -141,6 +143,8 @@ pre.art, .viewport, .hud, .controls, .map, .feed-head, .icon, .trio, .lvrow .ctr
 .c-end { color: var(--c-end); } .c-mrn { color: var(--c-mrn); } .c-nmt { color: var(--c-nmt); }
 .c-wbn { color: var(--c-wbn); } .c-bdb { color: var(--c-bdb); } .c-jck { color: var(--c-jck); }
 .c-ptr { color: var(--c-ptr); } .c-ncp { color: var(--c-ncp); } .c-nmg { color: var(--c-nmg); }
+/* The Nightmarionette is black: a thin white glow outlines each character, or it would vanish on the dark screen. */
+.c-nmt { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
 pre [class*="c-"] { font-weight: 600; }
 /* Accent colors: a second color on parts of the drawings (the masks in art.js), mostly the eyes.

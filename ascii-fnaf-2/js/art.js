@@ -98,38 +98,47 @@ function tint(lines, chars, color) {
   lines.accent = lines.map((line, i) => Array.from(line).map((ch, k) => chars.includes(ch) ? color : ((old[i] || '')[k] || ' ')).join(''));
   return lines;
 }
+// region(drawing, firstRow, lastRow, color, firstCol, lastCol): colors every character (not the spaces) in
+// one part of a drawing, like a hat, a bow tie or a bib, on top of the mask it already has.
+function region(lines, r1, r2, color, c1 = 0, c2 = 999) {
+  const old = lines.accent || [];
+  lines.accent = lines.map((line, i) => Array.from(line).map((ch, k) =>
+    i >= r1 && i <= r2 && k >= c1 && k <= c2 && ch !== ' ' ? color : ((old[i] || '')[k] || ' ')).join(''));
+  return lines;
+}
 
 // ---------- menu icons ----------
 // A tiny 3-line face of each character, used on the title, the custom night screen and the end
 // screens. Written as normal strings, so a backslash is typed \\ (two of them make one).
 const ICONS = {
-  nfr: ['o[_]o', '(@^@)', ' VVV '],         // Nightmare Freddy: Freddles on his shoulders, red eyes, too many teeth
-  nbn: ['|\\ /|', '(@ @)', ' VVV '],        // Nightmare Bonnie: torn ears, magenta eyes, sharp teeth
-  nch: [' \\|/ ', '(@>@)', '|EAT|'],        // Nightmare Chica: beak full of teeth, LET'S EAT bib
-  nfx: ['/\\_/\\', '(@ @)', 'JVVV/'],       // Nightmare Foxy: yellow eyes, teeth, hook
-  nfb: [' [_] ', '(@^@)', ' VVV '],         // Nightmare Fredbear: gold, purple hat and bow tie
-  bab: ['@@ @@', '(o.o)', ' |=| '],         // Circus Baby: red pigtails, green eyes
-  bal: [' ~~~ ', '(- -)', ' /|\\ '],        // Ballora: blue hair, eyes closed, dancing
-  ffr: ['[_] ^', '(o^o)', ' >=<b'],         // Funtime Freddy: white and pink, Bon-Bon on his hand
-  ffx: ['/\\_/\\', '(o o)', ' \\v/ '],      // Funtime Foxy: white and pink, yellow eyes
-  end: ['\\|||/', '(O O)', '/|_|\\'],       // Ennard: a mess of wires behind a mask
-  mrn: [' .^. ', '(O O)', ' /|\\ '],        // a Minireena: little purple dancer
-  nmt: [' .-. ', '(O O)', ' VVV '],         // the Nightmarionette: white face on black
-  wbn: ['|\\ /|', '( : )', ' VVV '],        // Withered Bonnie: no face, just wires
-  bdb: [' .-. ', '(o o)', ' /|\\ '],        // a Bidybab: small pink baby doll
+  nfr: ['o[_]o', '(@^@)', ' VVV '],         // Nightmare Freddy: black hat, Freddles on his shoulders, pale eyes, too many teeth
+  nbn: ['|\\ /|', '(@ @)', '>VVV<'],        // Nightmare Bonnie: torn ears, magenta eyes, sharp teeth, red bow tie
+  nch: [' \\|/ ', '(@>@)', '|EAT|'],        // Nightmare Chica: violet eyes, orange beak, white LET'S EAT bib
+  nfx: ['/\\_/\\', '(@ @)', 'JVVV/'],       // Nightmare Foxy: yellow eyes, teeth, steel hook
+  nfb: [' [_] ', '(@^@)', '>VVV<'],         // Nightmare Fredbear: gold, purple hat and bow tie, pale eyes
+  bab: ['@@ @@', '(o.o)', ' |=| '],         // Circus Baby: red-orange pigtails, green eyes, red nose and outfit
+  bal: [' ~~~ ', '(- -)', ' /|\\ '],        // Ballora: dark blue hair, eyes closed, purple dress
+  ffr: ['[_] ^', '(o^o)', ' >=<b'],         // Funtime Freddy: magenta hat and bow tie, blue eyes, Bon-Bon (blue) on his hand
+  ffx: ['/\\_/\\', '(o o)', ' \\v/ '],      // Funtime Foxy: white, pink ears and snout, yellow eyes
+  end: ['\\|||/', '(O O)', '/|_|\\'],       // Ennard: a mess of wires behind a white mask
+  mrn: [' .^. ', '(O O)', ' /|\\ '],        // a Minireena: little lilac dancer with a white face
+  nmt: [' .-. ', '(O O)', ' VVV '],         // the Nightmarionette: a white face on black
+  wbn: ['|\\ /|', '(* *)', ' VVV '],        // Withered Bonnie: no face, just red eye glints and an endoskeleton jaw
+  bdb: [' .-. ', '(o o)', ' /|\\ '],        // a Bidybab: small peachy doll with blue eyes
   jck: [' \\|/ ', '(^ ^)', '|EAT|'],        // Jack-o Chica: glowing orange, carved eyes
-  ptr: ['/\\/\\ ', '(O O)', ' VVV '],       // Plushtrap: little green rabbit, big grin
-  ncp: ['  ,  ', '(O O)', '\\VVV/'],        // Nightmare Cupcake: pink, sharp teeth
+  ptr: ['/\\/\\ ', '(O O)', ' VVV '],       // Plushtrap: little olive-green rabbit, big grin
+  ncp: ['  ,  ', '(O O)', '\\VVV/'],        // Nightmare Cupcake: pink, a lit candle, blue eyes, sharp teeth
   nmg: ['_/\\_ ', '(@-O)', ' VVV '],        // Nightmare Mangle: torn apart, two heads
 };
 // Which line of the icon is the face (the middle one for everyone).
 const FACE_ROW = {};
 // The icons' accent masks (same idea as the drawings' masks: one letter per character).
 const ICON_ACCENTS = {
-  nfr: ['', ' r r'], nbn: ['', ' m m'], nch: ['', ' r r'], nfx: ['', ' y y'], nfb: [' vvv', ' w w', ''],
-  bab: ['rr rr', '  g g'.slice(1)], bal: ['bbb'.padStart(4)], ffr: ['', ' b b', '    p'], ffx: ['', ' y y'],
-  end: ['', ' w w'], mrn: ['', ' w w'], nmt: ['', ' w w'], wbn: ['', '  r'], bdb: ['', ' b b'],
-  jck: ['', ' y y'], ptr: ['', ' w w'], ncp: ['', ' w w'], nmg: ['', ' r w'],
+  nfr: [' xxx', ' w w', ' www'], nbn: ['', ' m m', 'rwwwr'], nch: ['', ' vov', 'wwwww'], nfx: ['', ' y y', 'Gwww'],
+  nfb: [' vvv', ' w w', 'vwwwv'], bab: ['rr rr', ' grg', '  r'], bal: [' bbb', ' v v', ' vvv'],
+  ffr: ['mmm b', ' b b', ' mmmb'], ffx: ['p   p', ' y y', '  p'], end: ['', ' w w', ''], mrn: ['', 'wwwww'],
+  nmt: [' www', 'wwwww', ' www'], wbn: ['', ' r r', ' GGG'], bdb: ['', ' b b'], jck: ['', ' y y', 'yyyyy'],
+  ptr: ['', ' w w', ' www'], ncp: ['  y', ' b b', ' www'], nmg: ['', ' r y', ' www'],
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -719,9 +728,108 @@ const SPRITES = {
          ~      '---------'      ~`), 'r', '@'),
   },
 };
-// Circus Baby's hair (@) is red, and Nightmare Mangle's second eye (O) is white.
-for (const look of Object.values(SPRITES.bab)) tint(look, '@', 'r');
-for (const look of Object.values(SPRITES.nmg)) tint(look, 'O', 'w');
+// ---------- accurate details ----------
+// On request ("make colors and designs more accurate"): the second colors of the official designs,
+// added on top of the eye colors with tint() and region() (see "accent colors" above).
+// Row and column numbers count from 0 at the drawing's top-left corner.
+const looks = id => Object.values(SPRITES[id]);
+
+// Nightmare Freddy: a black top hat and bow tie, pale eyes, and Freddles on his shoulders and belly.
+SPRITES.nfr.scare = art(String.raw`
+                 _______
+                |       |
+              __|_______|__
+     _____   /             \   _____
+    ( * * ) |   .-.   .-.   | ( * * )
+     \_^_/  |  ( @ ) ( @ )  |  \_^_/
+            |   '-'   '-'   |
+            |      /^\      |
+            |  |VVVVVVVVV|  |
+            |  |AAAAAAAAA|  |
+             \     >=<     /
+              '---( * )---'
+                  \_^_/`);
+eyes(SPRITES.nfr.scare, 'w');
+region(SPRITES.nfr.scare, 0, 2, 'x');
+tint(SPRITES.nfr.scare, '>=<', 'x');
+eyes(SPRITES.nfr.office, 'w');
+
+// Nightmare Bonnie: a red bow tie under all those teeth.
+SPRITES.nbn.scare.push('                >===<');
+eyes(SPRITES.nbn.scare, 'm');
+tint(SPRITES.nbn.scare, '>=<', 'r');
+
+// Nightmare Chica: violet eyes, a white LET'S EAT bib, and her pink cupcake with blue eyes.
+for (const look of looks('nch')) eyes(look, 'v', '@');
+region(SPRITES.nch.cam, 4, 4, 'w');
+region(SPRITES.nch.near, 7, 8, 'w');
+region(SPRITES.nch.scare, 7, 7, 'w', 10, 21);
+region(SPRITES.nch.scare, 8, 10, 'p', 0, 7);
+tint(SPRITES.nch.scare, '*', 'b');
+
+// Nightmare Foxy: a steel hook.
+tint(SPRITES.nfx.scare, 'J', 'G');
+
+// Nightmare Fredbear: a purple top hat and bow tie.
+region(SPRITES.nfb.cam, 0, 0, 'v');
+region(SPRITES.nfb.near, 0, 2, 'v');
+region(SPRITES.nfb.scare, 0, 2, 'v');
+for (const look of looks('nfb')) tint(look, '>=<', 'v');
+
+// Circus Baby: red-orange pigtails (@), green eyes, a red outfit.
+region(SPRITES.bab.cam, 3, 3, 'r');
+region(SPRITES.bab.near, 5, 6, 'r');
+region(SPRITES.bab.office, 4, 5, 'r');
+region(SPRITES.bab.close, 7, 9, 'r');
+region(SPRITES.bab.scare, 7, 8, 'r');
+for (const look of looks('bab')) tint(look, '@', 'o');
+
+// Ballora: dark blue hair, purple eyelids (her eyes are closed), a purple dress.
+region(SPRITES.bal.scare, 0, 1, 'b');
+region(SPRITES.bal.scare, 3, 3, 'v', 14, 22);
+region(SPRITES.bal.scare, 8, 9, 'v');
+
+// Funtime Freddy: a magenta top hat and bow tie, blue eyes, and Bon-Bon (blue) on his hand.
+eyes(SPRITES.ffr.cam, 'b', 'o');
+region(SPRITES.ffr.cam, 0, 0, 'm', 0, 6);
+region(SPRITES.ffr.cam, 0, 1, 'b', 8, 12);
+region(SPRITES.ffr.scare, 0, 2, 'm', 0, 20);
+region(SPRITES.ffr.scare, 1, 4, 'b', 26, 40);
+for (const look of looks('ffr')) tint(look, '=', 'm');
+
+// Funtime Foxy: pink ears and snout.
+region(SPRITES.ffx.cam, 0, 0, 'p');
+tint(SPRITES.ffx.cam, 'v', 'p');
+region(SPRITES.ffx.scare, 0, 0, 'p');
+region(SPRITES.ffx.scare, 5, 5, 'p', 13, 18);
+
+// Ennard: a white mask with blue eyes in the middle of the wires.
+region(SPRITES.end.scare, 1, 6, 'w', 12, 21);
+for (const look of looks('end')) tint(look, '*O', 'c');
+
+// Minireenas: white faces. The Nightmarionette: a white face on a black body.
+region(SPRITES.mrn.office, 1, 1, 'w');
+region(SPRITES.mrn.scare, 1, 1, 'w');
+region(SPRITES.nmt.office, 0, 5, 'w');
+region(SPRITES.nmt.scare, 0, 6, 'w');
+
+// Withered Bonnie: no face, just two red glints and a grey endoskeleton jaw.
+SPRITES.wbn.office[5] = SPRITES.wbn.office[5].replace('::', '**');
+SPRITES.wbn.scare[6] = SPRITES.wbn.scare[6].replace('::', '**');
+SPRITES.wbn.scare[7] = SPRITES.wbn.scare[7].replace('::', '  ');
+for (const look of looks('wbn')) { eyes(look, 'r', '*'); tint(look, 'V', 'G'); }
+
+// Jack-o Chica: her bib glows too.
+region(SPRITES.jck.scare, 8, 8, 'y');
+
+// The Nightmare Cupcake: a lit candle and blue eyes.
+for (const look of looks('ncp')) { region(look, 0, 0, 'y'); region(look, 1, 1, 'w'); tint(look, 'O', 'b'); }
+
+// Nightmare Mangle: the second head's eye is white.
+for (const look of looks('nmg')) tint(look, 'O', 'w');
+
+// Everyone's teeth (the rows of V and A) are off-white.
+for (const id of ['nfr', 'nbn', 'nch', 'nfx', 'nfb', 'ptr', 'ncp', 'nmg', 'nmt']) for (const look of looks(id)) tint(look, 'VA', 'w');
 // Nightmare Foxy, Ballora and Bidybabs have no camera drawing: Foxy never shows up on the cameras,
 // Ballora is only heard, and Bidybabs stay in the vent. Their icon stands in on the menus.
 

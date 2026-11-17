@@ -38,7 +38,7 @@ Same as Line 1:
 - **Controlled shock** (X, or the buttons): at the desk it zaps the office (`shockDesk`); on the monitor it zaps the camera you're on (`shockCamera`). `SHOCK_COOLDOWN` 0.5 s.
 - **Vent door** (V): for Bidybab.
 - **Cameras** (on request): 1 left hall, 2 right hall (both drawn by code, `hallGrid`, a tunnel of support frames that leans to one side, "a really cool angle"), 3 show stage, 4 Funtime Auditorium (watch Funtime Freddy: the left of the room is the left door), 5 oxygen room, 6 power room, 7 parts & service, 8 storage, 9 arcade (the last three so Nightmare Mangle has places to hide).
-- **Look** (on request: "look like Sister Location", smaller font for more detail, "good atmosphere"): dark gunmetal, lavender text, magenta and teal lights, flickering lamps and signs, pipes, hazard stripes, warning signs, a low machine hum (`sfx.humOn`) and far-off clanks and drips (`sfx.ambient`). The art font is `--art` (at most 11px), the office row 84 characters wide.
+- **Look** (on request: "look like Sister Location", smaller font for more detail, "good atmosphere"): dark gunmetal, lavender text, magenta and teal lights, flickering lamps and signs, pipes, hazard stripes, warning signs, a low machine hum (`sfx.humOn`) and far-off clanks and drips (`sfx.ambient`). The art font is `--art` (at most 11px), the office row 84 characters wide. Each character's colors follow the official designs (on request 2026-11-17, "more accurate"): the main color in `style.css`, and hats, bow ties, hair, bibs, outfits, eyes and teeth as accent masks, added in the "accurate details" block of `art.js` with `tint()` and `region()`.
 
 ## The characters
 
