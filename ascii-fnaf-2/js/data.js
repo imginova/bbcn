@@ -124,11 +124,17 @@ const NMANGLE = {
   desc: 'Three cameras blink, but they\'re only on one of them, draining your power. Find the right one and shock it. A wrong shock wastes power.',
   how: 'ate the last of the power',
 };
+// Added on request after the first 18 (so he's last in SETUP).
+const NBB = {
+  id: 'nbb', name: 'Nightmare BB', where: 'OFFICE',
+  desc: 'Sits asleep in the corner of your office. When you put the monitor down he may wake up (his eyes open and he giggles): flash the lamp on him before you raise the monitor again. Never flash him while he\'s asleep.',
+  how: 'was wide awake when you looked away',
+};
 
 // Everything with a level on the custom night screen, in the order of the saved `levels` list.
 // NEW CHARACTERS GO AT THE END, so levels saved by older versions still line up.
 const SETUP = [NFREDDY, NBONNIE, NCHICA, NFOXY, NFREDBEAR, BABY, BALLORA, FFREDDY, FFOXY, ENNARD,
-  MINIREENA, NMARIONETTE, WBONNIE, BIDYBAB, JACKO, PLUSHTRAP, NCUPCAKE, NMANGLE];
+  MINIREENA, NMARIONETTE, WBONNIE, BIDYBAB, JACKO, PLUSHTRAP, NCUPCAKE, NMANGLE, NBB];
 // The nightmares that use the heavy doors and breathe behind them.
 const NIGHTMARES = [NBONNIE, NCHICA, NFOXY, NFREDBEAR];
 
@@ -161,11 +167,11 @@ const PRESETS = [
   { name: 'Brownout', v: 1, levels: lv({ ncp: 15, nmg: 15, nfr: 10, bdb: 8 }) },           // everything that takes power
   { name: 'Sister Location', v: 3, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
   { name: 'Bedroom', v: 1, levels: lv({ nfr: 15, nbn: 15, nch: 15, nfx: 15, nfb: 15, ptr: 12 }) },   // FNAF 4
-  { name: 'Halloween', v: 1, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10 }) },
-  { name: 'Everyone at 5', v: 3, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 3, levels: everyone(10) },
-  { name: 'Everyone at 15', v: 3, levels: everyone(15) },
-  { name: 'All 20', v: 3, levels: everyone(20) },
+  { name: 'Halloween', v: 2, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10, nbb: 12 }) },   // Nightmare BB joined on v2
+  { name: 'Everyone at 5', v: 4, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 4, levels: everyone(10) },
+  { name: 'Everyone at 15', v: 4, levels: everyone(15) },
+  { name: 'All 20', v: 4, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.

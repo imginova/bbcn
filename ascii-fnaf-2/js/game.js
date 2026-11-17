@@ -146,7 +146,41 @@ function newGame() {
     ncp: { level: levelOf(NCUPCAKE), present: false, chompT: 0, timer: cupcakeWait(levelOf(NCUPCAKE)) },
     // Nightmare Mangle: the room they're really in, and the rooms that only blink.
     nmg: { level: levelOf(NMANGLE), present: false, room: 'parts', decoys: [], radioT: 0, timer: mangleWait(levelOf(NMANGLE)) },
+    // Nightmare BB: asleep in the corner, or awake (after a monitor flip down) until the lamp puts him back.
+    nbb: { level: levelOf(NBB), awake: false },
+    lampUntil: 0,                  // the lamp's flash shows until this time (milliseconds)
   };
+}
+
+// ---------- Nightmare BB ----------
+// Putting the monitor down may wake him (nbbChance). Awake, he gets you the moment you raise the monitor
+// again, unless the lamp has put him back to sleep first (flashLamp).
+function bbMayWake() {
+  const B = G.nbb;
+  if (B.level === 0 || B.awake || Math.random() >= nbbChance(B.level)) return;
+  B.awake = true;
+  sfx.nbbWake();
+  dirty = true;
+}
+// Raising the monitor: fine while he sleeps; if he's awake, that's the end.
+function bbWatching() {
+  if (G.nbb.level > 0 && G.nbb.awake) { lose(NBB, null, 'cam'); return true; }
+  return false;
+}
+
+// The lamp on the desk: one short flash on Nightmare BB's corner (on request: a lamp you click, not a
+// flashlight you hold). Awake, he goes back to sleep. Asleep, the flash wakes him the wrong way.
+// It's free, and only works at the desk (not on the monitor or at a door).
+function flashLamp() {
+  if (!ready()) return;
+  if (!powered() || G.cam || G.at) { sfx.deny(); return; }
+  G.lampUntil = performance.now() + LAMP_SHOW * 1000;
+  sfx.lamp();
+  dirty = true;
+  const B = G.nbb;
+  if (B.level === 0) return;
+  if (B.awake) { B.awake = false; sfx.nbbSleep(); }
+  else lose(NBB, null, 'woke');
 }
 
 // ---------- the main rule loop ----------
@@ -697,7 +731,7 @@ function goToDoor(side) {
   if (!ready()) return;
   if (G.mask) { sfx.deny(); return; }
   G.at = G.at === side ? null : side;
-  G.cam = false;
+  if (G.cam) { G.cam = false; bbMayWake(); }   // the monitor goes down, which may wake Nightmare BB
   sfx.walk(G.at);
   dirty = true;
 }
@@ -706,9 +740,11 @@ function goToDoor(side) {
 function toggleCam() {
   if (!ready()) return;
   if (!powered() || G.mask || G.at) { sfx.deny(); return; }
+  if (!G.cam && bbWatching()) return;   // raising it with Nightmare BB awake
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
+  else bbMayWake();                     // putting it down may wake Nightmare BB
   dirty = true;
 }
 
@@ -716,6 +752,7 @@ function toggleCam() {
 function setCam(room) {
   if (!ready()) return;
   if (!powered() || G.mask || G.at) { sfx.deny(); return; }
+  if (!G.cam && bbWatching()) return;   // raising it with Nightmare BB awake
   G.cam = true;
   G.camRoom = room;
   sfx.cam();
@@ -839,6 +876,8 @@ function lose(c, side = null, why = null) {
   if (why === 'dark') message = `The power ran out. ${who} found you in the dark at ${when}.`;
   else if (why === 'o2') message = `You ran out of oxygen. ${who} ${c.how} at ${when}.`;
   else if (why === 'early') message = `You opened the ${door} heavy door too soon: ${who} was still breathing behind it. ${when}.`;
+  else if (why === 'cam') message = `You raised the monitor while ${who} was awake. ${when}.`;
+  else if (why === 'woke') message = `You flashed the lamp on ${who} while he was asleep. He didn't like that. ${when}.`;
   else if (side) message = `${who} came through the ${door} door at ${when}.`;
   else message = `${who} ${c.how} at ${when}.`;
   message += countKill(c.id, c.name);

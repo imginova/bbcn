@@ -40,6 +40,7 @@ onClick('btnMask', toggleMask);
 onClick('btnVent', toggleVent);
 onClick('btnShock', shock);
 onClick('btnShockCam', shock);
+onClick('btnLamp', flashLamp);
 onClick('btnResume', () => setPaused(false));
 onClick('btnQuit', () => { showPause(false); goSetup(); });
 onClick('btnAgainWin', startNight);
@@ -185,6 +186,7 @@ document.addEventListener('keydown', e => {
     else if (k === 'w') toggleMask();
     else if (k === 'x') shock();
     else if (k === 'v') toggleVent();
+    else if (k === 'f') flashLamp();
     // 1 to 9 pick a camera. /^[1-9]$/ means "exactly one digit from 1 to 9".
     else if (/^[1-9]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h') openHowto();

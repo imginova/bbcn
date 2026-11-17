@@ -48,6 +48,7 @@
   --c-ptr: #7d9b3c;   /* Plushtrap: olive green */
   --c-ncp: #ff6fb1;   /* Nightmare Cupcake: pink frosting (blue eyes, a lit candle) */
   --c-nmg: #f2e8f0;   /* Nightmare Mangle: white and pink, torn apart */
+  --c-nbb: #7b6a90;   /* Nightmare BB: a blackened, dusky purple BB (yellow eyes, red stripes and propeller) */
   --font-display: "Share Tech Mono", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   /* The ASCII art's font size. Smaller than Line 1 (on request) so the pictures can have more detail:
@@ -145,6 +146,7 @@ pre.art, .viewport, .hud, .controls, .map, .feed-head, .icon, .trio, .lvrow .ctr
 .c-ptr { color: var(--c-ptr); } .c-ncp { color: var(--c-ncp); } .c-nmg { color: var(--c-nmg); }
 /* The Nightmarionette is black: a thin white glow outlines each character, or it would vanish on the dark screen. */
 .c-nmt { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
+.c-nbb { color: var(--c-nbb); }
 /* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
 pre [class*="c-"] { font-weight: 600; }
 /* Accent colors: a second color on parts of the drawings (the masks in art.js), mostly the eyes.
@@ -250,6 +252,8 @@ pre [class*="c-"] { font-weight: 600; }
 .office pre[data-door] { cursor: pointer; }
 /* The controlled shock: the whole office flashes yellow-white for a moment. */
 .office.zap pre { filter: brightness(2.2) saturate(.4); text-shadow: 0 0 6px #fff7b0; }
+/* The desk lamp's flash: a warm light over the office for a moment. */
+.office.lamp-on #officeArt { filter: brightness(1.6); text-shadow: 0 0 6px rgba(255, 230, 160, .6); }
 /* After a power-out everything goes dark. */
 .office.dark pre, .office.dark pre span { color: #18151f !important; text-shadow: none !important; }
 /* What you hear at a door. */
@@ -295,8 +299,9 @@ pre [class*="c-"] { font-weight: 600; }
 .map .mw.alert { animation: blink 0.5s steps(2) infinite; }
 .map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
 
-/* The ten buttons: two rows of five. */
-.controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+/* The eleven buttons: two rows of six columns, the Camera button two columns wide in the top row. */
+.controls { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.controls .cam-btn { grid-column: span 2; }
 .controls button { padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; }
 .controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
 .controls button.on { border-color: var(--teal); background: rgba(63,224,208,.1); }

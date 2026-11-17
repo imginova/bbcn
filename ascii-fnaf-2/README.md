@@ -1,6 +1,6 @@
 # ASCII FNAF: Line 2
 
-A custom-night fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. This one mixes **Sister Location** and **FNAF 4**: you sit deep underground in Circus Baby's Entertainment and Rental from 12 AM to 6 AM with two doors, two heavy doors, a vent door, a mask, a controlled shock, nine cameras, a battery that drains whenever you use anything and oxygen that never comes back. Eighteen characters each get their own level from 0 to 20 on the custom night screen, and each one works its own way (the rules are in the game's **How to play**).
+A custom-night fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. This one mixes **Sister Location** and **FNAF 4**: you sit deep underground in Circus Baby's Entertainment and Rental from 12 AM to 6 AM with two doors, two heavy doors, a vent door, a mask, a controlled shock, a desk lamp, nine cameras, a battery that drains whenever you use anything and oxygen that never comes back. Nineteen characters each get their own level from 0 to 20 on the custom night screen, and each one works its own way (the rules are in the game's **How to play**).
 
 It's a separate game from [Line 1](../ascii-fnaf/), with its own saves.
 
@@ -21,7 +21,7 @@ The game is split into files by job, the same way as Line 1. Every file starts w
 | `style.css` | How everything looks: the Sister Location colors, one color per character, fonts, layout, flickering lights |
 | `js/helpers.js` | Tiny tools: `$`, `store` (saving in the browser), `pick`, `rand`, `byLevel` |
 | `js/config.js` | **The numbers to tweak**: power, oxygen, timings and how hard each level is |
-| `js/data.js` | The cameras, the 18 characters, Funtime Freddy's lines and the challenges |
+| `js/data.js` | The cameras, the 19 characters, Funtime Freddy's lines and the challenges |
 | `js/sound.js` | Every sound effect, generated in code (there are no sound files) |
 | `js/art.js` | The ASCII pictures: the halls (drawn by code), the rooms, the office and every character's drawings |
 | `js/game.js` | The rules: what each character does, doors, power, oxygen, the shock, winning and losing |

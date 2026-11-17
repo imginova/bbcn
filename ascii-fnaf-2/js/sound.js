@@ -185,6 +185,14 @@ const sfx = (() => {
       noise(0.4, { vol: 0.1 + 0.25 * size, freq: 500 });
     },
 
+    // ----- Nightmare BB and the lamp -----
+    // Waking up: a creepy little giggle from the corner of the office.
+    nbbWake() { for (let i = 0; i < 5; i++) tone(700 + i * 60 + (i % 2) * 120, 0.08, { type: 'square', vol: 0.12, delay: i * 0.09, pan: 0.5 }); },
+    // Back to sleep: a falling hum.
+    nbbSleep() { tone(500, 0.5, { type: 'triangle', vol: 0.1, slide: -320, pan: 0.5 }); },
+    // The desk lamp: a click and a short electric buzz.
+    lamp() { tone(1200, 0.03, { vol: 0.12 }); tone(120, 0.3, { type: 'sawtooth', vol: 0.06, delay: 0.02 }); },
+
     // ----- Nightmare Freddy's Freddles -----
     freddle() {
       const pan = Math.random() < 0.5 ? -0.3 : 0.3;

@@ -57,6 +57,8 @@ function renderGame(now) {
   btn('btnCam', G.cam, 'stCam', off ? 'NO POWER' : G.mask ? 'MASK ON' : G.at ? 'AT DOOR' : G.cam ? 'UP' : 'DOWN');
   btn('btnMask', G.mask, 'stMask', G.mask ? 'ON' : G.cam ? 'CAM UP' : G.at ? 'AT DOOR' : 'OFF', false);
   btn('btnVent', G.vent, 'stVent', off ? 'NO POWER' : G.vent ? 'CLOSED' : 'OPEN');
+  btn('btnLamp', now < G.lampUntil, 'stLamp', off ? 'NO POWER' : G.cam ? 'CAM UP' : G.at ? 'AT DOOR' : 'FLASH');
+  $('office').classList.toggle('lamp-on', now < G.lampUntil && !G.cam);
   const charged = G.t >= G.shockReady;
   btn('btnShock', false, 'stShock', off ? 'NO POWER' : G.at ? 'AT DOOR' : !charged ? 'CHARGING' : G.cam ? 'CAMERA' : 'DESK');
 }
@@ -87,6 +89,11 @@ function drawVisitors(g, now) {
   if (G.end.mode === 'air') sprite(g, ...ENNARD_AIR_SPOT, SPRITES.end.office, 'c-end');
   if (G.wbn.present) sprite(g, ...WBN_SPOT, SPRITES.wbn.office, 'c-wbn');
   if (G.nmt.present) sprite(g, ...NMT_SPOT, SPRITES.nmt.office, 'c-nmt' + (now < G.zapUntil ? ' shone' : ''));
+  // Nightmare BB in his corner: asleep, or awake with glowing eyes. He glows while the lamp flashes on him.
+  if (G.nbb.level > 0) {
+    const lit = now < G.lampUntil ? ' shone' : '';
+    sprite(g, ...NBB_SPOT, G.nbb.awake ? SPRITES.nbb.awake : SPRITES.nbb.asleep, 'c-nbb' + lit);
+  }
   // Nightmare Foxy, once he's got in: bigger at every stage (the last one is his jumpscare drawing).
   const X = G.nfx;
   if (X.inside) {

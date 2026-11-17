@@ -146,3 +146,10 @@ const NCP_DRAIN = 0.8;           // % power per second while the Cupcake is eati
 const mangleWait = level => waitFor(level, 50, 16);
 const NMG_DRAIN = 1.2;           // % power per second while Mangle is in the system
 const NMG_DECOYS = 2;            // how many empty cameras blink along with the real one
+
+// ---------- Nightmare BB ----------
+// He sits asleep in the corner of the office. Each time you put the monitor down he may wake up: a
+// chance of level / 40 (so half the time at level 20). Awake, flash the lamp on him before you raise the
+// monitor again. Flashing it while he's asleep wakes him the wrong way.
+const nbbChance = level => level / 40;
+const LAMP_SHOW = 0.35;          // seconds the lamp's flash shows

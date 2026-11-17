@@ -27,9 +27,9 @@ function loop(now) {
   if (currentScreen === 'game' && G && !G.over) {
     if (!G.paused) update(dt * speed);
     // Redraw about 15 times a second, or straight away if something important changed (and every
-    // frame while the shock's flash is showing, so it's never missed).
+    // frame while the shock's or the lamp's flash is showing, so it's never missed).
     sinceRender += dt;
-    if (!G.over && (dirty || now < G.zapUntil || sinceRender > 1 / 15)) {
+    if (!G.over && (dirty || now < G.zapUntil || now < G.lampUntil || sinceRender > 1 / 15)) {
       renderGame(now);
       dirty = false;
       sinceRender = 0;

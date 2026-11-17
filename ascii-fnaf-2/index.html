@@ -48,7 +48,7 @@
       <p class="eyebrow">Circus Baby's Entertainment and Rental · underground · 12 AM to 6 AM</p>
       <h1>ASCII FNAF</h1>
       <p class="line-tag">LINE 2</p>
-      <p class="tag-line">Two doors and two heavy doors, a vent, a mask, a shock button, a battery that never lasts and air that never comes back. Eighteen of them down here tonight, from the rental place and from the nightmares.</p>
+      <p class="tag-line">Two doors and two heavy doors, a vent, a mask, a shock button, a desk lamp, a battery that never lasts and air that never comes back. Nineteen of them down here tonight, from the rental place and from the nightmares.</p>
       <p class="trio" id="titleTags" aria-hidden="true"></p>
       <div class="menu">
         <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
@@ -142,16 +142,17 @@
       <div class="controls">
         <button id="btnL" type="button"><span>Left door<kbd>A</kbd></span><span class="state" id="stL">OPEN</span></button>
         <button id="btnHL" type="button" class="heavy-btn"><span>Left heavy<kbd>Z</kbd></span><span class="state" id="stHL">OPEN</span></button>
-        <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
+        <button id="btnCam" type="button" class="cam-btn"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
         <button id="btnHR" type="button" class="heavy-btn"><span>Right heavy<kbd>C</kbd></span><span class="state" id="stHR">OPEN</span></button>
         <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
         <button id="btnGoL" type="button"><span>Listen left<kbd>Q</kbd></span><span class="state" id="stGoL">GO</span></button>
         <button id="btnMask" type="button"><span>Mask<kbd>W</kbd></span><span class="state" id="stMask">OFF</span></button>
         <button id="btnShock" type="button" class="shock-btn"><span>Shock<kbd>X</kbd></span><span class="state" id="stShock">DESK</span></button>
+        <button id="btnLamp" type="button"><span>Lamp<kbd>F</kbd></span><span class="state" id="stLamp">FLASH</span></button>
         <button id="btnVent" type="button"><span>Vent door<kbd>V</kbd></span><span class="state" id="stVent">OPEN</span></button>
         <button id="btnGoR" type="button"><span>Listen right<kbd>E</kbd></span><span class="state" id="stGoR">GO</span></button>
       </div>
-      <p class="keys hint">A / D doors · Z / C heavy doors · Q / E go to a door and listen · Space cameras · 1–9 pick a camera · W mask · X shock (the desk, or the camera you're on) · V vent door · P pauses · M sound</p>
+      <p class="keys hint">A / D doors · Z / C heavy doors · Q / E go to a door and listen · Space cameras · 1–9 pick a camera · W mask · X shock (the desk, or the camera you're on) · V vent door · F lamp · P pauses · M sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -218,6 +219,7 @@
       <li><b class="c-jck">Jack-o Chica</b> stands in a doorway breathing smoke (you can see it drift in). Slam the heavy door on her.</li>
       <li><b class="c-ptr">Plushtrap</b> gets into the oxygen room (CAM 5). Stay on his camera until he leaves.</li>
       <li><b class="c-ncp">Nightmare Cupcake</b> eats power in the power room (CAM 6, a pink <span class="alert">!</span> on the map): shock that camera. <b class="c-nmg">Nightmare Mangle</b> makes three cameras blink <span class="alert">~</span> but is only on one: find them and shock it. A wrong shock wastes power.</li>
+      <li><b class="c-nbb">Nightmare BB</b> sits asleep in the corner of your office. When you put the monitor down he may wake up (his eyes open and he giggles): flash the lamp (F) on him before you raise the monitor again. Never flash him while he's asleep.</li>
     </ul>
     <div class="table-wrap">
       <table>
@@ -229,6 +231,7 @@
         <tr><td>Mask</td><td>W, or the Mask button (not on the monitor or at a door)</td></tr>
         <tr><td>Shock</td><td>X, or the Shock button (the desk), or "Shock this camera" on the monitor</td></tr>
         <tr><td>Vent door</td><td>V, or the button</td></tr>
+        <tr><td>Lamp (one flash)</td><td>F, or the Lamp button (at the desk only)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>
       </table>

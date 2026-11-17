@@ -129,6 +129,7 @@ const ICONS = {
   ptr: ['/\\/\\ ', '(O O)', ' VVV '],       // Plushtrap: little olive-green rabbit, big grin
   ncp: ['  ,  ', '(O O)', '\\VVV/'],        // Nightmare Cupcake: pink, a lit candle, blue eyes, sharp teeth
   nmg: ['_/\\_ ', '(@-O)', ' VVV '],        // Nightmare Mangle: torn apart, two heads
+  nbb: [' -+- ', '(@W@)', ' /#\\ '],        // Nightmare BB: a blackened BB, glowing yellow eyes, a grin full of teeth
 };
 // Which line of the icon is the face (the middle one for everyone).
 const FACE_ROW = {};
@@ -138,7 +139,7 @@ const ICON_ACCENTS = {
   nfb: [' vvv', ' w w', 'vwwwv'], bab: ['rr rr', ' grg', '  r'], bal: [' bbb', ' v v', ' vvv'],
   ffr: ['mmm b', ' b b', ' mmmb'], ffx: ['p   p', ' y y', '  p'], end: ['', ' w w', ''], mrn: ['', 'wwwww'],
   nmt: [' www', 'wwwww', ' www'], wbn: ['', 'GrGGG', ' www'], bdb: ['', ' b b'], jck: ['', ' y y', 'yyyyy'],
-  ptr: ['', ' w w', ' www'], ncp: ['  y', ' b b', ' www'], nmg: ['', ' r y', ' www'],
+  ptr: ['', ' w w', ' www'], ncp: ['  y', ' b b', ' www'], nmg: ['', ' r y', ' www'], nbb: [' rrr', ' ywy', '  r'],
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -752,6 +753,29 @@ JVVV`), 'y'),
           /    |  AAAAAAA |     \
          ~      '---------'      ~`), 'r', '@'),
   },
+  // Nightmare BB (added on request): asleep in the corner with his eyes shut, or awake with glowing
+  // eyes and a grin full of teeth. A propeller cap and a striped shirt, like BB, but blackened.
+  nbb: {
+    asleep: art(String.raw`
+ _/\_
+(-_-)
+/|#|\ `),
+    awake: eyes(art(String.raw`
+ _/\_
+(@W@)
+/|#|\ `), 'y'),
+    scare: eyes(art(String.raw`
+            _\|/_
+           /  |  \
+        .-~~~~~~~~~-.
+       /  .-.   .-.  \
+      |  ( @ ) ( @ )  |
+      |   '-'   '-'   |
+       \  VVVVVVVVV  /
+        \ AAAAAAAAA /
+         '---------'
+          /|#####|\ `), 'y'),
+  },
 };
 // ---------- accurate details ----------
 // On request ("make colors and designs more accurate"): the second colors of the official designs,
@@ -853,6 +877,9 @@ for (const look of looks('ncp')) { region(look, 0, 0, 'y'); region(look, 1, 1, '
 // Nightmare Mangle: the second head's eye is white.
 for (const look of looks('nmg')) tint(look, 'O', 'w');
 
+// Nightmare BB: a red-striped shirt and a red propeller on his cap.
+for (const look of looks('nbb')) { tint(look, '#', 'r'); region(look, 0, 0, 'r'); }
+
 // Everyone's teeth (the rows of V and A) are off-white.
 for (const id of ['nfr', 'nbn', 'nch', 'nfx', 'nfb', 'ptr', 'ncp', 'nmg', 'nmt']) for (const look of looks(id)) tint(look, 'VA', 'w');
 // Nightmare Foxy, Ballora and Bidybabs have no camera drawing: Foxy never shows up on the cameras,
@@ -897,6 +924,7 @@ const BABY_CLOSE_SPOT = [3, 13];  // and right in front of you
 const ENNARD_AIR_SPOT = [1, 20];  // Ennard, hanging out of the air vent
 // Nightmare Foxy in the office, at each stage of growing, by the side he came in from.
 const NFX_SPOTS = { 1: { L: [12, 1], R: [12, 49] }, 2: { L: [6, 1], R: [6, 42] }, 3: { L: [3, 12], R: [3, 12] } };
+const NBB_SPOT = [17, 44];        // Nightmare BB, slumped on the floor in the corner, right of the desk
 
 // The office for this moment, as a grid (without the visitors: render.js adds those).
 // `ventShut`: is the vent door closed?

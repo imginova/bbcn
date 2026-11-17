@@ -4,7 +4,7 @@ This file holds everything a new Claude session, or a person, needs to keep work
 
 ## What this is
 
-**ASCII FNAF: Line 2** is a free, browser-based **FNAF fan game**: a single custom night drawn in ASCII art, with 18 characters from **Sister Location and FNAF 4**. It's a **separate game** from Line 1 (`../ascii-fnaf/`), made on 2026-11-16 by copying Line 1's code and rewriting the rules, art, sounds and look. The owner gave the whole roster and the tools at once ("Line #2: SL & fnaf 4").
+**ASCII FNAF: Line 2** is a free, browser-based **FNAF fan game**: a single custom night drawn in ASCII art, with 19 characters from **Sister Location and FNAF 4** (Nightmare BB was added later). It's a **separate game** from Line 1 (`../ascii-fnaf/`), made on 2026-11-16 by copying Line 1's code and rewriting the rules, art, sounds and look. The owner gave the whole roster and the tools at once ("Line #2: SL & fnaf 4").
 
 - **Owner:** the `imginova` GitHub account (Jake Harris's son). They're new to programming, so explain changes in plain language and avoid jargon.
 - **Private Artifact link:** https://claude.ai/artifact/5A5fDZeDRzaFK27mXXx4jn (only the owner and people they share it with can open it; see "Publishing" below).
@@ -61,12 +61,13 @@ Same as Line 1:
 | Plushtrap | Turns up in the oxygen room (CAM 5), using oxygen | Watch CAM 5 for `PTR_WATCH` (2.5 s) in a row |
 | Nightmare Cupcake | Eats power in the power room (CAM 6, a pink ! on the map) | Camera shock on CAM 6 |
 | Nightmare Mangle | In one random room's camera, draining power; that room and `NMG_DECOYS` (2) others blink ~ on the map | Camera shock on the right room; a wrong one only wastes power |
+| Nightmare BB | Added on request 2026-11-17, last in `SETUP`. Sits asleep in the office corner (`NBB_SPOT`). Each monitor flip down (`toggleCam`, `goToDoor`) may wake him (`bbMayWake`, chance `nbbChance` = level / 40) | The lamp (F, one flash, free, desk only; the owner chose a clicked lamp over a held flashlight): awake, it puts him back to sleep; asleep, it gets you (`'woke'`). Raising the monitor while he's awake gets you (`bbWatching`, `'cam'`) |
 
 **Defaults chosen by Claude, not the owner** (tell them if asked, change on request): the heavy door also stops walkers; Ennard picks his kind of visit at random; the Nightmare Cupcake is always in the power room; the shock has a cooldown and costs 1% power; Freddles give a reaction window at the 4th; Baby's "close" comes after 2.5 s of mask; every number in `config.js` is a first guess. The owner chose: oxygen never refills; both door kinds on each side, with walking to a door to listen; Ballora's music comes from her side; Nightmare Mangle is shocked on the right camera.
 
-**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges (raised a version when Funtime Foxy's showtime moved to CAM 3 and again for those with Minireenas when they moved to CAM 5): Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 360 points).
+**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges (raised a version when Funtime Foxy's showtime moved to CAM 3 and again for those with Minireenas when they moved to CAM 5): Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 380 points). When Nightmare BB was added, Halloween got him at 12 and went to v2, and the Everyone and All 20 challenges (which now include him) went up a version.
 
-**Controls:** A/D doors, Z/C heavy doors, Q/E listen at a door, Space/S monitor, 1–9 cameras, W mask, X shock, V vent door, P/Esc pause, M mute.
+**Controls:** A/D doors, Z/C heavy doors, Q/E listen at a door, Space/S monitor, 1–9 cameras, W mask, X shock, V vent door, F lamp, P/Esc pause, M mute.
 
 ## How the code is organized
 
