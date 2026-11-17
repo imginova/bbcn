@@ -16,9 +16,8 @@ function setHtml(el, html) {
 }
 
 // Where someone who's using up your oxygen is, for the warning under the oxygen meter.
-const airWhere = c => c === MINIREENA || c === PLUSHTRAP ? 'CAM 5'
-  : c === JACKO ? (G.jck.side === 'L' ? 'left door' : 'right door')
-  : c === ENNARD ? 'in the vents' : 'office';
+const airWhere = c => c === MINIREENA || c === PLUSHTRAP || c === ENNARD ? 'CAM 5'
+  : c === JACKO ? (G.jck.side === 'L' ? 'left door' : 'right door') : 'office';
 
 // A bar like [|||||.....] that is `filled` out of `total` long.
 const bar = (filled, total) => '[' + '|'.repeat(filled) + '.'.repeat(total - filled) + ']';
@@ -96,7 +95,6 @@ function renderOffice(now) {
 function drawVisitors(g, now) {
   // The Freddles on the desk; they blink red once Nightmare Freddy is coming.
   for (let i = 0; i < G.nfr.freddles; i++) sprite(g, ...FREDDLE_SPOTS[i], SPRITES.nfr.office, 'c-nfr' + (G.nfr.coming ? ' blink' : ''));
-  if (G.end.mode === 'air') sprite(g, ...ENNARD_AIR_SPOT, SPRITES.end.office, 'c-end');
   if (G.wbn.present) sprite(g, ...WBN_SPOT, SPRITES.wbn.office, 'c-wbn');
   if (G.nmt.present) sprite(g, ...NMT_SPOT, SPRITES.nmt.office, 'c-nmt' + (now < G.zapUntil ? ' shone' : ''));
   // Nightmare BB in his corner: asleep, or awake with glowing eyes. He glows while the lamp flashes on him.
@@ -216,14 +214,14 @@ function renderMonitor(now) {
   $('btnShockCam').disabled = !powered() || G.t < G.shockReady;
   // The map: highlight the camera you're on, and the warnings: a pink ! where the Nightmare Cupcake
   // is eating, a blinking ~ on the three rooms Nightmare Mangle might be in, and a teal ▼ on the oxygen
-  // room while the Minireenas or Plushtrap are in there using up your air (on request).
+  // room while the Minireenas, Plushtrap or Ennard are in there using up your air (on request).
   for (const b of document.querySelectorAll('#map button')) {
     const r = b.dataset.room;
     b.setAttribute('aria-current', String(r === room));
     const warn = b.querySelector('.mw');
     const cup = G.ncp.present && r === 'power';
     const mangle = G.nmg.present && (r === G.nmg.room || G.nmg.decoys.includes(r));
-    const air = r === 'oxygen' && (G.mrn.count > 0 || G.ptr.present);
+    const air = r === 'oxygen' && (G.mrn.count > 0 || G.ptr.present || G.end.mode === 'air');
     warn.textContent = (cup ? ' !' : '') + (mangle ? ' ~' : '') + (air ? ' ▼' : '');
     warn.className = 'mw' + (cup ? ' c-ncp alert' : mangle ? ' c-nmg alert' : air ? ' air blink' : '');
   }
@@ -272,6 +270,7 @@ function drawOnCamera(g, room) {
   if (room === 'auditorium' && G.ffr.level > 0 && G.ffr.phase !== 'door') sprite(g, ...FFR_SPOTS[G.ffr.pos], SPRITES.ffr.cam, 'c-ffr');
   if (room === 'oxygen' && G.ptr.present) sprite(g, ...PTR_SPOT, SPRITES.ptr.cam, 'c-ptr');
   if (room === 'oxygen') for (let i = 0; i < G.mrn.count; i++) sprite(g, ...MRN_SPOTS[i], SPRITES.mrn.cam, 'c-mrn');
+  if (room === 'oxygen' && G.end.mode === 'air') sprite(g, ...ENNARD_O2_SPOT, SPRITES.end.office, 'c-end');
   if (room === 'power' && G.ncp.present) sprite(g, ...NCP_SPOT, SPRITES.ncp.cam, 'c-ncp');
   if (room === 'parts' && G.end.level > 0 && !G.end.mode) sprite(g, ...ENNARD_HOME, SPRITES.end.cam, 'c-end');
   if (G.nmg.present && room === G.nmg.room) sprite(g, ...NMG_SPOT, SPRITES.nmg.cam, 'c-nmg');

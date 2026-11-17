@@ -81,7 +81,7 @@ const FFOXY = {
 };
 const ENNARD = {
   id: 'end', name: 'Ennard', where: 'EITHER',
-  desc: 'Either walks down a hall to a door (shut it), or crawls into the air vents and uses up your oxygen until you shock the desk.',
+  desc: 'Either walks down a hall to a door (shut it), or crawls into the oxygen room (CAM 5) and uses up your oxygen until you shock that camera.',
   how: 'pulled you into the wires',
 };
 const MINIREENA = {
@@ -159,19 +159,19 @@ const PRESETS = [
   { name: 'Warm-up', v: 3, levels: lv({ nbn: 3, nch: 3, ffx: 3, mrn: 3 }) },
   { name: 'First shift', v: 1, levels: lv({ nfr: 5, nbn: 5, nch: 5, bab: 5 }) },
   { name: 'Circus', v: 2, levels: lv({ bab: 12, bdb: 12, ffx: 8 }) },                     // Baby and her Bidybabs
-  { name: 'Ballerina', v: 2, levels: lv({ bal: 12, mrn: 12, end: 8 }) },                   // Ballora and her Minireenas
+  { name: 'Ballerina', v: 3, levels: lv({ bal: 12, mrn: 12, end: 8 }) },                   // Ballora and her Minireenas
   { name: 'Showtime', v: 2, levels: lv({ ffr: 12, ffx: 15, bal: 8 }) },                    // the Funtime Auditorium
   { name: 'Heavy doors', v: 1, levels: lv({ nbn: 15, nch: 15, nfx: 10, nfb: 10 }) },       // the nightmares only
   { name: 'Mask up', v: 1, levels: lv({ wbn: 15, bab: 12, nfr: 8 }) },
   { name: 'Short of breath', v: 2, levels: lv({ mrn: 12, nmt: 10, jck: 10, ptr: 10 }) },  // everything that takes oxygen
   { name: 'Brownout', v: 1, levels: lv({ ncp: 15, nmg: 15, nfr: 10, bdb: 8 }) },           // everything that takes power
-  { name: 'Sister Location', v: 3, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
+  { name: 'Sister Location', v: 4, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
   { name: 'Bedroom', v: 1, levels: lv({ nfr: 15, nbn: 15, nch: 15, nfx: 15, nfb: 15, ptr: 12 }) },   // FNAF 4
   { name: 'Halloween', v: 2, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10, nbb: 12 }) },   // Nightmare BB joined on v2
-  { name: 'Everyone at 5', v: 4, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 4, levels: everyone(10) },
-  { name: 'Everyone at 15', v: 4, levels: everyone(15) },
-  { name: 'All 20', v: 4, levels: everyone(20) },
+  { name: 'Everyone at 5', v: 5, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 5, levels: everyone(10) },
+  { name: 'Everyone at 15', v: 5, levels: everyone(15) },
+  { name: 'All 20', v: 5, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.

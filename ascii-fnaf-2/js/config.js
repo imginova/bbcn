@@ -29,7 +29,7 @@ const POWER_OUT_WAIT = [5, 13];  // seconds of darkness after a power-out before
 // What drains it, in % per second while it's going on:
 const MRN_O2 = 0.3;              // each Minireena in the oxygen room
 const NMT_O2 = 1.0;              // the Nightmarionette
-const END_O2 = 0.8;              // Ennard in the air vents
+const END_O2 = 0.8;              // Ennard in the oxygen room
 const JCK_O2 = 0.8;              // Jack-o Chica's smoke
 const PTR_O2 = 0.6;              // Plushtrap messing with the air
 const O2_LOW = 25;               // below this, a warning beeps
@@ -102,7 +102,7 @@ const ffxGap = level => byLevel(level, 75, 28);   // seconds between showtimes
 const FFX_GRACE = 1.5;
 
 // ---------- Ennard ----------
-// Each visit is either a walk down a hall to a door (normal door) or a trip into the air vents (drains
+// Each visit is either a walk down a hall to a door (normal door) or a trip into the oxygen room (CAM 5; drains
 // oxygen until you shock him away).
 const ennardWait = level => waitFor(level, 40, 14);
 const ENNARD_INTERVAL = 4;

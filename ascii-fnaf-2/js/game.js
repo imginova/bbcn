@@ -134,7 +134,7 @@ function newGame() {
     ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, pos: 'C', phase: 'idle', goT: 0, stepped: false, deadline: 0 },
     // Funtime Foxy: the time (G.t) of the next show, and whether its fanfare has played.
     ffx: { level: levelOf(FFOXY), show: roundShow(ffxGap(levelOf(FFOXY)) * rand(0.8, 1.1)), played: false },
-    // Ennard: null between visits, then 'hall' (walking to a door), 'door' (at it) or 'air' (in the vents).
+    // Ennard: null between visits, then 'hall' (walking to a door), 'door' (at it) or 'air' (in the oxygen room).
     end: { level: levelOf(ENNARD), mode: null, side: 'L', stage: 0, timer: ennardWait(levelOf(ENNARD)), stepT: 0, deadline: 0 },
     mrn: { level: levelOf(MINIREENA), count: 0, timer: minireenaWait(levelOf(MINIREENA)) },
     nmt: { level: levelOf(NMARIONETTE), present: false, hits: 0, timer: nightmarionetteWait(levelOf(NMARIONETTE)) },
@@ -479,7 +479,7 @@ function updateFuntimeFoxy() {
 
 // ---------- Ennard ----------
 // Each visit: either a walk down a hall to a door (clanking, seen on the hall camera; shut the door),
-// or a crawl into the air vents (uses up oxygen until you shock the desk).
+// or a crawl into the oxygen room, CAM 5 (uses up oxygen until you shock that camera; on request).
 function updateEnnard(dt) {
   const E = G.end;
   if (E.level === 0) return;
@@ -783,8 +783,8 @@ function shock() {
   if (G.power <= 0) powerOutStart();
   dirty = true;
 }
-// The desk: clears the Freddles, hurts the Nightmarionette, and sends away Circus Baby (once she's
-// close) and Ennard (from the vents).
+// The desk: clears the Freddles, drives out Nightmare Foxy, hurts the Nightmarionette, and sends away
+// Circus Baby (once she's close).
 function shockDesk() {
   if (G.nfr.freddles) { G.nfr.freddles = 0; G.nfr.coming = 0; }
   if (G.nfx.inside) { nightmareHome(NFOXY, G.nfx); sfx.gone(); }   // Nightmare Foxy, driven out of the office
@@ -795,14 +795,17 @@ function shockDesk() {
     if (N.hits >= NMT_SHOCKS) { N.present = false; N.timer = nightmarionetteWait(N.level); sfx.gone(); }
   }
   if (G.bab.inside && G.bab.close) babyHome();
-  if (G.end.mode === 'air') { ennardHome(); sfx.gone(); }
 }
-// A camera: the Minireenas in the oxygen room (all of them at once), the Nightmare Cupcake in the power
-// room, or Nightmare Mangle in their room. Anything else is a wasted shock.
+// A camera: the Minireenas and Ennard in the oxygen room (all at once), the Nightmare Cupcake in the
+// power room, or Nightmare Mangle in their room. Anything else is a wasted shock.
 function shockCamera() {
   let hit = false;
   if (G.camRoom === 'oxygen' && G.mrn.count) {
     G.mrn.count = 0;
+    hit = true;
+  }
+  if (G.camRoom === 'oxygen' && G.end.mode === 'air') {
+    ennardHome();
     hit = true;
   }
   if (G.camRoom === 'power' && G.ncp.present) {

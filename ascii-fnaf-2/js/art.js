@@ -349,6 +349,7 @@ const FFX_SPOT = [3, 24];                                  // Funtime Foxy on th
 const FFR_SPOTS = { C: [4, 23], L: [5, 4], R: [5, 44] };   // Funtime Freddy in the auditorium: middle, left side, right side
 const PTR_SPOT = [9, 20];                                  // Plushtrap in the oxygen room
 const MRN_SPOTS = [[9, 4], [9, 11], [9, 47], [9, 53]];     // the Minireenas, dancing around the oxygen room (on request)
+const ENNARD_O2_SPOT = [2, 38];                            // Ennard, wrapped around the air supply panel in the oxygen room (on request)
 const NCP_SPOT = [8, 46];                                  // Nightmare Cupcake in the power room
 const NMG_SPOT = [1, 20];                                  // Nightmare Mangle, hanging from the ceiling of whichever room
 const ENNARD_HOME = [5, 44];                               // Ennard in parts & service, between visits
@@ -921,7 +922,6 @@ const NMT_SPOT = [1, 15];         // the Nightmarionette, looming over the monit
 const WBN_SPOT = [3, 41];         // Withered Bonnie, standing by the right wall
 const BABY_SPOT = [7, 1];         // Circus Baby, just in from the left
 const BABY_CLOSE_SPOT = [3, 13];  // and right in front of you
-const ENNARD_AIR_SPOT = [1, 20];  // Ennard, hanging out of the air vent
 // Nightmare Foxy in the office, at each stage of growing, by the side he came in from.
 const NFX_SPOTS = { 1: { L: [12, 1], R: [12, 49] }, 2: { L: [6, 1], R: [6, 42] }, 3: { L: [3, 12], R: [3, 12] } };
 const NBB_SPOT = [17, 44];        // Nightmare BB, slumped on the floor in the corner, right of the desk
