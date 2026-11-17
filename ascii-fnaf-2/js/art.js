@@ -34,11 +34,22 @@ function grid(lines, w, cls = '') {
 const blank = (w, h) => Array.from({ length: h }, () => Array.from({ length: w }, () => ({ ch: ' ', cls: '' })));
 
 // Turn a grid back into HTML: colored cells become <span>s, rows are joined with line breaks.
+// Cells next to each other with the same color share ONE <span> (on request: the game "chugged").
+// Line 2's pictures color almost every character, and a <span> per character meant about 1,700 of
+// them for the office alone, which made every redraw slow; grouping them leaves only a few hundred.
 function toHtml(g) {
-  return g.map(row =>
-    row.map(c => c.cls ? `<span class="${c.cls}">${esc(c.ch)}</span>` : esc(c.ch)).join('')
-  ).join('\n');
+  return g.map(row => {
+    let html = '', cls = null, run = '';
+    for (const c of row) {
+      // A space shows no color, so it can join whatever piece it's next to (fewer pieces again).
+      if (c.cls !== cls && c.ch !== ' ') { html += piece(cls, run); cls = c.cls; run = ''; }
+      run += esc(c.ch);
+    }
+    return html + piece(cls, run);
+  }).join('\n');
 }
+// One run of same-colored text: plain, or wrapped in a <span> with its class.
+const piece = (cls, text) => !text ? '' : cls ? `<span class="${cls}">${text}</span>` : text;
 
 // Draw a drawing (a list of text lines) into grid g with its top-left corner at row r, column c,
 // in the CSS class `cls`. Spaces INSIDE a line (between its first and last real character) are

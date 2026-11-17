@@ -100,6 +100,7 @@ body {
   position: absolute; inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.2) 2px 3px);
+  will-change: transform;   /* its own layer, so it isn't repainted every time something under it changes */
 }
 
 button {
@@ -133,6 +134,10 @@ p { margin: 0; }
    Every drawing lives in a <pre> ("preformatted") block, which keeps spaces and line breaks
    exactly as written. A monospace font makes every character the same width, so columns line up. */
 pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.16; margin: 0; white-space: pre; }
+/* Speed (on request: the game "chugged"): `contain` tells the browser that what happens inside these
+   boxes can't move anything outside them, so when a picture or a number changes it only has to work
+   out that one box again instead of the whole page. */
+pre.art, .hud, .board, .o2who, .controls { contain: layout style; }
 /* Clicking the game shouldn't highlight the ASCII pictures as text. */
 pre.art, .viewport, .hud, .controls, .map, .feed-head, .icon, .trio, .lvrow .ctrl, #scare pre {
   user-select: none; -webkit-user-select: none;

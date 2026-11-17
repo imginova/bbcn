@@ -73,6 +73,8 @@ Same as Line 1:
 
 The same split as Line 1 (see `README.md`). Plain classic scripts sharing the global scope: load order matters and names must be unique across files. `index.html` is a page fragment (no doctype/html/head/body). Art is ASCII only; drawings use `String.raw`, and a line can't end with `\` right before the closing backtick (add a space).
 
+**Speed** (on request 2026-11-17: "it chugs a lot"). Almost every character in Line 2's pictures has a color, and `toHtml` used to make one `<span>` per character: about 1,700 for the office and doors, so each office redraw took about 25 ms (a smooth frame has 16 ms). `toHtml` now puts neighbouring cells with the same color in one `<span>`, and spaces join whatever piece they're next to (about 150 spans; a redraw takes about 3 ms in the hidden test pane). `contain: layout style` on the pictures, HUD, board and buttons, and its own layer for the scanline overlay (`will-change`), keep each change from re-measuring or repainting the whole page. Keep it that way: don't go back to a span per character.
+
 ## Testing
 
 - No Node.js on the Windows computer: test in the Claude browser pane. Serve the folder with the PowerShell `serve.ps1` from the session scratchpad (port 8767), then drive the game from the page: `speed = 0`, `update(0.02)`, `renderGame(performance.now())`. The pane pauses the game when it's hidden; set `G.paused = false`.
