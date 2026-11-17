@@ -102,7 +102,8 @@ const sfx = (() => {
   }
 
   // Which speaker a door's sounds come from.
-  const panOf = side => side === 'L' ? -0.8 : 0.8;
+  // Anything else (like the vent above you) comes from straight ahead.
+  const panOf = side => side === 'L' ? -0.8 : side === 'R' ? 0.8 : 0;
 
   // Everything below is what other files can use: sfx.init(), sfx.door('L'), ...
   return {

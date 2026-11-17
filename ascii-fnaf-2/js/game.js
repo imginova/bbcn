@@ -576,7 +576,8 @@ function updateBidybab(dt) {
   const B = G.bdb;
   if (B.level === 0) return;
   if (B.waiting) {
-    if (G.vent) { B.waiting = false; B.squeaks = 0; B.timer = bidySqueak(B.level); sfx.gone(); dirty = true; }
+    // Shut out: she bonks into the vent door (on request) and crawls off.
+    if (G.vent) { B.waiting = false; B.squeaks = 0; B.timer = bidySqueak(B.level); sfx.bonk('vent'); dirty = true; }
     else if (G.t >= B.deadline) lose(BIDYBAB);
     return;
   }
@@ -586,7 +587,7 @@ function updateBidybab(dt) {
   B.squeaks++;
   sfx.squeak();
   if (B.squeaks % BIDY_EVERY === 0) {
-    if (G.vent) { B.squeaks = 0; sfx.gone(); }
+    if (G.vent) { B.squeaks = 0; sfx.bonk('vent'); }   // the vent door was already shut: bonk
     else { B.waiting = true; B.deadline = G.t + reactWindow(B.level); }
   }
   dirty = true;
