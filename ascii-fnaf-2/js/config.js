@@ -92,7 +92,7 @@ const ffrRun = level => byLevel(level, 4.5, 2.5);        // seconds from the lin
 const FFR_GRACE = 1;             // a last second to shut the door once he's there
 
 // ---------- Funtime Foxy ----------
-// The sign in the office shows the next SHOWTIME. Be watching CAM 3 (the show stage) at that time.
+// The sign on the show stage (CAM 3) shows the next SHOWTIME. Be watching CAM 3 at that time.
 // FFX_GRACE seconds late is still all right.
 const ffxGap = level => byLevel(level, 75, 28);   // seconds between showtimes
 const FFX_GRACE = 1.5;

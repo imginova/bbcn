@@ -65,7 +65,7 @@ function renderGame(now) {
 function renderOffice(now) {
   const dark = G.powerOut;
   $('office').classList.toggle('dark', dark);
-  $('board').hidden = !!G.at || dark;
+  $('board').hidden = !!G.at || dark || G.ffr.level === 0;   // the script, only on nights with Funtime Freddy
   $('listenNote').hidden = !G.at;
   for (const side of ['L', 'R']) $('door' + side).hidden = !!G.at;
   if (G.at) {
@@ -166,19 +166,13 @@ function listenText(side) {
   return `<span class="dim">LISTENING AT THE ${where} DOOR ·</span> ${parts.join(' ')}`;
 }
 
-// Funtime Freddy's script and the SHOWTIME sign, on the office wall.
+// Funtime Freddy's script, on the office wall.
 function renderBoard() {
-  const F = G.ffr, X = G.ffx;
-  $('script').hidden = F.level === 0;
+  const F = G.ffr;
   if (F.level > 0) {
     setHtml($('scriptLines'), F.script.map((line, i) =>
       `<li class="${line.important ? 'important' : ''}${line.done ? ' done' : ''}${i === F.said ? ' now' : ''}">` +
       `<span class="t">${clockLabel(line.t)}</span> ${escText(line.text)}</li>`).join(''));
-  }
-  $('showtime').hidden = X.level === 0;
-  if (X.level > 0) {
-    $('showTime').textContent = X.show >= NIGHT_END ? 'NO MORE SHOWS' : clockLabel(X.show);
-    $('showtime').classList.toggle('live', G.t >= X.show && X.show < NIGHT_END);
   }
 }
 
@@ -241,9 +235,14 @@ function drawOnCamera(g, room) {
       sprite(g, ...hallSpot(room, step, w, look.length, nudge), look, 'c-' + id);
     });
   }
+  // Funtime Foxy on the show stage, and the stage's sign showing when the next show starts (on request:
+  // the time is on the show stage itself, so you have to check CAM 3 to know it).
   if (room === 'stage' && G.ffx.level > 0) {
-    const live = G.t >= G.ffx.show && G.ffx.show < NIGHT_END;
+    const X = G.ffx, live = G.t >= X.show && X.show < NIGHT_END;
     sprite(g, ...FFX_SPOT, SPRITES.ffx.cam, 'c-ffx' + (live ? ' shone' : ''));
+    const text = X.show >= NIGHT_END ? '*  NO MORE SHOWS TONIGHT  *' : `*  NEXT SHOW:  ${clockLabel(X.show)}  *`;
+    write(g, 2, 7, ' '.repeat(46), 'sign');                         // clear the banner...
+    write(g, 2, 30 - Math.floor(text.length / 2), text, 'showsign');  // ...and put the time on it, in the middle
     if (live) write(g, 9, 21, '* IT\'S SHOWTIME! *', 'sign blink');
   }
   if (room === 'auditorium' && G.ffr.level > 0 && G.ffr.phase !== 'door') sprite(g, ...FFR_SPOTS[G.ffr.pos], SPRITES.ffr.cam, 'c-ffr');

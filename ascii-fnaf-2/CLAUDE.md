@@ -51,7 +51,7 @@ Same as Line 1:
 | Circus Baby | Left hall in `BABY_STAGES` (3) steps with soft beeps, then in the office | Mask in time; after `BABY_CLOSE` (2.5 s) of mask she's close (two beeps); then desk shock in time |
 | Ballora | Her music plays from the side she's heading to, louder each step (`BALLORA_STEPS` 3) | Shut that door (normal or heavy) |
 | Funtime Freddy | His script (`makeScript`, `FFR_LINES` 9, `ffrAttacks` 1–5 important) is on the office wall. An important line sends him to a door: he walks to that side of the auditorium (CAM 4) with steps from that side, and `ffrRun` s later he's there | Shut that door (`FFR_GRACE` 1 s once he's there) |
-| Funtime Foxy | The SHOWTIME sign shows the next show (a round time, `ffxGap` apart) | Be watching CAM 3 then (`FFX_GRACE` 1.5 s late is fine) |
+| Funtime Foxy | The show stage's sign on CAM 3 shows the next show (a round time, `ffxGap` apart; on request 2026-11-17 it moved there from an office sign, and every challenge with him went to v2) | Be watching CAM 3 then (`FFX_GRACE` 1.5 s late is fine) |
 | Ennard | Each visit: a walk down a hall (`ENNARD_STAGES`, clanks, seen on camera) or a crawl into the vents (oxygen) | Shut the door / desk shock |
 | Minireenas | One appears every `minireenaWait` s, up to `MRN_MAX` (4), each using oxygen | One desk shock zaps them all |
 | Nightmarionette | Appears and uses oxygen fast | `NMT_SHOCKS` (3) desk shocks |
@@ -64,7 +64,7 @@ Same as Line 1:
 
 **Defaults chosen by Claude, not the owner** (tell them if asked, change on request): the heavy door also stops walkers; Ennard picks his kind of visit at random; the Nightmare Cupcake is always in the power room; the shock has a cooldown and costs 1% power; Freddles give a reaction window at the 4th; Baby's "close" comes after 2.5 s of mask; every number in `config.js` is a first guess. The owner chose: oxygen never refills; both door kinds on each side, with walking to a door to listen; Ballora's music comes from her side; Nightmare Mangle is shocked on the right camera.
 
-**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges, all v1: Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 360 points).
+**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges (v1, except the 8 with Funtime Foxy, which are v2 since his showtime moved to CAM 3): Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 360 points).
 
 **Controls:** A/D doors, Z/C heavy doors, Q/E listen at a door, Space/S monitor, 1–9 cameras, W mask, X shock, V vent door, P/Esc pause, M mute.
 

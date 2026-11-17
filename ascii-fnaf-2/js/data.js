@@ -75,7 +75,7 @@ const FFREDDY = {
 };
 const FFOXY = {
   id: 'ffx', name: 'Funtime Foxy', where: 'CAM 3',
-  desc: 'The SHOWTIME sign in the office says when the show starts. Be watching CAM 3 (the show stage) at that time.',
+  desc: 'The sign on the show stage (CAM 3) says when the next show starts. Be watching CAM 3 at that time.',
   how: 'put on a show without you',
 };
 const ENNARD = {
@@ -149,22 +149,22 @@ const everyone = level => lv(Object.fromEntries(SETUP.map(c => [c.id, level])));
 // The list is in rough order of difficulty, easiest first, and All 20 must stay last (the maximum).
 // No two challenges may have exactly the same levels, or the second could never be matched.
 const PRESETS = [
-  { name: 'Warm-up', v: 1, levels: lv({ nbn: 3, nch: 3, ffx: 3, mrn: 3 }) },
+  { name: 'Warm-up', v: 2, levels: lv({ nbn: 3, nch: 3, ffx: 3, mrn: 3 }) },
   { name: 'First shift', v: 1, levels: lv({ nfr: 5, nbn: 5, nch: 5, bab: 5 }) },
-  { name: 'Circus', v: 1, levels: lv({ bab: 12, bdb: 12, ffx: 8 }) },                     // Baby and her Bidybabs
+  { name: 'Circus', v: 2, levels: lv({ bab: 12, bdb: 12, ffx: 8 }) },                     // Baby and her Bidybabs
   { name: 'Ballerina', v: 1, levels: lv({ bal: 12, mrn: 12, end: 8 }) },                   // Ballora and her Minireenas
-  { name: 'Showtime', v: 1, levels: lv({ ffr: 12, ffx: 15, bal: 8 }) },                    // the Funtime Auditorium
+  { name: 'Showtime', v: 2, levels: lv({ ffr: 12, ffx: 15, bal: 8 }) },                    // the Funtime Auditorium
   { name: 'Heavy doors', v: 1, levels: lv({ nbn: 15, nch: 15, nfx: 10, nfb: 10 }) },       // the nightmares only
   { name: 'Mask up', v: 1, levels: lv({ wbn: 15, bab: 12, nfr: 8 }) },
   { name: 'Short of breath', v: 1, levels: lv({ mrn: 12, nmt: 10, jck: 10, ptr: 10 }) },  // everything that takes oxygen
   { name: 'Brownout', v: 1, levels: lv({ ncp: 15, nmg: 15, nfr: 10, bdb: 8 }) },           // everything that takes power
-  { name: 'Sister Location', v: 1, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
+  { name: 'Sister Location', v: 2, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
   { name: 'Bedroom', v: 1, levels: lv({ nfr: 15, nbn: 15, nch: 15, nfx: 15, nfb: 15, ptr: 12 }) },   // FNAF 4
   { name: 'Halloween', v: 1, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10 }) },
-  { name: 'Everyone at 5', v: 1, levels: everyone(5) },
-  { name: 'Everyone at 10', v: 1, levels: everyone(10) },
-  { name: 'Everyone at 15', v: 1, levels: everyone(15) },
-  { name: 'All 20', v: 1, levels: everyone(20) },
+  { name: 'Everyone at 5', v: 2, levels: everyone(5) },
+  { name: 'Everyone at 10', v: 2, levels: everyone(10) },
+  { name: 'Everyone at 15', v: 2, levels: everyone(15) },
+  { name: 'All 20', v: 2, levels: everyone(20) },
 ];
 
 // One line of flavour text per challenge, shown under the list when it's picked.

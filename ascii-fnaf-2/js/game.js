@@ -402,7 +402,7 @@ function freddyBack() {
 }
 
 // ---------- Funtime Foxy ----------
-// The SHOWTIME sign says when. Be watching the show stage (CAM 3) then, or at most FFX_GRACE late.
+// The sign on the show stage (CAM 3) says when. Be watching CAM 3 then, or at most FFX_GRACE late.
 function updateFuntimeFoxy() {
   const X = G.ffx;
   if (X.level === 0 || X.show >= NIGHT_END) return;

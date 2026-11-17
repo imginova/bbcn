@@ -170,6 +170,7 @@ pre [class*="c-"] { font-weight: 600; }
 .pipe { color: #3b4a5a; }
 .sign { color: var(--magenta); text-shadow: 0 0 6px var(--magenta); }
 .curtain { color: #8a2a5c; }                  /* the show stage's curtains: deep magenta velvet */
+.showsign { color: #fff3c4; font-weight: 600; text-shadow: 0 0 8px var(--c-ffx), 0 0 2px #fff; }   /* the next show's time, lit up */
 .screen { color: var(--teal); text-shadow: 0 0 5px var(--teal); }
 .grate { color: #3a3352; }
 .door { color: #8a82ad; }
@@ -250,7 +251,7 @@ pre [class*="c-"] { font-weight: 600; }
 /* What you hear at a door. */
 .listen-note { min-height: 1.5em; font-size: 13px; text-align: center; }
 
-/* Funtime Freddy's script and the SHOWTIME sign, on the office wall. */
+/* Funtime Freddy's script, on the office wall. */
 .board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
 .board-head { font-size: 11px; letter-spacing: .14em; color: var(--dim); }
 .script { border: 1px solid var(--line); padding: 6px 10px; flex: 1 1 380px; max-width: 560px; background: rgba(255,255,255,.012); }
@@ -261,9 +262,6 @@ pre [class*="c-"] { font-weight: 600; }
 .script li.done { opacity: .4; }
 .script li.now { opacity: 1; color: var(--magenta); }
 .important-key { color: var(--magenta); }
-.showtime { border: 1px solid var(--line); padding: 6px 14px; text-align: center; flex: 0 0 auto; background: rgba(255,255,255,.012); }
-.showtime .show-time { font-family: var(--font-display); font-size: 26px; color: var(--c-ffx); line-height: 1.2; }
-.showtime.live { border-color: var(--c-ffx); animation: blink 0.5s steps(2) infinite; }
 
 /* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
    through its two eye holes. The holes let clicks through; the mask itself blocks them. */
@@ -369,5 +367,5 @@ pre [class*="c-"] { font-weight: 600; }
 }
 /* Some players turn on "reduce motion" in their system settings; respect it by switching off shaking and blinking. */
 @media (prefers-reduced-motion: reduce) {
-  .shake, .rec::before, .alert, .blink, .flicker, .showtime.live, .map .mw.alert { animation: none; }
+  .shake, .rec::before, .alert, .blink, .flicker, .map .mw.alert { animation: none; }
 }
