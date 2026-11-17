@@ -17,10 +17,14 @@ const NIGHT_HOURS = 6;     // 12 AM to 6 AM
 
 // ---------- power ----------
 // The monitor, each closed door and the vent door each cost this much per second while in use.
-// A heavy door counts as HEAVY_UNITS of them. The mask is free.
-const UNIT_DRAIN = 0.3;
-const HEAVY_UNITS = 2;
-const SHOCK_COST = 1;            // % power each controlled shock costs (on the desk or on a camera)
+// A heavy door counts as HEAVY_UNITS of them. The mask and the lamp are free.
+// Balanced with a test bot (on request, 2026-11-17: "is the max mode humanly possible?"). With the old
+// numbers (0.3, a heavy door counting double, 1% a shock, the Cupcake 0.8 and Mangle 1.2, nightmares
+// breathing 4-7 s) the power ran out by about 2 AM in All 20 every time. With these, a quick bot wins
+// All 20 about 1 night in 5 with almost no power left, and every other challenge can be won.
+const UNIT_DRAIN = 0.2;
+const HEAVY_UNITS = 1;           // a heavy door costs the same as a normal one
+const SHOCK_COST = 0.3;          // % power each controlled shock costs (on the desk or on a camera)
 const SHOCK_COOLDOWN = 0.5;      // seconds before the shock is charged again
 const POWER_OUT_WAIT = [5, 13];  // seconds of darkness after a power-out before Nightmare Freddy gets you
 
@@ -62,7 +66,7 @@ const NCH_INTERVAL = 5.5;
 const NFB_INTERVAL = 6;
 const NFX_INTERVAL = 4.5;        // Foxy is quick
 const NM_EXTRA = 1.5;            // extra seconds to shut the heavy door (you may have to walk to the door first)
-const NM_STAY = [4, 7];          // seconds they breathe behind a shut heavy door before leaving
+const NM_STAY = [3, 5];          // seconds they breathe behind a shut heavy door before leaving
 // Nightmare Foxy getting past the door doesn't end the night (on request): he's in the office and grows
 // a stage every NFX_GROW seconds. Shock the desk to drive him out; after NFX_STAGES stages he gets you.
 const NFX_GROW = 1.8;
@@ -142,9 +146,9 @@ const PTR_WATCH = 2.5;
 // The Cupcake gets into the power room (CAM 6, its map button shows a pink !) and eats power until you shock that
 // camera. Mangle blinks a warning on three cameras but is only on one; shock the right one.
 const cupcakeWait = level => waitFor(level, 45, 15);
-const NCP_DRAIN = 0.8;           // % power per second while the Cupcake is eating
+const NCP_DRAIN = 0.4;           // % power per second while the Cupcake is eating
 const mangleWait = level => waitFor(level, 50, 16);
-const NMG_DRAIN = 1.2;           // % power per second while Mangle is in the system
+const NMG_DRAIN = 0.4;           // % power per second while Mangle is in the system
 const NMG_DECOYS = 2;            // how many empty cameras blink along with the real one
 
 // ---------- Nightmare BB ----------
