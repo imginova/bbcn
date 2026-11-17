@@ -430,9 +430,9 @@ function balloraHome() {
 // ---------- Funtime Freddy ----------
 // He stands on one side of the auditorium (CAM 4), picked at the start of the night (`home`). He reads
 // his script (shown in the office) line by line. An important line sends him to a door (on request):
-// "Bon-Bon, go get 'em!" the door on his side, "Let's give him a surprise!" the other one. He walks to
-// that side of the auditorium with steps you hear from that side, and ffrRun seconds later he's at the
-// door. Shut it (normal or heavy) in time; then he goes back to his side.
+// "Bon-Bon, go get 'em!" the door on his side, "Let's give him a surprise!" the other one. He himself
+// stays on his side of the auditorium (on request); the attack comes to that door with steps you hear
+// from that side (`pos`), and ffrRun seconds later it's there. Shut it (normal or heavy) in time.
 function updateFuntimeFreddy(dt) {
   const F = G.ffr;
   if (F.level === 0) return;

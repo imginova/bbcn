@@ -268,7 +268,9 @@ function drawOnCamera(g, room) {
     write(g, 2, 30 - Math.floor(text.length / 2), text, 'showsign');  // ...and put the time on it, in the middle
     if (live) write(g, 9, 21, '* IT\'S SHOWTIME! *', 'sign blink');
   }
-  if (room === 'auditorium' && G.ffr.level > 0 && G.ffr.phase !== 'door') sprite(g, ...FFR_SPOTS[G.ffr.pos], SPRITES.ffr.cam, 'c-ffr');
+  // Funtime Freddy always stays on his own side of the auditorium, even while an attack is on its way
+  // to a door (on request); the line he said tells you which door.
+  if (room === 'auditorium' && G.ffr.level > 0) sprite(g, ...FFR_SPOTS[G.ffr.home], SPRITES.ffr.cam, 'c-ffr');
   if (room === 'oxygen' && G.ptr.present) sprite(g, ...PTR_SPOT, SPRITES.ptr.cam, 'c-ptr');
   if (room === 'oxygen') for (let i = 0; i < G.mrn.count; i++) sprite(g, ...MRN_SPOTS[i], SPRITES.mrn.cam, 'c-mrn');
   if (room === 'oxygen' && G.end.mode === 'air') sprite(g, ...ENNARD_O2_SPOT, SPRITES.end.office, 'c-end');
