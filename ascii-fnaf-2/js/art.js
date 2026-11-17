@@ -123,7 +123,7 @@ const ICONS = {
   end: ['\\|||/', '(O O)', '/|_|\\'],       // Ennard: a mess of wires behind a white mask
   mrn: [' .^. ', '(O O)', ' /|\\ '],        // a Minireena: little lilac dancer with a white face
   nmt: [' .-. ', '(O O)', ' VVV '],         // the Nightmarionette: a white face on black
-  wbn: ['|\\ /|', '(* *)', ' VVV '],        // Withered Bonnie: no face, just red eye glints and an endoskeleton jaw
+  wbn: ['|\\ /|', '[* o]', ' vvv '],        // Withered Bonnie: no face, just a metal skull with one red eye glint, and his jaw
   bdb: [' .-. ', '(o o)', ' /|\\ '],        // a Bidybab: small peachy doll with blue eyes
   jck: [' \\|/ ', '(^ ^)', '|EAT|'],        // Jack-o Chica: glowing orange, carved eyes
   ptr: ['/\\/\\ ', '(O O)', ' VVV '],       // Plushtrap: little olive-green rabbit, big grin
@@ -137,7 +137,7 @@ const ICON_ACCENTS = {
   nfr: [' xxx', ' w w', ' www'], nbn: ['', ' m m', 'rwwwr'], nch: ['', ' vov', 'wwwww'], nfx: ['', ' y y', 'Gwww'],
   nfb: [' vvv', ' w w', 'vwwwv'], bab: ['rr rr', ' grg', '  r'], bal: [' bbb', ' v v', ' vvv'],
   ffr: ['mmm b', ' b b', ' mmmb'], ffx: ['p   p', ' y y', '  p'], end: ['', ' w w', ''], mrn: ['', 'wwwww'],
-  nmt: [' www', 'wwwww', ' www'], wbn: ['', ' r r', ' GGG'], bdb: ['', ' b b'], jck: ['', ' y y', 'yyyyy'],
+  nmt: [' www', 'wwwww', ' www'], wbn: ['', 'GrGGG', ' www'], bdb: ['', ' b b'], jck: ['', ' y y', 'yyyyy'],
   ptr: ['', ' w w', ' www'], ncp: ['  y', ' b b', ' www'], nmg: ['', ' r y', ' www'],
 };
 // A text with every character escaped for HTML (see esc above).
@@ -648,30 +648,41 @@ JVVV`), 'y'),
       _____'-----------------'_____
      /     /|               |\     \ `), 'w'),
   },
+  // Withered Bonnie (on request: he looked like Ignited Bonnie): his whole face is GONE. Where it should
+  // be there's a hole showing the metal endoskeleton skull inside, with one red glint for an eye (on
+  // request; the other socket is dark). Only
+  // his lower jaw with its little teeth is left, a red bow tie, and his left arm is torn off (wires).
   wbn: {
-    office: eyes(art(String.raw`
-  /\    /\
- |  |  |  |
-  \  \/  /
-  /      \
- |  .--.  |
- | | :: | |
- |  '--'  |
- | VVVVVV |
-  \______/
-   |    |`), 'r', '*'),
-    scare: eyes(art(String.raw`
-         /\            /\
-        |  |          |  |
-        |  |          |  |
-         \  \________/  /
-         /              \
-        |    .------.    |
-        |   |   ::   |   |
-        |   |   ::   |   |
-        |    '------'    |
-        |  VVVVVVVVVVVV  |
-         \______________/`), 'r', '*'),
+    office: art(String.raw`
+  /\     /\
+ |  |   |  |
+ |  |   |  |
+  \  \_/  /
+  /  ___  \
+ |  /   \  |
+ | | * o | |
+ | |  =  | |
+ |  \___/  |
+  \ vvvvv /
+   '-----'
+    >==<
+  /|    |~~`),
+    scare: art(String.raw`
+          /\              /\
+         |  |            |  |
+         |  |            |  |
+          \  \__________/  /
+          /                \
+         |    .--------.    |
+         |   /   ____   \   |
+         |  |   /    \   |  |
+         |  |  | *  o |  |  |
+         |  |   \ == /   |  |
+         |   \   ''''   /   |
+         |    '--------'    |
+          \  vvvvvvvvvvvv  /
+           '--------------'
+               >======<`),
   },
   bdb: {
     scare: eyes(art(String.raw`
@@ -827,11 +838,11 @@ region(SPRITES.mrn.scare, 1, 1, 'w');
 region(SPRITES.nmt.office, 0, 5, 'w');
 region(SPRITES.nmt.scare, 0, 6, 'w');
 
-// Withered Bonnie: no face, just two red glints and a grey endoskeleton jaw.
-SPRITES.wbn.office[5] = SPRITES.wbn.office[5].replace('::', '**');
-SPRITES.wbn.scare[6] = SPRITES.wbn.scare[6].replace('::', '**');
-SPRITES.wbn.scare[7] = SPRITES.wbn.scare[7].replace('::', '  ');
-for (const look of looks('wbn')) { eyes(look, 'r', '*'); tint(look, 'V', 'G'); }
+// Withered Bonnie: the hole where his face was shows the grey metal skull, with one red eye glint; white
+// teeth on his jaw, a red bow tie, and grey wires where his arm was.
+region(SPRITES.wbn.office, 5, 8, 'G', 3, 9);
+region(SPRITES.wbn.scare, 6, 10, 'G', 13, 24);
+for (const look of looks('wbn')) { tint(look, '*', 'r'); tint(look, '>=<', 'r'); tint(look, 'v', 'w'); tint(look, '~', 'G'); }
 
 // Jack-o Chica: her bib glows too.
 region(SPRITES.jck.scare, 8, 8, 'y');
