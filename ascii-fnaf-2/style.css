@@ -1,0 +1,373 @@
+/* =====================================================================
+   style.css: how everything LOOKS (colors, fonts, sizes, layout).
+
+   CSS never changes what the game DOES; it only styles the HTML in
+   index.html. Each rule is "selector { property: value; }":
+     .monitor   means "every element with class="monitor""
+     #scare     means "the element with id="scare""
+     button     means "every <button>"
+
+   Layout: one control panel, centered. A top bar, then the active
+   screen. In game: HUD strip, ASCII view, control strip.
+   The look is Sister Location (on request): cold, dark gunmetal with
+   lavender text and magenta and teal lights, deep underground. It's
+   deliberately dark only.
+   ===================================================================== */
+
+/* ---------- design tokens ----------
+   "--name: value" defines a CSS variable; var(--name) uses it.
+   Change a color here and it changes everywhere it is used. */
+:root {
+  --bg: #07060b;
+  --panel: #0d0b14;
+  --line: #2a2340;
+  --fg: #cdbdf5;      /* pale lavender: the screens' text */
+  --dim: #7a6a9e;
+  --faint: #2e2645;
+  --danger: #ff4466;
+  --magenta: #ff3fb4; /* the neon lights */
+  --teal: #3fe0d0;    /* the screens and gauges */
+  /* One color per character (the c- classes below use them). */
+  --c-nfr: #a8743f;   /* Nightmare Freddy: dark brown (red eyes as accents) */
+  --c-nbn: #5b5be6;   /* Nightmare Bonnie: deep blue-purple */
+  --c-nch: #e8d23c;   /* Nightmare Chica: dirty yellow */
+  --c-nfx: #d2413a;   /* Nightmare Foxy: dark red */
+  --c-nfb: #d9a521;   /* Nightmare Fredbear: gold (purple hat as an accent) */
+  --c-bab: #ff7a5c;   /* Circus Baby: her red-orange hair and face paint */
+  --c-bal: #5aa8ff;   /* Ballora: blue */
+  --c-ffr: #f4eef8;   /* Funtime Freddy: white (pink and purple as accents) */
+  --c-ffx: #ffb3d9;   /* Funtime Foxy: white and pink */
+  --c-end: #9aa6b2;   /* Ennard: bare grey wires */
+  --c-mrn: #c9a8ff;   /* Minireenas: light purple */
+  --c-nmt: #e8e8ee;   /* the Nightmarionette: a white face on black */
+  --c-wbn: #6a76c9;   /* Withered Bonnie: faded blue */
+  --c-bdb: #ff9ad5;   /* Bidybabs: pink */
+  --c-jck: #ff8c1a;   /* Jack-o Chica: glowing orange */
+  --c-ptr: #6ccf5a;   /* Plushtrap: green */
+  --c-ncp: #ff4fa3;   /* Nightmare Cupcake: hot pink */
+  --c-nmg: #f0dfee;   /* Nightmare Mangle: white and pink */
+  --font-display: "Share Tech Mono", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* The ASCII art's font size. Smaller than Line 1 (on request) so the pictures can have more detail:
+     the office row is 84 characters wide, so the size is the screen width shared by 85 characters, at
+     most 11px. */
+  --art: min(11px, calc((100vw - 60px) / 85));
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  /* A faint glow from above, like a far-off ceiling light deep underground. */
+  background-image: radial-gradient(ellipse at 50% -10%, rgba(120, 80, 200, .14), transparent 60%);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  overflow-x: hidden;
+}
+* { box-sizing: border-box; }
+
+/* The game hides screens with the HTML `hidden` attribute. Browsers hide those by default,
+   but any rule that sets `display` (like `#scare { display: flex }`) would win and show
+   them anyway. !important makes `hidden` always win. */
+[hidden] { display: none !important; }
+
+.app { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar button { white-space: nowrap; flex: none; }
+
+/* The control panel: brushed dark metal with a thin magenta light along the top edge. */
+.monitor {
+  position: relative;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--magenta);
+  background: linear-gradient(180deg, #110e1b, var(--panel) 30%, #0a0910);
+  padding: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 90px rgba(0,0,0,.7), 0 -1px 18px rgba(255,63,180,.18);
+}
+/* Faint scanlines laid on top, like an old security screen. */
+.monitor::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.2) 2px 3px);
+}
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: rgba(255,255,255,.015);
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+button:hover { border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+button.primary { background: var(--magenta); color: #12040c; border-color: var(--magenta); font-weight: 600; }
+button.primary:hover { background: transparent; color: var(--magenta); }
+kbd { font: inherit; font-size: 11px; color: var(--dim); border: 1px solid var(--faint); padding: 0 5px; margin-left: 6px; }
+button.primary kbd { color: inherit; border-color: currentColor; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 1; text-wrap: balance; }
+/* clamp(smallest, preferred, largest): 13vw is 13% of the window width, so the title shrinks on phones. */
+h1 { font-size: clamp(40px, 13vw, 108px); letter-spacing: .06em; text-shadow: 0 0 18px rgba(255,63,180,.45); }
+h2 { font-size: clamp(34px, 7vw, 50px); letter-spacing: .06em; }
+p { margin: 0; }
+.eyebrow { color: var(--dim); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.keys { color: var(--dim); font-size: 12px; }
+.sub { color: var(--dim); max-width: 62ch; }
+
+/* ---------- ASCII art ----------
+   Every drawing lives in a <pre> ("preformatted") block, which keeps spaces and line breaks
+   exactly as written. A monospace font makes every character the same width, so columns line up. */
+pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.16; margin: 0; white-space: pre; }
+/* Clicking the game shouldn't highlight the ASCII pictures as text. */
+pre.art, .viewport, .hud, .controls, .map, .feed-head, .icon, .trio, .lvrow .ctrl, #scare pre {
+  user-select: none; -webkit-user-select: none;
+}
+/* Each character's color. b.c-nbn makes "Nightmare Bonnie" in a sentence bold in his color too. */
+.c-nfr { color: var(--c-nfr); } .c-nbn { color: var(--c-nbn); } .c-nch { color: var(--c-nch); }
+.c-nfx { color: var(--c-nfx); } .c-nfb { color: var(--c-nfb); } .c-bab { color: var(--c-bab); }
+.c-bal { color: var(--c-bal); } .c-ffr { color: var(--c-ffr); } .c-ffx { color: var(--c-ffx); }
+.c-end { color: var(--c-end); } .c-mrn { color: var(--c-mrn); } .c-nmt { color: var(--c-nmt); }
+.c-wbn { color: var(--c-wbn); } .c-bdb { color: var(--c-bdb); } .c-jck { color: var(--c-jck); }
+.c-ptr { color: var(--c-ptr); } .c-ncp { color: var(--c-ncp); } .c-nmg { color: var(--c-nmg); }
+/* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
+pre [class*="c-"] { font-weight: 600; }
+/* Accent colors: a second color on parts of the drawings (the masks in art.js), mostly the eyes.
+   They come after the character colors above, so on a cell with both classes the accent wins. */
+.acc-red { color: #ff3b3b; text-shadow: 0 0 5px #ff3b3b; } .acc-orange { color: #ffa21f; } .acc-yellow { color: #ffe14a; text-shadow: 0 0 5px #ffe14a; }
+.acc-green { color: #7dff9a; text-shadow: 0 0 5px #7dff9a; } .acc-blue { color: #6fb7ff; text-shadow: 0 0 5px #6fb7ff; } .acc-violet { color: #b04dff; }
+.acc-pink { color: #ff4fa3; } .acc-gold { color: #ffc94a; } .acc-sky { color: #9fe3ff; }
+.acc-white { color: #ffffff; text-shadow: 0 0 5px #fff; } .acc-grey { color: #b9c2cc; }
+.acc-magenta { color: var(--magenta); text-shadow: 0 0 5px var(--magenta); } .acc-teal { color: var(--teal); }
+.acc-black { color: #0a0a0a; text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
+/* A character's tiny 3-line face on the menus (ICONS in art.js). */
+.icon { display: inline-block; white-space: pre; font-family: var(--font-mono); font-weight: 600; font-size: 13px; line-height: 1.05; }
+.icon.big { font-size: 15px; justify-self: center; }
+/* Just the middle line of the face, for one-line places like the "Best:" line. */
+.face-mini { white-space: pre; font-family: var(--font-mono); font-weight: 600; }
+.alert, .blink { animation: blink 0.8s steps(2) infinite; }
+.alert { color: var(--danger) !important; }
+.dim { color: var(--dim); }
+
+/* ---------- the place itself (classes used by art.js and render.js) ---------- */
+.room { color: #5d5478; }                     /* walls, desk and furniture: cold grey-violet metal */
+.wall { color: #6a6190; } .wall1 { color: #574f78; } .wall2 { color: #433c5e; } .wall3 { color: #312b46; }   /* the hall gets darker the further away it is */
+.floor { color: #2c2640; }
+.lamp { color: #fff3c4; text-shadow: 0 0 8px #ffe9a0; }
+.exit { color: #ff4466; text-shadow: 0 0 6px #ff4466; }
+.hazard { color: #c9a227; opacity: .55; }
+.pipe { color: #3b4a5a; }
+.sign { color: var(--magenta); text-shadow: 0 0 6px var(--magenta); }
+.curtain { color: #8a2a5c; }                  /* the show stage's curtains: deep magenta velvet */
+.screen { color: var(--teal); text-shadow: 0 0 5px var(--teal); }
+.grate { color: #3a3352; }
+.door { color: #8a82ad; }
+.heavy { color: #c6c0dc; text-shadow: 0 0 2px #fff; }
+.shock { color: #ffe14a; text-shadow: 0 0 6px #ffe14a; }
+.smoke { opacity: .8; text-shadow: 0 0 8px var(--c-jck); }
+.shone { text-shadow: 0 0 10px #fff; color: #fffbe8; }
+/* A light that flickers now and then, like a failing bulb. */
+.flicker { animation: flicker 4s steps(1) infinite; }
+@keyframes flicker { 0%, 61%, 66%, 100% { opacity: 1; } 62%, 65% { opacity: .25; } 63% { opacity: .9; } 90% { opacity: .5; } 91% { opacity: 1; } }
+
+/* ---------- title ---------- */
+.title { display: flex; flex-direction: column; gap: 18px; padding-block: 24px; }
+.title .tag-line { font-size: 16px; max-width: 52ch; }
+/* "LINE 2" under the big title. */
+.title .line-tag { font-family: var(--font-display); font-size: 30px; letter-spacing: .4em; color: var(--teal); margin-top: -16px; text-shadow: 0 0 10px rgba(63,224,208,.5); }
+.trio { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.trio .icon { font-size: 15px; }
+.menu { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- setup ---------- */
+.setup { display: flex; flex-direction: column; gap: 18px; }
+/* The character cards: as many 120px-or-wider columns as fit. */
+.rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.lvrow {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 6px 8px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.012);
+  cursor: pointer;
+  text-align: center;
+}
+.lvrow:hover { border-color: var(--dim); }
+.lvrow.sel { border-color: var(--magenta); background: rgba(255,63,180,.06); }
+.lvrow.off .icon, .lvrow.off .name { opacity: .45; }   /* switched off for tonight */
+.lvrow .name { font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; line-height: 1.2; min-height: 2.4em; display: grid; place-items: center; }
+/* How many times this character has got you, in the card's top right corner (only once it has). */
+.lvrow .kills { position: absolute; top: 4px; right: 6px; color: var(--danger); font-size: 11px; }
+.ctrl { display: flex; align-items: center; gap: 6px; }
+.ctrl button { padding: 2px 9px; font-size: 18px; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; }   /* hold to repeat on phones too */
+.lv { font-family: var(--font-display); font-size: 26px; font-weight: 400; line-height: 1; min-width: 3ch; font-variant-numeric: tabular-nums; }
+/* The info box under the grid (and on the pause panel): how the pointed-at character works. */
+.who-box { border: 1px solid var(--line); padding: 10px 12px; min-height: 6.2em; color: var(--fg); font-size: 13px; line-height: 1.45; text-align: left; }
+.who-box b { font-weight: 600; letter-spacing: .06em; }
+.who-box .kills { color: var(--danger); }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.presets .lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-right: 4px; }
+.presets button { padding: 6px 10px; font-size: 12px; }
+.presets button.picked { border-color: var(--magenta); background: rgba(255,63,180,.1); }
+.flavor { color: var(--dim); font-style: italic; min-height: 1.5em; margin-top: -8px; }
+.flavor b { color: var(--fg); font-style: normal; }
+/* A beaten challenge: a gold ✓ and a gold border. */
+.tick { color: #ffc94a; font-weight: 600; }
+.presets button.done { border-color: #ffc94a; }
+.score b { color: var(--fg); font-weight: 600; }
+.best { color: var(--dim); }
+.best b { color: var(--fg); font-weight: 600; }
+
+/* ---------- game ---------- */
+.hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 18px; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-size: 38px; line-height: 1; color: var(--teal); text-shadow: 0 0 10px rgba(63,224,208,.45); }
+.meter { display: flex; align-items: baseline; gap: 8px; font-size: 12px; letter-spacing: .06em; }
+.meter .lab { color: var(--dim); font-size: 11px; letter-spacing: .14em; }
+.meter b { font-family: var(--font-display); font-size: 26px; font-weight: 400; min-width: 4ch; text-align: right; }
+.meter .bars { white-space: pre; }
+.meter.o2 b, .meter.o2 .bars { color: var(--teal); }
+.low { color: var(--danger) !important; }
+.viewport { position: relative; display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.16 * 20); }
+.office { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.office-room { display: flex; justify-content: center; }
+.office pre[data-door] { cursor: pointer; }
+/* The controlled shock: the whole office flashes yellow-white for a moment. */
+.office.zap pre { filter: brightness(2.2) saturate(.4); text-shadow: 0 0 6px #fff7b0; }
+/* After a power-out everything goes dark. */
+.office.dark pre, .office.dark pre span { color: #18151f !important; text-shadow: none !important; }
+/* What you hear at a door. */
+.listen-note { min-height: 1.5em; font-size: 13px; text-align: center; }
+
+/* Funtime Freddy's script and the SHOWTIME sign, on the office wall. */
+.board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
+.board-head { font-size: 11px; letter-spacing: .14em; color: var(--dim); }
+.script { border: 1px solid var(--line); padding: 6px 10px; flex: 1 1 380px; max-width: 560px; background: rgba(255,255,255,.012); }
+.script ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 14px; font-size: 12px; line-height: 1.5; }
+.script li .t { color: var(--dim); font-variant-numeric: tabular-nums; }
+.script li.important { color: var(--c-ffr); font-weight: 600; }
+.script li.important::before { content: "! "; color: var(--magenta); }
+.script li.done { opacity: .4; }
+.script li.now { opacity: 1; color: var(--magenta); }
+.important-key { color: var(--magenta); }
+.showtime { border: 1px solid var(--line); padding: 6px 14px; text-align: center; flex: 0 0 auto; background: rgba(255,255,255,.012); }
+.showtime .show-time { font-family: var(--font-display); font-size: 26px; color: var(--c-ffx); line-height: 1.2; }
+.showtime.live { border-color: var(--c-ffx); animation: blink 0.5s steps(2) infinite; }
+
+/* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
+   through its two eye holes. The holes let clicks through; the mask itself blocks them. */
+.mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.mask-view svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.mask-view path { fill: #0b0912; stroke: var(--dim); stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: visiblePainted; }
+
+/* The raised monitor: the camera feed, its shock button and the map side by side. */
+.cams { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; width: 100%; }
+.feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; color: var(--teal); }
+.rec { color: var(--danger); }
+.rec::before { content: "\25CF  "; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.shock-cam { align-self: flex-start; border-color: #6b5a1a; color: #ffe14a; }
+.shock-cam:disabled { opacity: .4; cursor: not-allowed; }
+.map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: "stage audi arcade" "parts oxygen power" "lhall storage rhall" "lhall you rhall";
+  gap: 6px;
+  width: min(300px, 100%);
+}
+.map button { padding: 7px 4px; font-size: 11px; line-height: 1.3; letter-spacing: .04em; text-transform: none; }
+.map button[aria-current="true"] { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+.map .mw { font-weight: 600; }
+.map .mw.alert { animation: blink 0.5s steps(2) infinite; }
+.map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
+
+/* The ten buttons: two rows of five. */
+.controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.controls button { padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; }
+.controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+.controls button.on { border-color: var(--teal); background: rgba(63,224,208,.1); }
+.controls button.on .state { color: var(--teal); }
+.controls button.heavy-btn { border-style: double; border-width: 3px; }
+.controls button.shock-btn { border-color: #6b5a1a; }
+.controls button.shock-btn .state { color: #ffe14a; }
+.controls button:disabled { opacity: .35; cursor: not-allowed; }
+.hint { margin-top: 10px; text-align: center; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(7,6,11,.93);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 20px; text-align: center;
+  overflow-y: auto;   /* a long roster can scroll */
+}
+/* "safe center" centres the pause panel, but starts at the top if it's taller than the screen. */
+#pause { justify-content: safe center; gap: 12px; }
+#pause > * { flex-shrink: 0; }
+#pause .who-box { width: min(560px, 100%); min-height: 4.6em; }
+.mini-roster { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 680px; }
+.mini-card { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 84px; padding: 6px 2px; border: 1px solid var(--line); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.mini-card:hover { border-color: var(--fg); }
+.mini-card .icon { font-size: 11px; }
+.mini-card b { font-weight: 600; line-height: 1.2; }
+.mini-card .lvtag { color: var(--dim); }
+
+/* ---------- end screens ---------- */
+.endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
+.endcard .big { font-family: var(--font-display); font-size: clamp(64px, 16vw, 128px); line-height: .9; color: var(--teal); text-shadow: 0 0 18px rgba(63,224,208,.4); }
+.endcard .lvls { font-size: 16px; display: flex; gap: 10px 18px; flex-wrap: wrap; align-items: center; }
+
+#scare {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center;
+}
+/* The jumpscare drawings are shown big. */
+#scareArt { font-size: min(3.6vw, 5.2vh); line-height: 1.1; text-shadow: 0 0 10px currentColor; }
+#scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 60ch; }
+#scareMsg h2 { color: var(--danger); }
+.shake { animation: shake .07s linear infinite; }
+@keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
+
+/* ---------- help ---------- */
+#howto { position: fixed; inset: 0; z-index: 40; background: rgba(7,6,11,.95); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.howto-card { max-width: 680px; width: 100%; border: 1px solid var(--line); border-top: 2px solid var(--magenta); background: var(--panel); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.howto-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.howto-card table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.howto-card td { border-top: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
+.howto-card td:first-child { color: var(--dim); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- small screens ----------
+   @media rules only apply when their condition is true. This one kicks in on phones (560px wide or less). */
+@media (max-width: 560px) {
+  .monitor { padding: 12px; }
+  .rows { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .lvrow .icon.big { font-size: 12px; }
+  .ctrl button { padding: 2px 7px; }
+  .lv { font-size: 22px; }
+  .mini-card { width: 66px; font-size: 9px; }
+  .mini-card .icon { font-size: 10px; }
+  .controls { gap: 5px; }
+  .controls button { font-size: 10px; padding: 8px 2px; }
+  .controls kbd { display: none; }
+  .clock { font-size: 30px; }
+}
+/* Some players turn on "reduce motion" in their system settings; respect it by switching off shaking and blinking. */
+@media (prefers-reduced-motion: reduce) {
+  .shake, .rec::before, .alert, .blink, .flicker, .showtime.live, .map .mw.alert { animation: none; }
+}

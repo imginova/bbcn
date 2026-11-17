@@ -1,0 +1,258 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASCII FNAF: Line 2</title>
+<!--
+  =====================================================================
+  index.html: the page STRUCTURE (what is on the screen).
+
+  ASCII FNAF: Line 2 is a fan game. It is not affiliated with Scott
+  Cawthon or Five Nights at Freddy's; the characters belong to their
+  creator. It's a separate game from Line 1, with its own saves.
+
+  This file only lists the pieces of the page: screens, buttons, empty
+  boxes the game draws into. How they look lives in style.css, and what
+  they do lives in the js/ folder (loaded at the very bottom).
+
+  Note: there is no <!doctype>, <html>, <head> or <body> here on purpose.
+  tools/build.js wraps the page in those for the website, and browsers
+  also cope fine when you double-click this file to open it locally.
+  The two <meta> lines at the very top are for that local case:
+  "charset utf-8" makes symbols like ✓ display correctly, and
+  "viewport" makes it fit a phone screen.
+
+  The game has four screens, and only one is visible at a time
+  (the others carry the `hidden` attribute):
+    #scr-title  title screen
+    #scr-setup  custom night: set each character's level
+    #scr-game   the night itself (HUD, office or monitor, controls)
+    #scr-win    6 AM, you survived
+  plus #scare (jumpscare and game over) and #howto ("How to play"),
+  which cover the whole window.
+  =====================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<div class="app">
+  <div class="topbar">
+    <span class="id">ASCII FNAF: Line 2 · a fan game</span>
+    <button id="btnMute" type="button" aria-pressed="false">Sound on</button>
+  </div>
+
+  <div class="monitor">
+
+    <!-- TITLE -->
+    <section id="scr-title" class="title">
+      <p class="eyebrow">Circus Baby's Entertainment and Rental · underground · 12 AM to 6 AM</p>
+      <h1>ASCII FNAF</h1>
+      <p class="line-tag">LINE 2</p>
+      <p class="tag-line">Two doors and two heavy doors, a vent, a mask, a shock button, a battery that never lasts and air that never comes back. Eighteen of them down here tonight, from the rental place and from the nightmares.</p>
+      <p class="trio" id="titleTags" aria-hidden="true"></p>
+      <div class="menu">
+        <button id="btnPlay" type="button" class="primary">Custom night <kbd>Enter</kbd></button>
+        <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
+      </div>
+      <p class="keys">Turn sound on: you'll need to listen at the doors.</p>
+      <p class="keys">An unofficial fan game. Not affiliated with Scott Cawthon or Five Nights at Freddy's.</p>
+    </section>
+
+    <!-- SETUP -->
+    <section id="scr-setup" class="setup" hidden>
+      <p class="eyebrow">Before your shift</p>
+      <h2>CUSTOM NIGHT</h2>
+      <p class="sub">Set each one from level 0 to 20. Level 0 switches it off for the night; at 20 it acts at every chance it gets and gives you the least time to react. Or pick a ready-made challenge.</p>
+      <div class="rows" id="rows"></div>
+      <!-- How the card you point at (or the selected one) works; filled by renderWho() in screens.js. -->
+      <p class="who-box" id="who" aria-live="polite"></p>
+      <div class="presets" id="presets"></div>
+      <!-- The picked challenge's flavour text (FLAVOR in data.js); empty when no challenge is picked. -->
+      <p class="flavor" id="presetFlavor"></p>
+      <p class="score" id="scoreLine"></p>
+      <div class="setup-actions">
+        <button id="btnStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
+        <button id="btnAll0" type="button">All 0</button>
+        <button id="btnAll20" type="button">All 20</button>
+        <button id="btnHowSetup" type="button">How to play</button>
+        <button id="btnBack" type="button">Back</button>
+      </div>
+      <p class="best" id="bestLine"></p>
+      <p class="keys">Point at a card to see how that character works · ↑ ↓ pick a character · ← → change its level (or hold − / +) · Enter starts · Esc goes back</p>
+    </section>
+
+    <!-- GAME -->
+    <section id="scr-game" hidden>
+      <div class="hud">
+        <div class="clock" id="clock">12:00 AM</div>
+        <div class="meter"><span class="lab">POWER</span><b id="pw">100%</b><span class="bars" id="pwbar"></span></div>
+        <div class="meter o2"><span class="lab">OXYGEN</span><b id="o2">100%</b><span class="bars" id="o2bar"></span></div>
+        <div class="meter"><span class="lab">USAGE</span><span class="bars" id="usage"></span></div>
+      </div>
+
+      <div class="viewport" id="viewport">
+        <div class="office" id="office">
+          <div class="office-room">
+            <pre class="art" id="doorL" data-door="L" aria-label="Left door"></pre>
+            <pre class="art" id="officeArt" aria-hidden="true"></pre>
+            <pre class="art" id="doorR" data-door="R" aria-label="Right door"></pre>
+          </div>
+          <!-- What you hear while you're at a door (render.js listenText). -->
+          <p class="listen-note" id="listenNote" hidden></p>
+          <!-- On the office wall: Funtime Freddy's script and Funtime Foxy's SHOWTIME sign. -->
+          <div class="board" id="board">
+            <div class="script" id="script">
+              <p class="board-head">FUNTIME FREDDY'S SCRIPT <span class="dim">· <b class="important-key">!</b> sends him to a door</span></p>
+              <ol id="scriptLines"></ol>
+            </div>
+            <div class="showtime" id="showtime">
+              <p class="board-head">SHOWTIME</p>
+              <p class="show-time" id="showTime">--</p>
+              <p class="dim">Watch CAM 3</p>
+            </div>
+          </div>
+        </div>
+        <!-- THE MONITOR: raised with the Camera button. A camera feed, the shock for that camera, and the map. -->
+        <div class="cams" id="cams" hidden>
+          <div class="feed">
+            <div class="feed-head"><span id="feedName">CAM 1 · LEFT HALL</span><span class="rec">REC</span></div>
+            <pre class="art" id="feed"></pre>
+            <button id="btnShockCam" type="button" class="shock-cam">Shock this camera <kbd>X</kbd></button>
+          </div>
+          <!-- Each map button has an empty .mw span for its warning (the Cupcake's !, Mangle's ~). -->
+          <div class="map" id="map">
+            <button type="button" data-room="stage" style="grid-area:stage">CAM 3<br>Show stage<span class="mw"></span></button>
+            <button type="button" data-room="auditorium" style="grid-area:audi">CAM 4<br>Auditorium<span class="mw"></span></button>
+            <button type="button" data-room="arcade" style="grid-area:arcade">CAM 9<br>Arcade<span class="mw"></span></button>
+            <button type="button" data-room="parts" style="grid-area:parts">CAM 7<br>Parts &amp; service<span class="mw"></span></button>
+            <button type="button" data-room="oxygen" style="grid-area:oxygen">CAM 5<br>Oxygen room<span class="mw"></span></button>
+            <button type="button" data-room="power" style="grid-area:power">CAM 6<br>Power room<span class="mw"></span></button>
+            <button type="button" data-room="storage" style="grid-area:storage">CAM 8<br>Storage<span class="mw"></span></button>
+            <button type="button" data-room="lhall" style="grid-area:lhall">CAM 1<br>Left hall<span class="mw"></span></button>
+            <span class="you">YOU</span>
+            <button type="button" data-room="rhall" style="grid-area:rhall">CAM 2<br>Right hall<span class="mw"></span></button>
+          </div>
+        </div>
+        <!-- The mask: covers the whole view except two eye holes. An SVG is a drawing made of shapes;
+             "evenodd" means the two ovals are cut OUT of the big rectangle, leaving holes.
+             It sits inside a <div> because only normal page elements understand `hidden`. -->
+        <div class="mask-view" id="maskView" hidden aria-hidden="true">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path fill-rule="evenodd" d="M0 0H100V100H0Z M23 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z M52 50a12.5 15 0 1 0 25 0a12.5 15 0 1 0 -25 0Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnL" type="button"><span>Left door<kbd>A</kbd></span><span class="state" id="stL">OPEN</span></button>
+        <button id="btnHL" type="button" class="heavy-btn"><span>Left heavy<kbd>Z</kbd></span><span class="state" id="stHL">OPEN</span></button>
+        <button id="btnCam" type="button"><span>Camera<kbd>Space</kbd></span><span class="state" id="stCam">DOWN</span></button>
+        <button id="btnHR" type="button" class="heavy-btn"><span>Right heavy<kbd>C</kbd></span><span class="state" id="stHR">OPEN</span></button>
+        <button id="btnR" type="button"><span>Right door<kbd>D</kbd></span><span class="state" id="stR">OPEN</span></button>
+        <button id="btnGoL" type="button"><span>Listen left<kbd>Q</kbd></span><span class="state" id="stGoL">GO</span></button>
+        <button id="btnMask" type="button"><span>Mask<kbd>W</kbd></span><span class="state" id="stMask">OFF</span></button>
+        <button id="btnShock" type="button" class="shock-btn"><span>Shock<kbd>X</kbd></span><span class="state" id="stShock">DESK</span></button>
+        <button id="btnVent" type="button"><span>Vent door<kbd>V</kbd></span><span class="state" id="stVent">OPEN</span></button>
+        <button id="btnGoR" type="button"><span>Listen right<kbd>E</kbd></span><span class="state" id="stGoR">GO</span></button>
+      </div>
+      <p class="keys hint">A / D doors · Z / C heavy doors · Q / E go to a door and listen · Space cameras · 1–9 pick a camera · W mask · X shock (the desk, or the camera you're on) · V vent door · P pauses · M sound</p>
+
+      <div class="overlay" id="pause" hidden>
+        <h2>PAUSED</h2>
+        <div class="menu">
+          <button id="btnResume" type="button" class="primary">Resume <kbd>P</kbd></button>
+          <button id="btnHowPause" type="button">How to play</button>
+          <button id="btnQuit" type="button">Quit to setup</button>
+        </div>
+        <!-- Who is on tonight, filled by showPause() in screens.js. -->
+        <p class="eyebrow">On tonight</p>
+        <p class="who-box" id="pauseInfo"></p>
+        <div class="mini-roster" id="pauseRoster"></div>
+      </div>
+    </section>
+
+    <!-- WIN -->
+    <section id="scr-win" class="endcard" hidden>
+      <p class="eyebrow">Shift complete</p>
+      <div class="big">6:00 AM</div>
+      <p id="winMsg">You made it to morning.</p>
+      <div class="lvls" id="winLevels"></div>
+      <p class="best" id="winBest"></p>
+      <div class="menu">
+        <button id="btnAgainWin" type="button" class="primary">Play again <kbd>Enter</kbd></button>
+        <button id="btnLevelsWin" type="button">Change levels <kbd>C</kbd></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- JUMPSCARE / GAME OVER -->
+<div id="scare" hidden>
+  <pre class="art" id="scareArt"></pre>
+  <div id="scareMsg" hidden>
+    <h2>GAME OVER</h2>
+    <p id="loseMsg"></p>
+    <div class="menu">
+      <button id="btnRetry" type="button" class="primary">Retry <kbd>Enter</kbd></button>
+      <button id="btnLevelsLose" type="button">Change levels <kbd>C</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="howto" hidden>
+  <div class="howto-card" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <h2 id="howtoTitle">HOW TO PLAY</h2>
+    <ul>
+      <li>Survive from 12 AM to 6 AM. Each hour lasts 30 real seconds.</li>
+      <li><b>Power</b>: the monitor, each closed door and the vent door use power, a heavy door twice as much, and every shock a little. The mask is free. If the power runs out, everything opens and Nightmare Freddy finds you in the dark.</li>
+      <li><b>Oxygen</b> never comes back. Minireenas, the Nightmarionette, Ennard in the vents, Jack-o Chica's smoke and Plushtrap all use it up. At 0% you pass out.</li>
+      <li>You can't see anyone in the doorways. <b>Go to a door and listen</b> (Q or E): you can still work that door's buttons there, but not the cameras, the mask or the shock.</li>
+      <li><b>The shock</b>: at the desk it zaps everything in your office; on the monitor it zaps the camera you're looking at.</li>
+      <li><b class="c-nbn">Nightmare Bonnie</b> (left hall, CAM 1), <b class="c-nch">Nightmare Chica</b> (right hall, CAM 2), <b class="c-nfb">Nightmare Fredbear</b> (either hall) and <b class="c-nfx">Nightmare Foxy</b> (either side, never on camera, listen for his steps) come to the doors. Shut the <b>heavy door</b>, and only open it once the breathing has stopped.</li>
+      <li><b class="c-nfr">Nightmare Freddy</b>: Freddles climb onto your desk. Shock the desk before there are 4.</li>
+      <li><b class="c-bab">Circus Baby</b> beeps softly down the left hall. When she's in, put the mask on until she's right in front of you, then shock the desk.</li>
+      <li><b class="c-bal">Ballora</b>: her music comes from the side she's heading to, louder each step. Shut that door.</li>
+      <li><b class="c-ffr">Funtime Freddy</b>: his script is on the office wall. At an important line (marked !), watch the auditorium (CAM 4): the side of the room he walks to is the door he's going to. Shut it.</li>
+      <li><b class="c-ffx">Funtime Foxy</b>: be watching the show stage (CAM 3) at the time on the SHOWTIME sign.</li>
+      <li><b class="c-end">Ennard</b> either walks down a hall to a door (shut it) or crawls into the air vents (shock the desk).</li>
+      <li><b class="c-mrn">Minireenas</b> and the <b class="c-nmt">Nightmarionette</b> appear in your office and use up oxygen. One shock zaps all the Minireenas; the Nightmarionette needs 3.</li>
+      <li><b class="c-wbn">Withered Bonnie</b> walks in: mask on until he leaves.</li>
+      <li><b class="c-bdb">Bidybab</b> squeaks in the vent above you. Count: on every 3rd squeak, close the vent door.</li>
+      <li><b class="c-jck">Jack-o Chica</b> stands in a doorway breathing smoke (you can see it drift in). Slam the heavy door on her.</li>
+      <li><b class="c-ptr">Plushtrap</b> gets into the oxygen room (CAM 5). Stay on his camera until he leaves.</li>
+      <li><b class="c-ncp">Nightmare Cupcake</b> eats power in the power room (CAM 6, a pink <span class="alert">!</span> on the map): shock that camera. <b class="c-nmg">Nightmare Mangle</b> makes three cameras blink <span class="alert">~</span> but is only on one: find them and shock it. A wrong shock wastes power.</li>
+    </ul>
+    <div class="table-wrap">
+      <table>
+        <tr><td>Left / right door</td><td>A / D, or the buttons</td></tr>
+        <tr><td>Left / right heavy door</td><td>Z / C, or the buttons</td></tr>
+        <tr><td>Go to a door and listen</td><td>Q / E (press again to go back), or the Listen buttons</td></tr>
+        <tr><td>Monitor up / down</td><td>Space or S, or the Camera button</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 9, or click a room on the map</td></tr>
+        <tr><td>Mask</td><td>W, or the Mask button (not on the monitor or at a door)</td></tr>
+        <tr><td>Shock</td><td>X, or the Shock button (the desk), or "Shock this camera" on the monitor</td></tr>
+        <tr><td>Vent door</td><td>V, or the button</td></tr>
+        <tr><td>Pause</td><td>P or Esc</td></tr>
+        <tr><td>Sound</td><td>M, or the button at the top</td></tr>
+      </table>
+    </div>
+    <div class="menu"><button id="btnHowClose" type="button" class="primary">Got it <kbd>Esc</kbd></button></div>
+  </div>
+</div>
+
+<!--
+  The game's code, split by job. ORDER MATTERS: each file can use
+  things defined in the files above it, so the basics load first and
+  main.js (which starts the game) loads last.
+-->
+<script src="js/helpers.js"></script>  <!-- tiny tools: $, store, pick, rand, byLevel -->
+<script src="js/config.js"></script>   <!-- numbers to tweak: power, oxygen, timing, difficulty -->
+<script src="js/data.js"></script>     <!-- rooms, cameras, the characters and the challenges -->
+<script src="js/sound.js"></script>    <!-- every sound effect, generated in code -->
+<script src="js/art.js"></script>      <!-- ASCII pictures and the tools that draw them -->
+<script src="js/game.js"></script>     <!-- the rules: moving, doors, power, oxygen, winning, losing -->
+<script src="js/render.js"></script>   <!-- draws the night onto the screen -->
+<script src="js/screens.js"></script>  <!-- switching screens, custom night, how to play -->
+<script src="js/input.js"></script>    <!-- mouse and keyboard controls -->
+<script src="js/main.js"></script>     <!-- the game loop, and starting everything up -->
