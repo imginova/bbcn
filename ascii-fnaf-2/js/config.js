@@ -89,6 +89,7 @@ const BABY_CLOSE = 2.5;
 // Her music plays from the side she's coming from, louder each step. Shut that door before she arrives.
 const BALLORA_INTERVAL = 5;
 const BALLORA_STEPS = 3;
+const BALLORA_MUSIC = 1.3;      // seconds between the phrases of her music while she's coming (it plays all the way)
 
 // ---------- Funtime Freddy ----------
 // His script (shown in the office) has a line every so often. The important lines ("Bon-Bon, go get

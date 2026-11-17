@@ -68,7 +68,7 @@ const BABY = {
 };
 const BALLORA = {
   id: 'bal', name: 'Ballora', where: 'EITHER DOOR',
-  desc: 'Her music comes from the side she\'s dancing toward and gets louder each step. Shut that door before she arrives.',
+  desc: 'Her music plays the whole time she\'s coming, from the side she\'s dancing toward, and gets louder each step. Shut that door before she arrives.',
 };
 const FFREDDY = {
   id: 'ffr', name: 'Funtime Freddy', where: 'EITHER DOOR',

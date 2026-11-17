@@ -129,7 +129,7 @@ function newGame() {
     // Circus Baby: her step down the left hall; then `inside` (in your office) and `close` (right in front of you).
     bab: { level: levelOf(BABY), stage: 0, timer: BABY_INTERVAL * rand(0.7, 1.3), inside: false, close: false, maskT: 0, deadline: 0 },
     // Ballora: her step toward the side she picked, and her clock once she's there.
-    bal: { level: levelOf(BALLORA), step: 0, side: 'L', timer: BALLORA_INTERVAL * rand(0.7, 1.3), deadline: 0 },
+    bal: { level: levelOf(BALLORA), step: 0, side: 'L', timer: BALLORA_INTERVAL * rand(0.7, 1.3), deadline: 0, musicT: 0 },
     // Funtime Freddy: his script, where he stands in the auditorium ('C', 'L' or 'R') and what he's doing.
     ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, pos: 'C', phase: 'idle', goT: 0, stepped: false, deadline: 0 },
     // Funtime Foxy: the time (G.t) of the next show, and whether its fanfare has played.
@@ -393,9 +393,15 @@ function babyHome() {
 // ---------- Ballora ----------
 // She dances toward a door; her music comes from that side and gets louder each step. Shut that door
 // (normal or heavy) before she gets there, or within the reaction window once she's there.
+// Like in the games (on request), her music plays the WHOLE time she's on her way and at the door, a
+// phrase every BALLORA_MUSIC seconds, not just once per step; it stops when she gives up.
 function updateBallora(dt) {
   const B = G.bal;
   if (B.level === 0) return;
+  if (B.step > 0) {
+    B.musicT -= dt;
+    if (B.musicT <= 0) { sfx.ballora(Math.min(1, B.step / BALLORA_STEPS), B.side); B.musicT = BALLORA_MUSIC; }
+  }
   if (B.step > BALLORA_STEPS) {
     if (blocked(B.side)) { sfx.bonk(B.side); balloraHome(); }
     else if (G.t >= B.deadline) lose(BALLORA, B.side);
@@ -407,7 +413,7 @@ function updateBallora(dt) {
   if (Math.random() >= moveChance(B.level)) return;
   if (B.step === 0) B.side = pick(['L', 'R']);
   B.step++;
-  sfx.ballora(Math.min(1, B.step / BALLORA_STEPS), B.side);
+  B.musicT = 0;   // a step closer: her music swells straight away (updateBallora plays it next frame)
   if (B.step > BALLORA_STEPS) {
     if (blocked(B.side)) { sfx.bonk(B.side); balloraHome(); }
     else B.deadline = G.t + reactWindow(B.level);
