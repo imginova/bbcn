@@ -86,7 +86,8 @@ const levelOf = c => levels[SETUP.indexOf(c)];
 
 // A nightmare's state: how far down its hall it is, which side, and (at the door) its clocks.
 const nightmare = c => ({ level: levelOf(c), stage: 0, side: c.side || 'L', timer: c.interval * rand(0.7, 1.3),
-  atDoor: false, shut: false, deadline: 0, stayT: 0, breathT: 0 });
+  atDoor: false, shut: false, deadline: 0, stayT: 0, breathT: 0,
+  inside: false, grow: 0, growT: 0 });   // inside / grow / growT: only Nightmare Foxy uses these (foxyGrows)
 
 // Funtime Freddy's script for the night: FFR_LINES lines spread over the night, some of them important.
 function makeScript(level) {
@@ -238,6 +239,7 @@ function updateNightmares(dt) {
 }
 function updateNightmare(c, N, dt) {
   if (N.level === 0) return;
+  if (N.inside) { foxyGrows(N, dt); return; }
   if (N.atDoor) {
     if (G.at === N.side) {
       N.breathT -= dt;
@@ -250,8 +252,12 @@ function updateNightmare(c, N, dt) {
         sfx.leave(N.side);
         nightmareHome(c, N);
       }
-    } else if (N.shut) lose(c, N.side, 'early');   // opened before the breathing stopped
-    else if (G.t >= N.deadline) lose(c, N.side);
+    } else if (N.shut || G.t >= N.deadline) {
+      // Opened before the breathing stopped, or never shut in time. Nightmare Foxy gets into the office
+      // instead (foxyGrows); the others get you.
+      if (c === NFOXY) foxyIn(N);
+      else lose(c, N.side, N.shut ? 'early' : null);
+    }
     return;
   }
   N.timer -= dt;
@@ -272,7 +278,28 @@ function updateNightmare(c, N, dt) {
   }
   dirty = true;
 }
+// Nightmare Foxy in your office (on request: getting in doesn't end your night). He starts small on the
+// side he came in from and grows a stage every NFX_GROW seconds, with a growl each time. A shock on the
+// desk drives him out (shockDesk); if he grows past NFX_STAGES he gets you.
+function foxyIn(N) {
+  N.atDoor = false;
+  N.inside = true;
+  N.grow = 1;
+  N.growT = NFX_GROW;
+  sfx.foxyIn(N.side);
+  dirty = true;
+}
+function foxyGrows(N, dt) {
+  N.growT -= dt;
+  if (N.growT > 0) return;
+  N.grow++;
+  N.growT = NFX_GROW;
+  if (N.grow > NFX_STAGES) { lose(NFOXY); return; }
+  sfx.foxyGrow(N.grow / NFX_STAGES);
+  dirty = true;
+}
 function nightmareHome(c, N) {
+  N.inside = false;
   N.stage = 0;
   N.atDoor = false;
   N.shut = false;
@@ -719,11 +746,11 @@ function shock() {
   if (G.power <= 0) powerOutStart();
   dirty = true;
 }
-// The desk: clears the Freddles, zaps the Minireenas, hurts the Nightmarionette, and sends away Circus
-// Baby (once she's close) and Ennard (from the vents).
+// The desk: clears the Freddles, hurts the Nightmarionette, and sends away Circus Baby (once she's
+// close) and Ennard (from the vents).
 function shockDesk() {
   if (G.nfr.freddles) { G.nfr.freddles = 0; G.nfr.coming = 0; }
-  G.mrn.count = 0;
+  if (G.nfx.inside) { nightmareHome(NFOXY, G.nfx); sfx.gone(); }   // Nightmare Foxy, driven out of the office
   const N = G.nmt;
   if (N.present) {
     N.hits++;
@@ -733,10 +760,14 @@ function shockDesk() {
   if (G.bab.inside && G.bab.close) babyHome();
   if (G.end.mode === 'air') { ennardHome(); sfx.gone(); }
 }
-// A camera: the Nightmare Cupcake in the power room, or Nightmare Mangle in their room. Anything else
-// is a wasted shock.
+// A camera: the Minireenas in the oxygen room (all of them at once), the Nightmare Cupcake in the power
+// room, or Nightmare Mangle in their room. Anything else is a wasted shock.
 function shockCamera() {
   let hit = false;
+  if (G.camRoom === 'oxygen' && G.mrn.count) {
+    G.mrn.count = 0;
+    hit = true;
+  }
   if (G.camRoom === 'power' && G.ncp.present) {
     G.ncp.present = false;
     G.ncp.timer = cupcakeWait(G.ncp.level);

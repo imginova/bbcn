@@ -173,6 +173,18 @@ const sfx = (() => {
     // A nightmare walking away from the door after you outlasted it.
     leave(side) { for (let i = 0; i < 3; i++) noise(0.1, { vol: 0.3 - i * 0.09, freq: 300, delay: i * 0.3, pan: panOf(side) }); },
 
+    // ----- Nightmare Foxy in the office -----
+    // Bursting in from his side: a scrape and a snarl.
+    foxyIn(side) {
+      noise(0.4, { vol: 0.5, freq: 900, pan: panOf(side) });
+      tone(110, 0.6, { type: 'sawtooth', vol: 0.3, slide: 60, pan: panOf(side) * 0.6 });
+    },
+    // Growing a stage: a growl that gets deeper and louder (`size` goes from 0 to 1).
+    foxyGrow(size) {
+      tone(160 - 70 * size, 0.5, { type: 'sawtooth', vol: 0.15 + 0.25 * size, slide: -40 });
+      noise(0.4, { vol: 0.1 + 0.25 * size, freq: 500 });
+    },
+
     // ----- Nightmare Freddy's Freddles -----
     freddle() {
       const pan = Math.random() < 0.5 ? -0.3 : 0.3;

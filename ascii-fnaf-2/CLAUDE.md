@@ -46,14 +46,14 @@ Same as Line 1:
 |---|---|---|
 | Nightmare Freddy | A Freddle climbs onto the desk every `freddleWait` s; at `FREDDLE_MAX` (4) he's coming (`coming`, a reaction window) | Desk shock clears them all |
 | Nightmare Bonnie / Chica | Left / right hall in `NM_STAGES` (3) steps, footsteps and seen on CAM 1 / 2 (eyes far away, big up close); then at the door, unseen | Heavy door within `reactWindow + NM_EXTRA`; they breathe behind it for `NM_STAY` (4–7 s); opening it before then gets you (`'early'`) |
-| Nightmare Foxy | Either side, never on camera (`unseen`), only footsteps | Same as above |
+| Nightmare Foxy | Either side, never on camera (`unseen`), only footsteps. Getting past the door doesn't end the night (on request 2026-11-17): he's in the office (`inside`, `foxyIn`, `foxyGrows`) and grows a stage every `NFX_GROW` (1.8 s), drawn bigger each time (`NFX_SPOTS`) | Heavy door, as above; once he's in, a desk shock before he grows past `NFX_STAGES` (3). No challenge versions were raised: it only gives a second chance |
 | Nightmare Fredbear | Either hall, seen on its camera | Same as above |
 | Circus Baby | Left hall in `BABY_STAGES` (3) steps with soft beeps, then in the office | Mask in time; after `BABY_CLOSE` (2.5 s) of mask she's close (two beeps); then desk shock in time |
 | Ballora | Her music plays from the side she's heading to, louder each step (`BALLORA_STEPS` 3) | Shut that door (normal or heavy) |
 | Funtime Freddy | His script (`makeScript`, `FFR_LINES` 9, `ffrAttacks` 1–5 important) is on the office wall. An important line sends him to a door: he walks to that side of the auditorium (CAM 4) with steps from that side, and `ffrRun` s later he's there | Shut that door (`FFR_GRACE` 1 s once he's there) |
 | Funtime Foxy | The show stage's sign on CAM 3 shows the next show (a round time, `ffxGap` apart; on request 2026-11-17 it moved there from an office sign, and every challenge with him went to v2) | Be watching CAM 3 then (`FFX_GRACE` 1.5 s late is fine) |
 | Ennard | Each visit: a walk down a hall (`ENNARD_STAGES`, clanks, seen on camera) or a crawl into the vents (oxygen) | Shut the door / desk shock |
-| Minireenas | One appears every `minireenaWait` s, up to `MRN_MAX` (4), each using oxygen | One desk shock zaps them all |
+| Minireenas | One appears in the oxygen room (CAM 5; on request 2026-11-17 they moved there from the office) every `minireenaWait` s, up to `MRN_MAX` (4), each using oxygen | One camera shock on CAM 5 zaps them all |
 | Nightmarionette | Appears and uses oxygen fast | `NMT_SHOCKS` (3) desk shocks |
 | Withered Bonnie | Walks into the office | Mask for `MASK_HOLD` (2 s) |
 | Bidybab | Squeaks in the vent | Close the vent door on every `BIDY_EVERY` (3rd) squeak |
@@ -64,7 +64,7 @@ Same as Line 1:
 
 **Defaults chosen by Claude, not the owner** (tell them if asked, change on request): the heavy door also stops walkers; Ennard picks his kind of visit at random; the Nightmare Cupcake is always in the power room; the shock has a cooldown and costs 1% power; Freddles give a reaction window at the 4th; Baby's "close" comes after 2.5 s of mask; every number in `config.js` is a first guess. The owner chose: oxygen never refills; both door kinds on each side, with walking to a door to listen; Ballora's music comes from her side; Nightmare Mangle is shocked on the right camera.
 
-**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges (v1, except the 8 with Funtime Foxy, which are v2 since his showtime moved to CAM 3): Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 360 points).
+**Custom night, pause roster, kill tally, challenges, auto-pause:** the same as Line 1 (`screens.js`, `whoHtml`, `countKill`, `PRESETS` with versions, `FLAVOR`). 16 starter challenges (raised a version when Funtime Foxy's showtime moved to CAM 3 and again for those with Minireenas when they moved to CAM 5): Warm-up, First shift, Circus, Ballerina, Showtime, Heavy doors, Mask up, Short of breath, Brownout, Sister Location, Bedroom, Halloween, Everyone at 5/10/15, All 20 (the maximum, 360 points).
 
 **Controls:** A/D doors, Z/C heavy doors, Q/E listen at a door, Space/S monitor, 1–9 cameras, W mask, X shock, V vent door, P/Esc pause, M mute.
 

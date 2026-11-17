@@ -27,7 +27,7 @@ const POWER_OUT_WAIT = [5, 13];  // seconds of darkness after a power-out before
 // ---------- oxygen ----------
 // Oxygen starts at 100% and NEVER comes back (on request). At 0% you pass out: game over.
 // What drains it, in % per second while it's going on:
-const MRN_O2 = 0.3;              // each Minireena in the office
+const MRN_O2 = 0.3;              // each Minireena in the oxygen room
 const NMT_O2 = 1.0;              // the Nightmarionette
 const END_O2 = 0.8;              // Ennard in the air vents
 const JCK_O2 = 0.8;              // Jack-o Chica's smoke
@@ -63,6 +63,10 @@ const NFB_INTERVAL = 6;
 const NFX_INTERVAL = 4.5;        // Foxy is quick
 const NM_EXTRA = 1.5;            // extra seconds to shut the heavy door (you may have to walk to the door first)
 const NM_STAY = [4, 7];          // seconds they breathe behind a shut heavy door before leaving
+// Nightmare Foxy getting past the door doesn't end the night (on request): he's in the office and grows
+// a stage every NFX_GROW seconds. Shock the desk to drive him out; after NFX_STAGES stages he gets you.
+const NFX_GROW = 1.8;
+const NFX_STAGES = 3;
 
 // ---------- Nightmare Freddy's Freddles ----------
 // A Freddle climbs onto your desk every so often. FREDDLE_MAX of them and Nightmare Freddy comes for
@@ -105,8 +109,8 @@ const ENNARD_INTERVAL = 4;
 const ENNARD_STAGES = 2;
 
 // ---------- Minireenas ----------
-// They turn up in the office one at a time (MRN_MAX at most) and each one uses up oxygen. A shock on
-// the desk zaps them all.
+// They turn up in the oxygen room (CAM 5, on request) one at a time (MRN_MAX at most) and each one uses
+// up oxygen. One shock on that camera zaps them all.
 const minireenaWait = level => waitFor(level, 26, 8);
 const MRN_MAX = 4;
 

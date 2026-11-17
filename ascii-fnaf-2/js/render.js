@@ -84,10 +84,15 @@ function renderOffice(now) {
 function drawVisitors(g, now) {
   // The Freddles on the desk; they blink red once Nightmare Freddy is coming.
   for (let i = 0; i < G.nfr.freddles; i++) sprite(g, ...FREDDLE_SPOTS[i], SPRITES.nfr.office, 'c-nfr' + (G.nfr.coming ? ' blink' : ''));
-  for (let i = 0; i < G.mrn.count; i++) sprite(g, ...MRN_SPOTS[i], SPRITES.mrn.office, 'c-mrn');
   if (G.end.mode === 'air') sprite(g, ...ENNARD_AIR_SPOT, SPRITES.end.office, 'c-end');
   if (G.wbn.present) sprite(g, ...WBN_SPOT, SPRITES.wbn.office, 'c-wbn');
   if (G.nmt.present) sprite(g, ...NMT_SPOT, SPRITES.nmt.office, 'c-nmt' + (now < G.zapUntil ? ' shone' : ''));
+  // Nightmare Foxy, once he's got in: bigger at every stage (the last one is his jumpscare drawing).
+  const X = G.nfx;
+  if (X.inside) {
+    const look = X.grow === 1 ? SPRITES.nfx.small : X.grow === 2 ? SPRITES.nfx.medium : SPRITES.nfx.scare;
+    sprite(g, ...NFX_SPOTS[Math.min(X.grow, NFX_STAGES)][X.side], look, 'c-nfx');
+  }
   const B = G.bab;
   if (B.inside) {
     if (B.close) sprite(g, ...BABY_CLOSE_SPOT, SPRITES.bab.close, 'c-bab');
@@ -247,6 +252,7 @@ function drawOnCamera(g, room) {
   }
   if (room === 'auditorium' && G.ffr.level > 0 && G.ffr.phase !== 'door') sprite(g, ...FFR_SPOTS[G.ffr.pos], SPRITES.ffr.cam, 'c-ffr');
   if (room === 'oxygen' && G.ptr.present) sprite(g, ...PTR_SPOT, SPRITES.ptr.cam, 'c-ptr');
+  if (room === 'oxygen') for (let i = 0; i < G.mrn.count; i++) sprite(g, ...MRN_SPOTS[i], SPRITES.mrn.cam, 'c-mrn');
   if (room === 'power' && G.ncp.present) sprite(g, ...NCP_SPOT, SPRITES.ncp.cam, 'c-ncp');
   if (room === 'parts' && G.end.level > 0 && !G.end.mode) sprite(g, ...ENNARD_HOME, SPRITES.end.cam, 'c-end');
   if (G.nmg.present && room === G.nmg.room) sprite(g, ...NMG_SPOT, SPRITES.nmg.cam, 'c-nmg');

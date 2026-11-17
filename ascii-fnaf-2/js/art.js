@@ -6,7 +6,7 @@
    Each cell is one character plus an optional CSS class for its color:
        { ch: 'O', cls: 'c-nbn' }
    We build a grid from plain text, draw characters into it (Nightmare
-   Bonnie in the hall, Minireenas in the office...), then turn the grid
+   Bonnie in the hall, Freddles on the desk...), then turn the grid
    into HTML with toHtml() and drop it into a <pre> block on the page.
 
    Line 2 uses a smaller font than Line 1 (on request), so its pictures
@@ -347,6 +347,7 @@ const ROOM_TINTS = {
 const FFX_SPOT = [3, 24];                                  // Funtime Foxy on the show stage
 const FFR_SPOTS = { C: [4, 23], L: [5, 4], R: [5, 44] };   // Funtime Freddy in the auditorium: middle, left side, right side
 const PTR_SPOT = [9, 20];                                  // Plushtrap in the oxygen room
+const MRN_SPOTS = [[9, 4], [9, 11], [9, 47], [9, 53]];     // the Minireenas, dancing around the oxygen room (on request)
 const NCP_SPOT = [8, 46];                                  // Nightmare Cupcake in the power room
 const NMG_SPOT = [1, 20];                                  // Nightmare Mangle, hanging from the ceiling of whichever room
 const ENNARD_HOME = [5, 44];                               // Ennard in parts & service, between visits
@@ -448,6 +449,19 @@ const SPRITES = {
        J\     |      |     /
          \    \AAAAAA/    /
           '--------------'`), 'y'),
+    // In your office (on request), growing: small in the corner he came in by, then bigger, and at the
+    // last stage his jumpscare drawing, looming over the desk.
+    small: eyes(art(String.raw`
+/\_/\
+(@ @)
+JVVV`), 'y'),
+    medium: eyes(art(String.raw`
+ /\       /\
+/  \_____/  \
+|  @     @  |
+ \  /VVV\  /
+ J\ \AAA/ /
+   '-----'`), 'y'),
   },
   nfb: {
     far: eyes(['@ @'], 'w'),
@@ -605,7 +619,7 @@ const SPRITES = {
     /|\  /|\ '----' /|\  /|\ `), 'w'),
   },
   mrn: {
-    office: eyes([' .^.', '(O O)', ' /|\\'], 'w'),
+    cam: eyes([' .^.', '(O O)', ' /|\\'], 'w'),
     scare: eyes(art(String.raw`
       .^.        .^.        .^.
      (O O)      (O O)      (O O)
@@ -768,7 +782,7 @@ region(SPRITES.nch.scare, 8, 10, 'p', 0, 7);
 tint(SPRITES.nch.scare, '*', 'b');
 
 // Nightmare Foxy: a steel hook.
-tint(SPRITES.nfx.scare, 'J', 'G');
+for (const look of looks('nfx')) tint(look, 'J', 'G');
 
 // Nightmare Fredbear: a purple top hat and bow tie.
 region(SPRITES.nfb.cam, 0, 0, 'v');
@@ -808,7 +822,7 @@ region(SPRITES.end.scare, 1, 6, 'w', 12, 21);
 for (const look of looks('end')) tint(look, '*O', 'c');
 
 // Minireenas: white faces. The Nightmarionette: a white face on a black body.
-region(SPRITES.mrn.office, 1, 1, 'w');
+region(SPRITES.mrn.cam, 1, 1, 'w');
 region(SPRITES.mrn.scare, 1, 1, 'w');
 region(SPRITES.nmt.office, 0, 5, 'w');
 region(SPRITES.nmt.scare, 0, 6, 'w');
@@ -865,12 +879,13 @@ const OFFICE_ART = art(String.raw`
 const VENT_BOX = [2, 22, 3, 33];            // the inside of the vent: rows 2-3, columns 22-33
 const SCREEN_BOX = [11, 16, 12, 39];        // the monitor's screen
 const FREDDLE_SPOTS = [[12, 8], [12, 44], [12, 2], [12, 49]];   // on the desk, either side of the monitor
-const MRN_SPOTS = [[1, 10], [1, 40], [6, 1], [6, 48]];          // Minireenas, dangling around the walls
 const NMT_SPOT = [1, 15];         // the Nightmarionette, looming over the monitor
 const WBN_SPOT = [3, 41];         // Withered Bonnie, standing by the right wall
 const BABY_SPOT = [7, 1];         // Circus Baby, just in from the left
 const BABY_CLOSE_SPOT = [3, 13];  // and right in front of you
 const ENNARD_AIR_SPOT = [1, 20];  // Ennard, hanging out of the air vent
+// Nightmare Foxy in the office, at each stage of growing, by the side he came in from.
+const NFX_SPOTS = { 1: { L: [12, 1], R: [12, 49] }, 2: { L: [6, 1], R: [6, 42] }, 3: { L: [3, 12], R: [3, 12] } };
 
 // The office for this moment, as a grid (without the visitors: render.js adds those).
 // `ventShut`: is the vent door closed?
