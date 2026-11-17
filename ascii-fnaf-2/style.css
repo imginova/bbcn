@@ -245,6 +245,10 @@ pre [class*="c-"] { font-weight: 600; }
 .meter b { font-family: var(--font-display); font-size: 26px; font-weight: 400; min-width: 4ch; text-align: right; }
 .meter .bars { white-space: pre; }
 .meter.o2 b, .meter.o2 .bars { color: var(--teal); }
+/* The oxygen warnings: a blinking ▼ by the meter, a line naming who's taking it, and the ▼ on the map. */
+.o2drop, .map .mw.air { color: var(--teal); font-weight: 600; }
+.o2who { min-height: 1.5em; margin-top: 4px; font-size: 12px; text-align: right; color: var(--dim); }
+.o2who:not(:empty)::before { content: "\25BC  AIR BEING USED BY: "; color: var(--teal); letter-spacing: .08em; }
 .low { color: var(--danger) !important; }
 .viewport { position: relative; display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.16 * 20); }
 .office { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }

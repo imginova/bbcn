@@ -86,9 +86,11 @@
       <div class="hud">
         <div class="clock" id="clock">12:00 AM</div>
         <div class="meter"><span class="lab">POWER</span><b id="pw">100%</b><span class="bars" id="pwbar"></span></div>
-        <div class="meter o2"><span class="lab">OXYGEN</span><b id="o2">100%</b><span class="bars" id="o2bar"></span></div>
+        <div class="meter o2"><span class="lab">OXYGEN</span><b id="o2">100%</b><span class="bars" id="o2bar"></span><span class="o2drop blink" id="o2drop" hidden>▼</span></div>
         <div class="meter"><span class="lab">USAGE</span><span class="bars" id="usage"></span></div>
       </div>
+      <!-- Who is using up your oxygen right now, and where (filled by renderGame; empty when nobody is). -->
+      <p class="o2who" id="o2who"></p>
 
       <div class="viewport" id="viewport">
         <div class="office" id="office">

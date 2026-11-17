@@ -15,6 +15,11 @@ function setHtml(el, html) {
   el.innerHTML = html;
 }
 
+// Where someone who's using up your oxygen is, for the warning under the oxygen meter.
+const airWhere = c => c === MINIREENA || c === PLUSHTRAP ? 'CAM 5'
+  : c === JACKO ? (G.jck.side === 'L' ? 'left door' : 'right door')
+  : c === ENNARD ? 'in the vents' : 'office';
+
 // A bar like [|||||.....] that is `filled` out of `total` long.
 const bar = (filled, total) => '[' + '|'.repeat(filled) + '.'.repeat(total - filled) + ']';
 
@@ -29,6 +34,11 @@ function renderGame(now) {
   $('o2').textContent = o + '%';
   $('o2').classList.toggle('low', o <= O2_LOW);
   $('o2bar').textContent = bar(Math.ceil(o / 10), 10);
+  // While something is using up oxygen, a blinking ▼ and who it is, and where (on request: oxygen only
+  // ever drops while something is taking it, and this shows what).
+  setHtml($('o2who'), airThieves().map(([c]) =>
+    `<b class="c-${c.id}">${c.name}</b> <span class="dim">(${airWhere(c)})</span>`).join(', '));
+  $('o2drop').hidden = !airThieves().length;
   const units = Math.min(8, powerUnits() + (G.ncp.present ? 1 : 0) + (G.nmg.present ? 1 : 0));
   $('usage').textContent = '▮'.repeat(units) + '▯'.repeat(8 - units);
   $('usage').classList.toggle('low', units >= 5);
@@ -205,15 +215,17 @@ function renderMonitor(now) {
   setHtml($('feed'), toHtml(g));
   $('btnShockCam').disabled = !powered() || G.t < G.shockReady;
   // The map: highlight the camera you're on, and the warnings: a pink ! where the Nightmare Cupcake
-  // is eating, and a blinking ~ on the three rooms Nightmare Mangle might be in.
+  // is eating, a blinking ~ on the three rooms Nightmare Mangle might be in, and a teal ▼ on the oxygen
+  // room while the Minireenas or Plushtrap are in there using up your air (on request).
   for (const b of document.querySelectorAll('#map button')) {
     const r = b.dataset.room;
     b.setAttribute('aria-current', String(r === room));
     const warn = b.querySelector('.mw');
     const cup = G.ncp.present && r === 'power';
     const mangle = G.nmg.present && (r === G.nmg.room || G.nmg.decoys.includes(r));
-    warn.textContent = (cup ? ' !' : '') + (mangle ? ' ~' : '');
-    warn.className = 'mw' + (cup ? ' c-ncp alert' : mangle ? ' c-nmg alert' : '');
+    const air = r === 'oxygen' && (G.mrn.count > 0 || G.ptr.present);
+    warn.textContent = (cup ? ' !' : '') + (mangle ? ' ~' : '') + (air ? ' ▼' : '');
+    warn.className = 'mw' + (cup ? ' c-ncp alert' : mangle ? ' c-nmg alert' : air ? ' air blink' : '');
   }
 }
 
