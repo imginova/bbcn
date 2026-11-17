@@ -223,6 +223,9 @@ const sfx = (() => {
     // His steps toward a door, from that side.
     ffrStep(side, n) { tone(80, 0.2, { type: 'sine', vol: 0.3 + 0.2 * n, pan: panOf(side) * (0.4 + 0.3 * n) }); noise(0.1, { vol: 0.25, freq: 500, pan: panOf(side) }); },
 
+    // Walking across the auditorium to his other side: a few quiet, far-off steps from straight ahead.
+    ffrShuffle() { for (let i = 0; i < 4; i++) noise(0.08, { vol: 0.08, freq: 400, delay: i * 0.22 }); },
+
     // ----- Funtime Foxy -----
     showtime() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.08, delay: i * 0.12 })); },
     applause() { for (let i = 0; i < 10; i++) noise(0.04, { vol: 0.12, freq: 3000, type: 'highpass', delay: i * 0.06 + Math.random() * 0.03 }); },

@@ -131,7 +131,7 @@ function newGame() {
     // Ballora: her step toward the side she picked, and her clock once she's there.
     bal: { level: levelOf(BALLORA), step: 0, side: 'L', timer: BALLORA_INTERVAL * rand(0.7, 1.3), deadline: 0, musicT: 0 },
     // Funtime Freddy: his script, where he stands in the auditorium ('C', 'L' or 'R') and what he's doing.
-    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, home: 'L', pos: 'L', phase: 'idle', goT: 0, stepped: false, deadline: 0 },
+    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, home: 'L', pos: 'L', phase: 'idle', goT: 0, stepped: false, deadline: 0, switchT: ffrSwitch(levelOf(FFREDDY)) },
     // Funtime Foxy: the time (G.t) of the next show, and whether its fanfare has played.
     ffx: { level: levelOf(FFOXY), show: roundShow(ffxGap(levelOf(FFOXY)) * rand(0.8, 1.1)), played: false },
     // Ennard: null between visits, then 'hall' (walking to a door), 'door' (at it) or 'air' (in the oxygen room).
@@ -436,6 +436,20 @@ function balloraHome() {
 function updateFuntimeFreddy(dt) {
   const F = G.ffr;
   if (F.level === 0) return;
+  // Now and then (not during an attack) he walks over to the other side of the auditorium (on request):
+  // a quiet shuffle, and static if you're watching CAM 4. Check it again before trusting his side.
+  if (F.phase === 'idle') {
+    F.switchT -= dt;
+    if (F.switchT <= 0) {
+      F.switchT = ffrSwitch(F.level);
+      if (Math.random() < moveChance(F.level)) {
+        F.home = F.pos = F.home === 'L' ? 'R' : 'L';
+        sfx.ffrShuffle();
+        if (onCam('auditorium')) camStatic(0.4);
+        dirty = true;
+      }
+    }
+  }
   // The next line of the script, once its time comes.
   const i = F.script.findIndex(line => !line.done);
   if (i >= 0 && G.t >= F.script[i].t) {
