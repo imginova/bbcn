@@ -100,8 +100,9 @@ const ffrAttacks = level => 1 + Math.floor(level / 5);   // how many of them are
 const ffrRun = level => byLevel(level, 4.5, 2.5);        // seconds from the line to him reaching the door
 const FFR_GRACE = 1;             // a last second to shut the door once he's there
 // Now and then he walks across to the other side of the auditorium (on request), so check CAM 4 again:
-// a chance every this many seconds (40 at level 1, 15 at level 20), never during an attack.
-const ffrSwitch = level => waitFor(level, 40, 15);
+// a chance every this many seconds (20 at level 1, 7 at level 20; it was 40 and 15 until he was asked
+// to move more often), never during an attack.
+const ffrSwitch = level => waitFor(level, 20, 7);
 
 // ---------- Funtime Foxy ----------
 // The sign on the show stage (CAM 3) shows the next SHOWTIME. Be watching CAM 3 at that time.
