@@ -45,6 +45,14 @@ const MAX_LEVEL = 20;
 // Keeps any number inside 0..20 and makes it a whole number.
 const clampLevel = n => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, Math.round(Number(n) || MIN_LEVEL)));
 
+// Every level plays a little easier than it says (on request, 2026-11-18: "make everyone a little
+// easier"). effLevel turns the level on the card into the level the character really plays at:
+// 1 + (level - 1) * LEVEL_SCALE, so level 1 stays 1, level 10 plays like 8.65 and level 20 like 17.15.
+// Level 0 stays 0 (off). The cards, the score and the challenges still use the real levels, so no ✓
+// changes. To make everyone harder again, raise LEVEL_SCALE back towards 1.
+const LEVEL_SCALE = 0.85;
+const effLevel = level => level > 0 ? 1 + (level - 1) * LEVEL_SCALE : 0;
+
 // A character at level L gets a chance to act every so often, and each chance works L times in 20.
 const moveChance = level => level / 20;
 

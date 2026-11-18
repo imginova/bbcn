@@ -42,6 +42,8 @@ Same as Line 1:
 
 ## The characters
 
+**Every level plays a little easier than it says** (on request 2026-11-18, "make everyone a little easier"): `levelOf` in `game.js` passes each card's level through `effLevel` (`config.js`), `1 + (level − 1) × LEVEL_SCALE` (0.85). Level 1 is unchanged, level 10 plays like 8.65 and level 20 like 17.15 (reaction window 3.06 s instead of 2.9, Funtime Freddy 4 attacks instead of 5). The cards, the score and challenge matching still use the real levels, and it only made things easier, so no challenge versions changed. The level numbers below are the levels on the cards.
+
 | Character | How it works | Counter |
 |---|---|---|
 | Nightmare Freddy | A Freddle (a little bear plush with ears, a tiny black top hat, white eyes and teeth; redrawn on request 2026-11-17, "make the freddles look like freddles") climbs onto the desk every `freddleWait` s: left of the monitor, right of it, then the third in the middle in front of the desk (`FREDDLE_SPOTS`). Once `FREDDLE_MAX` (3) are up they blink, and when the next one would come it's Nightmare Freddy, who gets you at once (on request 2026-11-17: there used to be a 4th Freddle and then a reaction window). That made him harder, but on request no challenge versions were raised, so every ✓ was kept | Desk shock clears them all |

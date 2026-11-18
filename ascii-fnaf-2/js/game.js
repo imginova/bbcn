@@ -81,8 +81,9 @@ function clockLabel(t) {
 }
 const NIGHT_END = HOUR_SECONDS * NIGHT_HOURS;   // 6 AM, in seconds
 
-// The level of character c tonight (c is one of the descriptions in data.js, like BABY).
-const levelOf = c => levels[SETUP.indexOf(c)];
+// The level character c really plays at tonight (c is one of the descriptions in data.js, like BABY):
+// the level on its card, eased a little by effLevel (config.js).
+const levelOf = c => effLevel(levels[SETUP.indexOf(c)]);
 
 // A nightmare's state: how far down its hall it is, which side, and (at the door) its clocks.
 const nightmare = c => ({ level: levelOf(c), stage: 0, side: c.side || 'L', timer: c.interval * rand(0.7, 1.3),
