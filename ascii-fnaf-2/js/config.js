@@ -97,13 +97,17 @@ const BALLORA_MUSIC = 1.3;      // seconds between the phrases of her music whil
 const balloraStep = level => byLevel(level, 3, 2);
 
 // ---------- Funtime Freddy ----------
-// His script (shown in the office) has a line every so often. The important lines ("Bon-Bon, go get
+// His script (shown line by line as subtitles) has a line every so often. The important lines ("Bon-Bon, go get
 // 'em!": the door on his side of the auditorium, "Let's give him a surprise!": the other door) send an
 // attack to a door, and you hear its steps from that side.
 const FFR_LINES = 9;                                     // lines in his script for the night
 const ffrAttacks = level => 1 + Math.floor(level / 5);   // how many of them are important: 1 to 5
 const ffrRun = level => byLevel(level, 4.5, 2.5);        // seconds from the line to him reaching the door
 const FFR_GRACE = 1;             // a last second to shut the door once he's there
+// His lines show as SUBTITLES at the bottom of the view (office, cameras or at a door) for this many
+// seconds after he says them (on request 2026-11-17; they used to be a script on the office wall, which
+// you couldn't see from the cameras).
+const FFR_SUB_SHOW = 4;
 // Now and then he walks across to the other side of the auditorium (on request), so check CAM 4 again:
 // a chance every this many seconds (20 at level 1, 7 at level 20; it was 40 and 15 until he was asked
 // to move more often), never during an attack.

@@ -131,7 +131,7 @@ function newGame() {
     // Ballora: her step toward the side she picked, and her clock once she's there.
     bal: { level: levelOf(BALLORA), step: 0, side: 'L', timer: BALLORA_INTERVAL * rand(0.7, 1.3), deadline: 0, musicT: 0 },
     // Funtime Freddy: his script, where he stands in the auditorium ('C', 'L' or 'R') and what he's doing.
-    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, home: 'L', pos: 'L', phase: 'idle', goT: 0, stepped: false, deadline: 0, switchT: ffrSwitch(levelOf(FFREDDY)) },
+    ffr: { level: levelOf(FFREDDY), script: makeScript(levelOf(FFREDDY)), said: -1, subUntil: 0, home: 'L', pos: 'L', phase: 'idle', goT: 0, stepped: false, deadline: 0, switchT: ffrSwitch(levelOf(FFREDDY)) },
     // Funtime Foxy: the time (G.t) of the next show, and whether its fanfare has played.
     ffx: { level: levelOf(FFOXY), show: roundShow(ffxGap(levelOf(FFOXY)) * rand(0.8, 1.1)), played: false },
     // Ennard: null between visits, then 'hall' (walking to a door), 'door' (at it) or 'air' (in the oxygen room).
@@ -461,6 +461,7 @@ function updateFuntimeFreddy(dt) {
     const line = F.script[i];
     line.done = true;
     F.said = i;
+    F.subUntil = G.t + FFR_SUB_SHOW;   // show it as a subtitle for a few seconds (render.js)
     sfx.voice(line.important);
     if (line.important && F.phase === 'idle') {
       F.phase = 'going';

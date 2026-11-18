@@ -91,6 +91,9 @@
       </div>
       <!-- Who is using up your oxygen right now, and where (filled by renderGame; empty when nobody is). -->
       <p class="o2who" id="o2who"></p>
+      <!-- Funtime Freddy's subtitles: his last line, on its own strip above the view so it shows wherever you
+           are (office, cameras, at a door) and never covers anything (render.js renderSubtitle). -->
+      <p class="subtitle" id="subtitle"></p>
 
       <div class="viewport" id="viewport">
         <div class="office" id="office">
@@ -101,14 +104,6 @@
           </div>
           <!-- What you hear while you're at a door (render.js listenText). -->
           <p class="listen-note" id="listenNote" hidden></p>
-          <!-- On the office wall: Funtime Freddy's script. (Funtime Foxy's showtime is on the show stage's
-               sign, on CAM 3: render.js drawOnCamera.) -->
-          <div class="board" id="board">
-            <div class="script" id="script">
-              <p class="board-head">FUNTIME FREDDY'S SCRIPT <span class="dim">· "go get 'em!" = his side · "surprise!" = the other side · check CAM 4 for his side</span></p>
-              <ol id="scriptLines"></ol>
-            </div>
-          </div>
         </div>
         <!-- THE MONITOR: raised with the Camera button. A camera feed, the shock for that camera, and the map. -->
         <div class="cams" id="cams" hidden>
@@ -212,7 +207,7 @@
       <li><b class="c-nfr">Nightmare Freddy</b>: Freddles climb onto your desk: left, right, then the middle. Once the middle one is there, shock the desk before the next one comes, because the next one is Nightmare Freddy himself.</li>
       <li><b class="c-bab">Circus Baby</b> beeps softly down the left hall. When she's in, put the mask on until she's right in front of you, then shock the desk.</li>
       <li><b class="c-bal">Ballora</b>: her music comes from the side she's heading to, louder each step. Shut that door.</li>
-      <li><b class="c-ffr">Funtime Freddy</b> stands on one side of the auditorium, and now and then walks over to the other (you hear quiet steps): check CAM 4 to see which. His script is on the office wall. "Bon-Bon, go get 'em!" sends him to the door on his side; "Let's give him a surprise!" to the other door. Shut that door. He himself stays on his side; you hear the steps coming from the side of the attack.</li>
+      <li><b class="c-ffr">Funtime Freddy</b> stands on one side of the auditorium, and now and then walks over to the other (you hear quiet steps): check CAM 4 to see which. His lines show as subtitles at the bottom of the screen. "Bon-Bon, go get 'em!" sends him to the door on his side; "Let's give him a surprise!" to the other door. Shut that door. He himself stays on his side; you hear the steps coming from the side of the attack.</li>
       <li><b class="c-ffx">Funtime Foxy</b>: the sign on the show stage (CAM 3) says when the next show starts. Be watching CAM 3 at that time.</li>
       <li><b class="c-end">Ennard</b> either walks down a hall to a door (shut it) or crawls into the oxygen room (CAM 5: shock that camera).</li>
       <li><b class="c-mrn">Minireenas</b> gather in the oxygen room (CAM 5) and use up oxygen: one shock on that camera zaps them all. The <b class="c-nmt">Nightmarionette</b> appears in your office and uses up oxygen fast: shock the desk 3 times.</li>

@@ -72,7 +72,7 @@ const BALLORA = {
 };
 const FFREDDY = {
   id: 'ffr', name: 'Funtime Freddy', where: 'EITHER DOOR',
-  desc: 'He stands on one side of the auditorium, and now and then walks over to the other: check CAM 4 to see which. His script is on the office wall. "Bon-Bon, go get \'em!" sends him to the door on his side, "Let\'s give him a surprise!" to the other door. Shut that door before he gets there.',
+  desc: 'He stands on one side of the auditorium, and now and then walks over to the other: check CAM 4 to see which. His lines show as subtitles. "Bon-Bon, go get \'em!" sends him to the door on his side, "Let\'s give him a surprise!" to the other door. Shut that door before he gets there.',
 };
 const FFOXY = {
   id: 'ffx', name: 'Funtime Foxy', where: 'CAM 3',

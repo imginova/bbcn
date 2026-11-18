@@ -51,6 +51,7 @@ function renderGame(now) {
   $('viewport').classList.toggle('lights-flicker', now < G.flickerUntil);
   if (G.cam) renderMonitor(now);
   else renderOffice(now);
+  renderSubtitle();
 
   // ----- buttons -----
   const off = !powered();
@@ -78,7 +79,6 @@ function renderGame(now) {
 function renderOffice(now) {
   const dark = G.powerOut;
   $('office').classList.toggle('dark', dark);
-  $('board').hidden = !!G.at || dark || G.ffr.level === 0;   // the script, only on nights with Funtime Freddy
   $('listenNote').hidden = !G.at;
   for (const side of ['L', 'R']) $('door' + side).hidden = !!G.at;
   if (G.at) {
@@ -90,7 +90,6 @@ function renderOffice(now) {
   const g = officeGrid(G.vent);
   if (!dark) drawVisitors(g, now);
   setHtml($('officeArt'), toHtml(g));
-  renderBoard();
 }
 
 // Everyone who can be in the office, drawn on top of it (the later ones on top of the earlier ones).
@@ -189,14 +188,14 @@ function listenText(side) {
   return `<span class="dim">LISTENING AT THE ${where} DOOR ·</span> ${parts.join(' ')}`;
 }
 
-// Funtime Freddy's script, on the office wall.
-function renderBoard() {
+// Funtime Freddy's last line, as a subtitle above the view, for FFR_SUB_SHOW seconds after he says it.
+// It shows wherever you are (office, cameras, at a door), and every line looks the same: the important
+// ones aren't marked (on request).
+function renderSubtitle() {
   const F = G.ffr;
-  if (F.level > 0) {
-    setHtml($('scriptLines'), F.script.map((line, i) =>
-      `<li class="${line.done ? 'done' : ''}${i === F.said ? ' now' : ''}">` +   // important lines aren't marked (on request)
-      `<span class="t">${clockLabel(line.t)}</span> ${escText(line.text)}</li>`).join(''));
-  }
+  const line = F.level > 0 && G.t < F.subUntil && F.script[F.said];
+  $('subtitle').hidden = F.level === 0;   // no strip at all on nights without him
+  setHtml($('subtitle'), line ? `<span class="line"><span class="c-ffr">FUNTIME FREDDY:</span> "${escText(line.text)}"</span>` : '');
 }
 
 // ---------- the monitor ----------
