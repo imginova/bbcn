@@ -139,8 +139,9 @@ function newGame() {
     mrn: { level: levelOf(MINIREENA), count: 0, timer: minireenaWait(levelOf(MINIREENA)) },
     nmt: { level: levelOf(NMARIONETTE), present: false, hits: 0, timer: nightmarionetteWait(levelOf(NMARIONETTE)) },
     wbn: { level: levelOf(WBONNIE), present: false, maskT: 0, deadline: 0, timer: witheredWait(levelOf(WBONNIE)) },
-    // Bidybab: squeaks so far, and (after every 3rd) the clock to shut the vent.
-    bdb: { level: levelOf(BIDYBAB), squeaks: 0, waiting: false, deadline: 0, timer: bidySqueak(levelOf(BIDYBAB)) },
+    // Bidybab: which duct she's in ('L', 'T' or 'R'), how far down it (0 = not in the ducts), and once
+    // she's at the vent above you, the clock to shut it.
+    bdb: { level: levelOf(BIDYBAB), duct: 'T', stage: 0, waiting: false, deadline: 0, timer: BIDY_INTERVAL * rand(0.7, 1.3) },
     jck: { level: levelOf(JACKO), side: null, smokeT: 0, timer: jackWait(levelOf(JACKO)) },
     ptr: { level: levelOf(PLUSHTRAP), present: false, watchT: 0, timer: plushWait(levelOf(PLUSHTRAP)) },
     ncp: { level: levelOf(NCUPCAKE), present: false, chompT: 0, timer: cupcakeWait(levelOf(NCUPCAKE)) },
@@ -602,26 +603,39 @@ function updateWithered(dt) {
 }
 
 // ---------- Bidybab ----------
-// Squeaks in the vent. Every BIDY_EVERY-th squeak, the vent door must be shut within the reaction window
-// plus BIDY_EXTRA seconds.
+// Like UCN's vent crawlers: every BIDY_INTERVAL seconds she has a chance (her level) to move. From
+// outside the ducts she climbs into a random one; then she crawls down it a section at a time, squeaking
+// (louder each time, from that duct's side); after the last section she's at the vent above you. Shut the
+// vent door within the reaction window plus BIDY_EXTRA, or she drops in.
 function updateBidybab(dt) {
   const B = G.bdb;
   if (B.level === 0) return;
   if (B.waiting) {
-    // Shut out: she bonks into the vent door (on request) and crawls off.
-    if (G.vent) { B.waiting = false; B.squeaks = 0; B.timer = bidySqueak(B.level); sfx.bonk('vent'); dirty = true; }
+    // Shut out: she bonks into the vent door (on request) and crawls back out of the ducts.
+    if (G.vent) { bidyBack(); sfx.bonk('vent'); }
     else if (G.t >= B.deadline) lose(BIDYBAB);
     return;
   }
   B.timer -= dt;
   if (B.timer > 0) return;
-  B.timer = bidySqueak(B.level);
-  B.squeaks++;
-  sfx.squeak();
-  if (B.squeaks % BIDY_EVERY === 0) {
-    if (G.vent) { B.squeaks = 0; sfx.bonk('vent'); }   // the vent door was already shut: bonk
-    else { B.waiting = true; B.deadline = G.t + reactWindow(B.level) + BIDY_EXTRA; }
+  B.timer = BIDY_INTERVAL * rand(0.8, 1.2);
+  if (Math.random() >= moveChance(B.level)) return;
+  if (B.stage === 0) B.duct = pick(Object.keys(DUCTS));   // which duct this time
+  B.stage++;
+  if (B.stage > BIDY_STAGES) {
+    // At the vent above you.
+    if (G.vent) { bidyBack(); sfx.bonk('vent'); return; }   // the vent door was already shut: bonk
+    B.waiting = true;
+    B.deadline = G.t + reactWindow(B.level) + BIDY_EXTRA;
   }
+  sfx.squeak(Math.min(1, B.stage / (BIDY_STAGES + 1)), B.duct);
+  dirty = true;
+}
+function bidyBack() {
+  const B = G.bdb;
+  B.waiting = false;
+  B.stage = 0;
+  B.timer = BIDY_INTERVAL * rand(0.8, 1.2);
   dirty = true;
 }
 
@@ -700,7 +714,7 @@ function updateMangle(dt) {
     M.timer -= dt;
     if (M.timer > 0) return;
     M.present = true;
-    const rooms = CAM_ORDER.slice().sort(() => Math.random() - 0.5);   // the rooms in a random order
+    const rooms = CAM_ORDER.filter(r => r !== 'vents').sort(() => Math.random() - 0.5);   // the rooms (not the vent map) in a random order
     M.room = rooms[0];
     M.decoys = rooms.slice(1, 1 + NMG_DECOYS);
     G.flickerUntil = performance.now() + NMG_FLICKER * 1000;   // the lights flicker as Mangle gets in (on request)

@@ -143,11 +143,12 @@ const witheredWait = level => waitFor(level, 45, 14);
 const MASK_HOLD = 2.0;
 
 // ---------- Bidybab ----------
-// Squeaks in the vent above you. On every 3rd squeak, close the vent door in time.
-// Made easier on request (2026-11-17): the squeaks used to come 9 s apart at level 1 and 3.5 s at
-// level 20, and the vent had to be shut within the plain reaction window.
-const bidySqueak = level => waitFor(level, 12, 5);
-const BIDY_EVERY = 3;
+// Like the vent crawlers in Ultimate Custom Night (on request, 2026-11-18): she climbs into one of the
+// three air ducts and crawls down it, BIDY_STAGES sections, squeaking at every move. You can watch her on
+// CAM 10 (the vents). Then she's at the vent above you: close the vent door within the reaction window
+// plus BIDY_EXTRA. (She used to be heard only: close the vent on every 3rd squeak.)
+const BIDY_INTERVAL = 4;         // seconds between her chances to move (her level is the chance)
+const BIDY_STAGES = 3;           // sections of duct before the vent
 const BIDY_EXTRA = 1.5;          // extra seconds to shut the vent, on top of the reaction window
 
 // ---------- Jack-o Chica ----------

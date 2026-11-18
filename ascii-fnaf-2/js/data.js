@@ -21,9 +21,12 @@ const ROOMS = {
   parts:      { cam: 7, name: 'PARTS & SERVICE' },
   storage:    { cam: 8, name: 'STORAGE' },
   arcade:     { cam: 9, name: 'ARCADE' },
+  vents:      { cam: 10, name: 'VENTS' },   // not a room: a map of the air ducts, to watch Bidybab crawl (on request, like UCN)
 };
-// Which room each number key (1 to 9) opens.
-const CAM_ORDER = ['lhall', 'rhall', 'stage', 'auditorium', 'oxygen', 'power', 'parts', 'storage', 'arcade'];
+// Which room each number key opens: 1 to 9, then 0 for CAM 10 (the vents).
+const CAM_ORDER = ['lhall', 'rhall', 'stage', 'auditorium', 'oxygen', 'power', 'parts', 'storage', 'arcade', 'vents'];
+// The three air ducts that lead to the vent above your office (CAM 10), and what they're called.
+const DUCTS = { L: 'LEFT', T: 'TOP', R: 'RIGHT' };
 // The hall camera on each side.
 const HALL = { L: 'lhall', R: 'rhall' };
 
@@ -101,7 +104,7 @@ const WBONNIE = {
 };
 const BIDYBAB = {
   id: 'bdb', name: 'Bidybab', where: 'VENT',
-  desc: 'Squeaks in the vent above you. Count the squeaks: on every 3rd one, close the vent door.',
+  desc: 'Crawls through the air ducts toward the vent above you, squeaking as she goes. Watch her on CAM 10 (the vents) and close the vent door when she reaches the end.',
   how: 'dropped out of the vent',
 };
 const JACKO = {

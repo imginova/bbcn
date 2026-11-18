@@ -294,7 +294,7 @@ pre [class*="c-"] { font-weight: 600; }
 .map {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-areas: "stage audi arcade" "parts oxygen power" "lhall storage rhall" "lhall you rhall";
+  grid-template-areas: "stage audi arcade" "parts oxygen power" "lhall storage rhall" "lhall vents rhall" "lhall you rhall";
   gap: 6px;
   width: min(300px, 100%);
 }

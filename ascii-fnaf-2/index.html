@@ -122,6 +122,7 @@
             <button type="button" data-room="power" style="grid-area:power">CAM 6<br>Power room<span class="mw"></span></button>
             <button type="button" data-room="storage" style="grid-area:storage">CAM 8<br>Storage<span class="mw"></span></button>
             <button type="button" data-room="lhall" style="grid-area:lhall">CAM 1<br>Left hall<span class="mw"></span></button>
+            <button type="button" data-room="vents" style="grid-area:vents">CAM 10<br>Vents<span class="mw"></span></button>
             <span class="you">YOU</span>
             <button type="button" data-room="rhall" style="grid-area:rhall">CAM 2<br>Right hall<span class="mw"></span></button>
           </div>
@@ -149,7 +150,7 @@
         <button id="btnVent" type="button"><span>Vent door<kbd>V</kbd></span><span class="state" id="stVent">OPEN</span></button>
         <button id="btnGoR" type="button"><span>Listen right<kbd>E</kbd></span><span class="state" id="stGoR">GO</span></button>
       </div>
-      <p class="keys hint">A / D doors · Z / C heavy doors · Q / E go to a door and listen · Space cameras · 1–9 pick a camera · W mask · X shock (the desk, or the camera you're on) · V vent door · F lamp · P pauses · M sound</p>
+      <p class="keys hint">A / D doors · Z / C heavy doors · Q / E go to a door and listen · Space cameras · 1–9, 0 pick a camera · W mask · X shock (the desk, or the camera you're on) · V vent door · F lamp · P pauses · M sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -212,7 +213,7 @@
       <li><b class="c-end">Ennard</b> either walks down a hall to a door (shut it) or crawls into the oxygen room (CAM 5: shock that camera).</li>
       <li><b class="c-mrn">Minireenas</b> gather in the oxygen room (CAM 5) and use up oxygen: one shock on that camera zaps them all. The <b class="c-nmt">Nightmarionette</b> appears in your office and uses up oxygen fast: shock the desk 3 times.</li>
       <li><b class="c-wbn">Withered Bonnie</b> walks in: mask on until he leaves.</li>
-      <li><b class="c-bdb">Bidybab</b> squeaks in the vent above you. Count: on every 3rd squeak, close the vent door.</li>
+      <li><b class="c-bdb">Bidybab</b> crawls through the air ducts toward the vent above you (left, top or right duct), squeaking at every move, louder as she gets closer. Watch her on CAM 10 (the vents). When she reaches the end of her duct she peeks through the vent: close the vent door before she drops in.</li>
       <li><b class="c-jck">Jack-o Chica</b> stands in a doorway breathing smoke (you can see it drift in). Slam the heavy door on her.</li>
       <li><b class="c-ptr">Plushtrap</b> gets into the oxygen room (CAM 5). Stay on his camera until he leaves.</li>
       <li><b class="c-ncp">Nightmare Cupcake</b> eats power in the power room (CAM 6, a pink <span class="alert">!</span> on the map): shock that camera. <b class="c-nmg">Nightmare Mangle</b> makes three cameras blink <span class="alert">~</span> but is only on one: find them and shock it. A wrong shock wastes power.</li>
@@ -224,7 +225,7 @@
         <tr><td>Left / right heavy door</td><td>Z / C, or the buttons</td></tr>
         <tr><td>Go to a door and listen</td><td>Q / E (press again to go back), or the Listen buttons</td></tr>
         <tr><td>Monitor up / down</td><td>Space or S, or the Camera button</td></tr>
-        <tr><td>Pick a camera</td><td>1 to 9, or click a room on the map</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 9 (0 for the vents), or click a room on the map</td></tr>
         <tr><td>Mask</td><td>W, or the Mask button (not on the monitor or at a door)</td></tr>
         <tr><td>Shock</td><td>X, or the Shock button (the desk), or "Shock this camera" on the monitor</td></tr>
         <tr><td>Vent door</td><td>V, or the button</td></tr>

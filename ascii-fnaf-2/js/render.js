@@ -97,6 +97,8 @@ function drawVisitors(g, now) {
   // The Freddles: left, right, then the middle. They blink once all of them are up (Nightmare Freddy is next).
   const full = G.nfr.freddles >= FREDDLE_MAX;
   for (let i = 0; i < G.nfr.freddles; i++) sprite(g, ...FREDDLE_SPOTS[i], SPRITES.nfr.office, 'c-nfr' + (full ? ' blink' : ''));
+  // Bidybab peeking through the open vent once she's at the end of a duct (the shut vent hides her).
+  if (G.bdb.waiting && !G.vent) sprite(g, ...BIDY_VENT_SPOT, BIDY_PEEK, 'c-bdb');
   if (G.wbn.present) sprite(g, ...WBN_SPOT, SPRITES.wbn.office, 'c-wbn');
   if (G.nmt.present) sprite(g, ...NMT_SPOT, SPRITES.nmt.office, 'c-nmt' + (now < G.zapUntil ? ' shone' : ''));
   // Nightmare BB in his corner: asleep, or awake with glowing eyes. He glows while the lamp flashes on him.
@@ -232,6 +234,7 @@ function renderMonitor(now) {
 // A room's picture: the halls are drawn by code, the rest come from ROOM_ART with their tints.
 function roomGrid(room) {
   if (room === 'lhall' || room === 'rhall') return hallGrid(room);
+  if (room === 'vents') return ventGrid(G.vent);   // CAM 10: the map of the air ducts
   const g = grid(frame(art(ROOM_ART[room]), CAM_W - 2), CAM_W, 'room');
   for (const [r1, c1, r2, c2, cls] of ROOM_TINTS[room] || []) paint(g, r1 + 1, c1 + 1, r2 + 1, c2 + 1, cls);
   return g;
@@ -272,6 +275,12 @@ function drawOnCamera(g, room) {
   // Funtime Freddy always stays on his own side of the auditorium, even while an attack is on its way
   // to a door (on request); the line he said tells you which door.
   if (room === 'auditorium' && G.ffr.level > 0) sprite(g, ...FFR_SPOTS[G.ffr.home], SPRITES.ffr.cam, 'c-ffr');
+  // Bidybab on the vent map: in the section of the duct she's in, or at the vent above you (blinking).
+  if (room === 'vents' && G.bdb.level > 0 && G.bdb.stage > 0) {
+    const B = G.bdb;
+    if (B.waiting) sprite(g, ...VENT_END, BIDY_MARK, 'c-bdb blink');
+    else { const [r, c] = VENT_SECTIONS[B.duct][B.stage - 1]; sprite(g, r, c + 1, BIDY_MARK, 'c-bdb'); }
+  }
   if (room === 'oxygen' && G.ptr.present) sprite(g, ...PTR_SPOT, SPRITES.ptr.cam, 'c-ptr');
   if (room === 'oxygen') for (let i = 0; i < G.mrn.count; i++) sprite(g, ...MRN_SPOTS[i], SPRITES.mrn.cam, 'c-mrn');
   if (room === 'oxygen' && G.end.mode === 'air') sprite(g, ...ENNARD_O2_SPOT, SPRITES.end.office, 'c-end');

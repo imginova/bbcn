@@ -269,12 +269,15 @@ const sfx = (() => {
     // A rubbery squeak in the vent above you: a sharp rising chirp, then a falling one. It used to be
     // two quiet sine blips that Ballora's music drowned out (on request), so now it's louder, buzzier,
     // much higher than her notes, and it ducks her music while it plays.
-    squeak() {
+    // Since she crawls the ducts (2026-11-18): `progress` (0 to 1) makes it louder the closer she is, and
+    // `duct` ('L', 'T' or 'R') says which side it comes from (the top duct is straight ahead).
+    squeak(progress = 1, duct = 'T') {
+      const v = 0.35 + 0.65 * progress, pan = (duct === 'L' ? -0.6 : duct === 'R' ? 0.6 : 0) * (0.4 + 0.6 * progress);
       duck(0.15, 0.4);
-      tone(1800, 0.1, { type: 'square', vol: 0.1, slide: 1400 });
-      tone(2600, 0.12, { type: 'sine', vol: 0.3, slide: 900 });
-      tone(3200, 0.14, { type: 'sine', vol: 0.25, slide: -1300, delay: 0.13 });
-      noise(0.05, { vol: 0.12, freq: 3500, type: 'highpass', delay: 0.12 });
+      tone(1800, 0.1, { type: 'square', vol: 0.1 * v, slide: 1400, pan });
+      tone(2600, 0.12, { type: 'sine', vol: 0.3 * v, slide: 900, pan });
+      tone(3200, 0.14, { type: 'sine', vol: 0.25 * v, slide: -1300, delay: 0.13, pan });
+      noise(0.05, { vol: 0.12 * v, freq: 3500, type: 'highpass', delay: 0.12, pan });
     },
 
     // ----- Nightmare Cupcake and Nightmare Mangle -----

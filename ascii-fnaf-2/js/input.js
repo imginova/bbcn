@@ -187,8 +187,8 @@ document.addEventListener('keydown', e => {
     else if (k === 'x') shock();
     else if (k === 'v') toggleVent();
     else if (k === 'f') flashLamp();
-    // 1 to 9 pick a camera. /^[1-9]$/ means "exactly one digit from 1 to 9".
-    else if (/^[1-9]$/.test(k)) setCam(CAM_ORDER[Number(k) - 1]);
+    // 1 to 9 pick a camera, and 0 the vents (CAM 10). /^[0-9]$/ means "exactly one digit".
+    else if (/^[0-9]$/.test(k)) setCam(CAM_ORDER[k === '0' ? 9 : Number(k) - 1]);
     else if (k === 'h') openHowto();
 
   } else if (currentScreen === 'win') {

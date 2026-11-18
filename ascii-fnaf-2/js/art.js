@@ -240,6 +240,37 @@ function hallSpot(room, step, w, h, nudge = 0) {
 }
 
 // The other rooms are drawn by hand: 14 lines of 58 characters (frame() adds the border).
+// ---------- the vents (CAM 10) ----------
+// Not a camera picture but a MAP of the three air ducts (left, top, right) that lead to the vent above
+// your office, drawn by code like the halls (on request, 2026-11-18: Bidybab crawls through them like the
+// vent crawlers in Ultimate Custom Night). Each duct has BIDY_STAGES sections, drawn as little boxes
+// "[ L-1 ]" (7 wide). VENT_SECTIONS holds each box's [row, column]; Bidybab's face replaces the label of
+// the section she's in.
+const VENT_SECTIONS = {
+  L: [[2, 2], [5, 10], [8, 18]],
+  T: [[2, 26], [5, 26], [8, 26]],
+  R: [[2, 50], [5, 42], [8, 34]],
+};
+const VENT_END = [10, 27];                        // Bidybab once she's at the vent above you
+const BIDY_MARK = eyes(['(o o)'], 'b', 'o');      // her face on the map, with blue eyes
+// `ventShut`: is the vent door closed? The map says so on the office vent.
+function ventGrid(ventShut) {
+  const g = grid(frame(Array(CAM_H - 2).fill(''), CAM_W - 2), CAM_W, 'room');
+  write(g, 1, 2, 'LEFT DUCT', 'dim');
+  write(g, 1, 25, 'TOP DUCT', 'dim');
+  write(g, 1, 47, 'RIGHT DUCT', 'dim');
+  for (const d of Object.keys(VENT_SECTIONS)) {
+    VENT_SECTIONS[d].forEach(([r, c], i) => write(g, r, c, `[ ${d}-${i + 1} ]`));   // in the normal text color, to stand out
+  }
+  // The ducts joining the sections, and then the vent: \ from the left, | from the top, / from the right.
+  for (const [r, c] of [[3, 9], [4, 10], [6, 17], [7, 18], [9, 25], [10, 26]]) write(g, r, c, '\\', 'pipe');
+  for (const r of [3, 4, 6, 7, 9, 10]) write(g, r, 29, '|', 'pipe');
+  for (const [r, c] of [[3, 49], [4, 48], [6, 41], [7, 40], [9, 33], [10, 32]]) write(g, r, c, '/', 'pipe');
+  write(g, 11, 18, ventShut ? '[= OFFICE VENT: SHUT =]' : '[= OFFICE VENT: OPEN =]', ventShut ? 'door' : 'grate');
+  write(g, 12, 28, 'YOU', 'sign');
+  return g;
+}
+
 const ROOM_ART = {
   stage: String.raw`
 /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
@@ -929,6 +960,8 @@ const OFFICE_ART = art(String.raw`
 
 // Where things go in the office, as [row, column] of their top-left corner.
 const VENT_BOX = [2, 22, 3, 33];            // the inside of the vent: rows 2-3, columns 22-33
+const BIDY_VENT_SPOT = [2, 25];             // Bidybab peeking through the open vent once she's at the end of a duct
+const BIDY_PEEK = eyes([' .-. ', '(o o)'], 'b', 'o');
 const SCREEN_BOX = [11, 16, 12, 39];        // the monitor's screen
 // The Freddles: on the desk left of the monitor, then right of it, then the third in the middle, in front
 // of the desk below the shock button (on request).
