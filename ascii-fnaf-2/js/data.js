@@ -171,7 +171,9 @@ const PRESETS = [
   { name: 'Brownout', v: 1, levels: lv({ ncp: 15, nmg: 15, nfr: 10, bdb: 8 }) },           // everything that takes power
   { name: 'Sister Location', v: 8, levels: lv({ bab: 15, bal: 15, ffr: 15, ffx: 15, end: 12, mrn: 10, bdb: 10 }) },
   { name: 'Bedroom', v: 1, levels: lv({ nfr: 15, nbn: 15, nch: 15, nfx: 15, nfb: 15, ptr: 12 }) },   // FNAF 4
-  { name: 'Halloween', v: 2, levels: lv({ jck: 15, nmg: 15, ptr: 12, nfx: 12, nmt: 10, nbb: 12 }) },   // Nightmare BB joined on v2
+  // The FNAF 4 Halloween update's characters only. Nightmare BB joined on v2; Plushtrap and Nightmare Foxy
+  // left on request (they aren't in that update). That made it easier, so it kept v2 and its ✓.
+  { name: 'Halloween', v: 2, levels: lv({ jck: 15, nmg: 15, nmt: 10, nbb: 12 }) },
   { name: 'Everyone at 5', v: 9, levels: everyone(5) },
   { name: 'Everyone at 10', v: 9, levels: everyone(10) },
   { name: 'Everyone at 15', v: 9, levels: everyone(15) },

@@ -371,7 +371,9 @@ const ENNARD_HOME = [5, 44];                               // Ennard in parts & 
 // jumpscare, shown big). eyes() adds the eye color.
 const SPRITES = {
   nfr: {
-    office: eyes(['(*)', '/U\\'], 'r'),   // a Freddle (the little Freddys on your desk)
+    // A Freddle (the little Freddys on your desk; redrawn on request "make the freddles look like
+    // freddles"): a bear plush with round ears, a tiny black top hat, pale eyes and a jaw full of teeth.
+    office: region(eyes(['o[_]o', '(*v*)', '\\WWW/'], 'w'), 0, 0, 'x', 1, 3),
     scare: eyes(art(String.raw`
       _____                     _____
      ( * * )    ___________    ( * * )
@@ -928,7 +930,7 @@ const OFFICE_ART = art(String.raw`
 // Where things go in the office, as [row, column] of their top-left corner.
 const VENT_BOX = [2, 22, 3, 33];            // the inside of the vent: rows 2-3, columns 22-33
 const SCREEN_BOX = [11, 16, 12, 39];        // the monitor's screen
-const FREDDLE_SPOTS = [[12, 8], [12, 44], [12, 2], [12, 49]];   // on the desk, either side of the monitor
+const FREDDLE_SPOTS = [[11, 7], [11, 44], [11, 1], [11, 50]];   // on the desk, either side of the monitor (in front of the pillars)
 const NMT_SPOT = [1, 15];         // the Nightmarionette, looming over the monitor
 const WBN_SPOT = [3, 41];         // Withered Bonnie, standing by the right wall
 const BABY_SPOT = [7, 1];         // Circus Baby, just in from the left
