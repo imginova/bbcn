@@ -140,8 +140,11 @@ const MASK_HOLD = 2.0;
 
 // ---------- Bidybab ----------
 // Squeaks in the vent above you. On every 3rd squeak, close the vent door in time.
-const bidySqueak = level => waitFor(level, 9, 3.5);
+// Made easier on request (2026-11-17): the squeaks used to come 9 s apart at level 1 and 3.5 s at
+// level 20, and the vent had to be shut within the plain reaction window.
+const bidySqueak = level => waitFor(level, 12, 5);
 const BIDY_EVERY = 3;
+const BIDY_EXTRA = 1.5;          // extra seconds to shut the vent, on top of the reaction window
 
 // ---------- Jack-o Chica ----------
 // Stands in a doorway breathing smoke (it uses up oxygen). Slam the heavy door on her to send her away.

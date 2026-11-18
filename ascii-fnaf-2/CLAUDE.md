@@ -56,7 +56,7 @@ Same as Line 1:
 | Minireenas | One appears in the oxygen room (CAM 5; on request 2026-11-17 they moved there from the office) every `minireenaWait` s, up to `MRN_MAX` (4), each using oxygen | One camera shock on CAM 5 zaps them all |
 | Nightmarionette | Appears and uses oxygen fast | `NMT_SHOCKS` (3) desk shocks |
 | Withered Bonnie | Walks into the office | Mask for `MASK_HOLD` (2 s) |
-| Bidybab | Squeaks in the vent | Close the vent door on every `BIDY_EVERY` (3rd) squeak |
+| Bidybab | Squeaks in the vent, every `bidySqueak` s (12 at level 1 to 5 at level 20; made easier on request 2026-11-17, it was 9 to 3.5). With Ballora on, her waltz drowned the squeaks out (reported 2026-11-17), so the squeak is now louder, buzzier and higher than her notes, and it **ducks** her music: Ballora's notes go through their own `music` knob in `sound.js`, which `duck()` turns down to 15% for 0.4 s on each squeak | Close the vent door on every `BIDY_EVERY` (3rd) squeak, within the reaction window + `BIDY_EXTRA` (1.5 s, added in the same easing). It only got easier, so no challenge versions changed |
 | Jack-o Chica | Stands in a doorway with an open heavy door, smoke drifting in (oxygen) | Slam that heavy door |
 | Plushtrap | Turns up in the oxygen room (CAM 5), using oxygen | Watch CAM 5 for `PTR_WATCH` (2.5 s) in a row |
 | Nightmare Cupcake | Eats power in the power room (CAM 6, a pink ! on the map) | Camera shock on CAM 6 |

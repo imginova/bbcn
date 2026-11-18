@@ -601,7 +601,8 @@ function updateWithered(dt) {
 }
 
 // ---------- Bidybab ----------
-// Squeaks in the vent. Every BIDY_EVERY-th squeak, the vent door must be shut within the reaction window.
+// Squeaks in the vent. Every BIDY_EVERY-th squeak, the vent door must be shut within the reaction window
+// plus BIDY_EXTRA seconds.
 function updateBidybab(dt) {
   const B = G.bdb;
   if (B.level === 0) return;
@@ -618,7 +619,7 @@ function updateBidybab(dt) {
   sfx.squeak();
   if (B.squeaks % BIDY_EVERY === 0) {
     if (G.vent) { B.squeaks = 0; sfx.bonk('vent'); }   // the vent door was already shut: bonk
-    else { B.waiting = true; B.deadline = G.t + reactWindow(B.level); }
+    else { B.waiting = true; B.deadline = G.t + reactWindow(B.level) + BIDY_EXTRA; }
   }
   dirty = true;
 }

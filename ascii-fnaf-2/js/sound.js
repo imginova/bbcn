@@ -22,6 +22,7 @@ const sfx = (() => {
 
   let ctx = null;       // the audio engine; browsers only allow it after a click or key press
   let master = null;    // the master volume knob
+  let music = null;     // a second knob just for Ballora's music, so it can be turned down for a moment (duck)
   let hum = null;       // the background machinery hum while you play
   let noiseBuf = null;  // 2 seconds of random hiss, made once and reused
   let muted = store.get('muted', false);
@@ -38,20 +39,37 @@ const sfx = (() => {
       master = ctx.createGain();
       master.gain.value = muted ? 0 : VOL;
       master.connect(ctx.destination);   // destination = your speakers
+      music = ctx.createGain();
+      music.connect(master);             // the music knob feeds into the master knob
     } catch {
       ctx = null;                        // no audio support: the game simply stays silent
     }
   }
 
-  // Send a sound to the speakers, optionally panned left (-1) or right (+1).
-  function out(node, pan) {
+  // Send a sound to the speakers, optionally panned left (-1) or right (+1). `bus` 'music' sends it
+  // through the music knob instead of straight to the master knob.
+  function out(node, pan, bus) {
+    const to = bus === 'music' && music ? music : master;
     if (pan && ctx.createStereoPanner) {
       const panner = ctx.createStereoPanner();
       panner.pan.value = pan;
-      node.connect(panner).connect(master);
+      node.connect(panner).connect(to);
     } else {
-      node.connect(master);
+      node.connect(to);
     }
+  }
+
+  // "Ducking": turn the music down to `level` (0 to 1) for `dur` seconds, then fade it back up, so a
+  // quieter sound underneath can be heard. Bidybab's squeak does this to Ballora's music (on request:
+  // with both on, the squeaks got lost in her waltz).
+  function duck(level, dur) {
+    if (!music) return;
+    const g = music.gain, t = ctx.currentTime;
+    g.cancelScheduledValues(t);              // forget any fade already planned
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(level, t + 0.03);
+    g.setValueAtTime(level, t + dur);
+    g.linearRampToValueAtTime(1, t + dur + 0.3);
   }
 
   // Play one note.
@@ -62,7 +80,8 @@ const sfx = (() => {
   //   slide  how far the pitch bends during the note (negative = down)
   //   delay  seconds to wait before playing
   //   pan    -1 left ... 0 middle ... +1 right
-  function tone(freq, dur, { type = 'square', vol = 0.2, slide = 0, delay = 0, pan = 0 } = {}) {
+  //   bus    'music' for music (it goes through the music knob, see duck())
+  function tone(freq, dur, { type = 'square', vol = 0.2, slide = 0, delay = 0, pan = 0, bus } = {}) {
     if (!ctx) return;
     const t = ctx.currentTime + delay;
     const osc = ctx.createOscillator(), gain = ctx.createGain();
@@ -73,7 +92,7 @@ const sfx = (() => {
     gain.gain.setValueAtTime(vol, t);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     osc.connect(gain);
-    out(gain, pan);
+    out(gain, pan, bus);
     osc.start(t);
     osc.stop(t + dur + 0.05);
   }
@@ -211,7 +230,7 @@ const sfx = (() => {
     // A few notes of her music-box waltz from her side; `progress` (0 to 1) makes it louder and nearer.
     ballora(progress, side) {
       const vol = 0.04 + 0.2 * progress, pan = panOf(side) * (0.3 + 0.7 * progress);
-      [659, 784, 988, 784].forEach((f, i) => tone(f, 0.35, { type: 'triangle', vol, delay: i * 0.3, pan }));
+      [659, 784, 988, 784].forEach((f, i) => tone(f, 0.35, { type: 'triangle', vol, delay: i * 0.3, pan, bus: 'music' }));
     },
 
     // ----- Funtime Freddy -----
@@ -247,8 +266,16 @@ const sfx = (() => {
     wbnIn() { noise(0.6, { vol: 0.3, freq: 350 }); tone(65, 0.8, { type: 'sawtooth', vol: 0.3, slide: 20 }); },
 
     // ----- Bidybab -----
-    // A small rubbery squeak in the vent above you.
-    squeak() { tone(2400, 0.06, { type: 'sine', vol: 0.15, slide: 600 }); tone(2000, 0.08, { type: 'sine', vol: 0.12, slide: -400, delay: 0.08 }); },
+    // A rubbery squeak in the vent above you: a sharp rising chirp, then a falling one. It used to be
+    // two quiet sine blips that Ballora's music drowned out (on request), so now it's louder, buzzier,
+    // much higher than her notes, and it ducks her music while it plays.
+    squeak() {
+      duck(0.15, 0.4);
+      tone(1800, 0.1, { type: 'square', vol: 0.1, slide: 1400 });
+      tone(2600, 0.12, { type: 'sine', vol: 0.3, slide: 900 });
+      tone(3200, 0.14, { type: 'sine', vol: 0.25, slide: -1300, delay: 0.13 });
+      noise(0.05, { vol: 0.12, freq: 3500, type: 'highpass', delay: 0.12 });
+    },
 
     // ----- Nightmare Cupcake and Nightmare Mangle -----
     chomp() { for (let i = 0; i < 3; i++) tone(180, 0.06, { type: 'square', vol: 0.1, delay: i * 0.12 }); },
