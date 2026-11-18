@@ -73,10 +73,12 @@ const NFX_GROW = 1.8;
 const NFX_STAGES = 3;
 
 // ---------- Nightmare Freddy's Freddles ----------
-// A Freddle climbs onto your desk every so often. FREDDLE_MAX of them and Nightmare Freddy comes for
-// you. One shock on the desk clears them all.
+// A Freddle climbs onto your desk every so often, up to FREDDLE_MAX of them (left, right, then the
+// middle). When the next one would come, it's Nightmare Freddy himself and he gets you at once (on
+// request 2026-11-17; there used to be a 4th Freddle and then a reaction window). One shock on the desk
+// clears them all.
 const freddleWait = level => waitFor(level, 22, 7);
-const FREDDLE_MAX = 4;
+const FREDDLE_MAX = 3;
 
 // ---------- Circus Baby ----------
 // She comes down the left hall in BABY_STAGES steps (a soft beep each), then into your office. Mask on

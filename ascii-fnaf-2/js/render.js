@@ -95,8 +95,9 @@ function renderOffice(now) {
 
 // Everyone who can be in the office, drawn on top of it (the later ones on top of the earlier ones).
 function drawVisitors(g, now) {
-  // The Freddles on the desk; they blink red once Nightmare Freddy is coming.
-  for (let i = 0; i < G.nfr.freddles; i++) sprite(g, ...FREDDLE_SPOTS[i], SPRITES.nfr.office, 'c-nfr' + (G.nfr.coming ? ' blink' : ''));
+  // The Freddles: left, right, then the middle. They blink once all of them are up (Nightmare Freddy is next).
+  const full = G.nfr.freddles >= FREDDLE_MAX;
+  for (let i = 0; i < G.nfr.freddles; i++) sprite(g, ...FREDDLE_SPOTS[i], SPRITES.nfr.office, 'c-nfr' + (full ? ' blink' : ''));
   if (G.wbn.present) sprite(g, ...WBN_SPOT, SPRITES.wbn.office, 'c-wbn');
   if (G.nmt.present) sprite(g, ...NMT_SPOT, SPRITES.nmt.office, 'c-nmt' + (now < G.zapUntil ? ' shone' : ''));
   // Nightmare BB in his corner: asleep, or awake with glowing eyes. He glows while the lamp flashes on him.

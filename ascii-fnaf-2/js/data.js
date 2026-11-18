@@ -37,7 +37,7 @@ const HALL = { L: 'lhall', R: 'rhall' };
 // They're in the order of the roster, which is also the order of the setup cards.
 const NFREDDY = {
   id: 'nfr', name: 'Nightmare Freddy', where: 'DESK',
-  desc: 'Freddles climb onto your desk one by one. Shock the desk to clear them before there are 4, or Nightmare Freddy comes for you.',
+  desc: 'Freddles climb onto your desk one by one. Shock the desk to clear them: after the third (in the middle), Nightmare Freddy comes for you.',
   how: 'came out of the Freddles',
 };
 const NBONNIE = {

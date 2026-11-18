@@ -124,7 +124,7 @@ function newGame() {
     lastAir: MINIREENA,            // who used up oxygen most recently (they get the blame at 0%)
     o2WarnT: 0, ambientT: 4,
 
-    nfr: { level: levelOf(NFREDDY), freddles: 0, coming: 0, timer: freddleWait(levelOf(NFREDDY)) },
+    nfr: { level: levelOf(NFREDDY), freddles: 0, timer: freddleWait(levelOf(NFREDDY)) },
     nbn: nightmare(NBONNIE), nch: nightmare(NCHICA), nfx: nightmare(NFOXY), nfb: nightmare(NFREDBEAR),
     // Circus Baby: her step down the left hall; then `inside` (in your office) and `close` (right in front of you).
     bab: { level: levelOf(BABY), stage: 0, timer: BABY_INTERVAL * rand(0.7, 1.3), inside: false, close: false, maskT: 0, deadline: 0 },
@@ -249,18 +249,17 @@ function updateOxygen(dt) {
 }
 
 // ---------- Nightmare Freddy's Freddles ----------
-// A Freddle climbs onto the desk every so often. When the last one (FREDDLE_MAX) is up, Nightmare
-// Freddy is coming: shock the desk within the reaction window or he gets you.
+// A Freddle climbs onto the desk every so often. Once FREDDLE_MAX are up (they blink red), the next
+// one is Nightmare Freddy himself: he gets you straight away, so shock the desk before then.
 function updateFreddles(dt) {
   const F = G.nfr;
   if (F.level === 0) return;
-  if (F.coming) { if (G.t >= F.coming) lose(NFREDDY); return; }
   F.timer -= dt;
   if (F.timer > 0) return;
+  if (F.freddles >= FREDDLE_MAX) { lose(NFREDDY); return; }
   F.timer = freddleWait(F.level);
   F.freddles++;
   sfx.freddle();
-  if (F.freddles >= FREDDLE_MAX) F.coming = G.t + reactWindow(F.level);
   dirty = true;
 }
 
@@ -819,7 +818,7 @@ function shock() {
 // The desk: clears the Freddles, drives out Nightmare Foxy, hurts the Nightmarionette, and sends away
 // Circus Baby (once she's close).
 function shockDesk() {
-  if (G.nfr.freddles) { G.nfr.freddles = 0; G.nfr.coming = 0; }
+  if (G.nfr.freddles) G.nfr.freddles = 0;
   if (G.nfx.inside) { nightmareHome(NFOXY, G.nfx); sfx.gone(); }   // Nightmare Foxy, driven out of the office
   const N = G.nmt;
   if (N.present) {

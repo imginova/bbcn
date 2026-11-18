@@ -930,7 +930,9 @@ const OFFICE_ART = art(String.raw`
 // Where things go in the office, as [row, column] of their top-left corner.
 const VENT_BOX = [2, 22, 3, 33];            // the inside of the vent: rows 2-3, columns 22-33
 const SCREEN_BOX = [11, 16, 12, 39];        // the monitor's screen
-const FREDDLE_SPOTS = [[11, 7], [11, 44], [11, 1], [11, 50]];   // on the desk, either side of the monitor (in front of the pillars)
+// The Freddles: on the desk left of the monitor, then right of it, then the third in the middle, in front
+// of the desk below the shock button (on request).
+const FREDDLE_SPOTS = [[11, 7], [11, 44], [16, 25]];
 const NMT_SPOT = [1, 15];         // the Nightmarionette, looming over the monitor
 const WBN_SPOT = [3, 41];         // Withered Bonnie, standing by the right wall
 const BABY_SPOT = [7, 1];         // Circus Baby, just in from the left
