@@ -158,6 +158,7 @@ const NCP_DRAIN = 0.4;           // % power per second while the Cupcake is eati
 const mangleWait = level => waitFor(level, 50, 16);
 const NMG_DRAIN = 0.4;           // % power per second while Mangle is in the system
 const NMG_DECOYS = 2;            // how many empty cameras blink along with the real one
+const NMG_FLICKER = 1.6;         // seconds the lights flicker when Mangle gets into the system (on request)
 
 // ---------- Nightmare BB ----------
 // He sits asleep in the corner of the office. Each time you put the monitor down he may wake up: a

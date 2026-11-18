@@ -263,6 +263,10 @@ pre [class*="c-"] { font-weight: 600; }
 .office.zap pre { filter: brightness(2.2) saturate(.4); text-shadow: 0 0 6px #fff7b0; }
 /* The desk lamp's flash: a warm light over the office for a moment. */
 .office.lamp-on #officeArt { filter: brightness(1.6); text-shadow: 0 0 6px rgba(255, 230, 160, .6); }
+/* Nightmare Mangle getting into the system: the lights stutter off and on for a moment (render.js), on
+   the office and the monitor alike. steps(1) jumps between the values instead of fading, like a bad bulb. */
+.lights-flicker { animation: lights-flicker .8s steps(1) infinite; }
+@keyframes lights-flicker { 0% { opacity: 1; } 10% { opacity: .15; } 18% { opacity: .9; } 26% { opacity: .1; } 40% { opacity: 1; } 55% { opacity: .35; } 62% { opacity: 1; } 80% { opacity: .2; } 86% { opacity: 1; } }
 /* After a power-out everything goes dark. */
 .office.dark pre, .office.dark pre span { color: #18151f !important; text-shadow: none !important; }
 /* What you hear at a door. */

@@ -149,6 +149,7 @@ function newGame() {
     // Nightmare BB: asleep in the corner, or awake (after a monitor flip down) until the lamp puts him back.
     nbb: { level: levelOf(NBB), awake: false },
     lampUntil: 0,                  // the lamp's flash shows until this time (milliseconds)
+    flickerUntil: 0,               // the lights flicker until this time (milliseconds): Mangle just got in
   };
   // Funtime Freddy's side of the auditorium for tonight (his lines are about this side).
   G.ffr.home = G.ffr.pos = pick(['L', 'R']);
@@ -701,6 +702,7 @@ function updateMangle(dt) {
     const rooms = CAM_ORDER.slice().sort(() => Math.random() - 0.5);   // the rooms in a random order
     M.room = rooms[0];
     M.decoys = rooms.slice(1, 1 + NMG_DECOYS);
+    G.flickerUntil = performance.now() + NMG_FLICKER * 1000;   // the lights flicker as Mangle gets in (on request)
     dirty = true;
   }
   M.radioT -= dt;

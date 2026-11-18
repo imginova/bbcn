@@ -47,6 +47,8 @@ function renderGame(now) {
   $('cams').hidden = !G.cam;
   $('maskView').hidden = !G.mask || G.cam;   // the mask covers the office view, leaving two eye holes
   $('office').classList.toggle('zap', now < G.zapUntil && !G.cam);
+  // The lights flicker for a moment when Nightmare Mangle gets in, on the monitor too (style.css .lights-flicker).
+  $('viewport').classList.toggle('lights-flicker', now < G.flickerUntil);
   if (G.cam) renderMonitor(now);
   else renderOffice(now);
 
