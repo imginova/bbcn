@@ -167,6 +167,7 @@ h3 { font-size: 22px; color: var(--dim); }
 }
 .room .rcam { color: var(--dim); font-size: 10px; }
 .room .rname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.room .rinfo { display: flex; flex-direction: column; align-items: flex-start; }
 .room .who { font-size: 12px; margin-top: auto; }
 .room.vent { background: #150f1f; border-style: dashed; }
 .room.near { border-color: var(--faint); }
@@ -182,7 +183,7 @@ h3 { font-size: 22px; color: var(--dim); }
 .room.office { border: 1px solid var(--guard); border-radius: 4px; background: #101a24; color: var(--guard); align-items: center; cursor: default; }
 .ways { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 3px; }
 .attack { font-size: 10px; padding: 2px 5px; color: var(--dim); line-height: 1.2; }
-.attack.ready { color: var(--bg); background: var(--you); border-color: var(--you); font-weight: 600; animation: pulse 1.2s ease-in-out infinite; }
+.attack.ready { color: var(--bg); background: var(--you); border-color: var(--you); font-weight: 600; animation: pulse 1.2s steps(1) infinite; }
 .attack.shut { border-color: var(--danger); }
 .hint { min-height: 1.5em; color: var(--danger); margin-top: 6px; }
 
@@ -221,6 +222,31 @@ h3 { font-size: 22px; color: var(--dim); }
 .cbar { font-size: 11px; color: var(--dim); letter-spacing: -.04em; }
 .ab { margin-top: 4px; font-size: 11px; padding: 3px 7px; }
 .ab.ready { border-color: var(--you); color: var(--you); }
+/* Speed: `contain` tells the browser that what happens inside a box can't change the size or position of
+   anything outside it. Without it, a changed number on one card made the browser re-measure the whole page
+   15 times a second (the lag). With it, it only re-measures that one box. The status line is kept to one
+   line so a longer status can't make a card grow. */
+.card, .room { contain: content; }
+.map, .crew, .hud, .says, .log, #hint { contain: layout style; }
+.status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* A big crew (Max mode): smaller cards, the face shrunk, more of them per row. */
+.crew.many { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 5px; }
+.crew.many .card { padding: 5px; gap: 5px; }
+.crew.many .card .icon { font-size: 10px; }
+.crew.many .cname { font-size: 12px; }
+.crew.many .status, .crew.many .cbar, .crew.many .ab { font-size: 10px; }
+.crew.many .ab { padding: 2px 5px; }
+
+/* Challenges on the custom night screen. */
+.challenges { display: grid; gap: 8px; }
+.challenge { display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 12px; border-color: var(--danger); }
+.challenge .cbody { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.challenge b { font-family: var(--font-display); font-size: 24px; font-weight: normal; color: var(--danger); }
+.challenge .cdesc { color: var(--fg); }
+.challenge .tick, .night.beaten .tick { color: #7dff9a; }
+.icon.c-tendons8 { color: var(--danger); }
+
 .controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; }
 
 /* ---------- overlays ---------- */
@@ -232,7 +258,7 @@ h3 { font-size: 22px; color: var(--dim); }
 #end.won h2 { color: var(--you); }
 
 @keyframes blink { 50% { opacity: 0; } }
-@keyframes pulse { 50% { opacity: .6; } }
+@keyframes pulse { 50% { opacity: .6; } }   /* used with steps(), so it changes twice a second instead of every frame */
 @keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
 
 /* ---------- phones ---------- */

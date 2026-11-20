@@ -214,6 +214,10 @@ const GUARDS = [
     desc: 'He built half of you. Lures, shocks, doors and lights.' },
   { id: 'mike2', name: 'Mike Schmidt (veteran)', from: 'FNAF 1', skill: 18, tools: TOOL_IDS.slice(), camLove: 0.5, doorHold: 0.8, lightLove: 0.45,
     desc: 'Back for one more night, with every tool there is.' },
+  // The hardest guard (on request): the highest skill, every tool, and better at all of it than anyone else.
+  { id: 'tendons8', name: 'The Tendons 8', from: 'ASCII FNAF Simulator', skill: 20, tools: TOOL_IDS.slice(), camLove: 0.5, doorHold: 0.6, lightLove: 0.6,
+    hears: 1.5, reboot: 1.0, slowDown: -0.15, grit: 0.35, thrift: 0.35,
+    desc: 'The hardest guard there is. Every tool, the sharpest eyes and ears, the fastest hands, and your tricks only work half as well on it.' },
 ];
 const GUARD_BY_ID = Object.fromEntries(GUARDS.map(g => [g.id, g]));
 
@@ -242,3 +246,14 @@ const NIGHTS = [
   { name: 'One more night', guard: 'mike2', crew: ['wgf', 'wfx', 'pup', 'pfr', 'mng', 'sbn'],
     tip: 'Every tool against every trick. Break his cameras and he can\'t wind the box, then let the withereds in.' },
 ];
+
+// ---------- custom night challenges ----------
+// Ready-made custom nights with a name. Beating one saves a ✓ under its name plus its version `v`
+// ("Max mode v1"): if a change ever makes a challenge harder, raise its `v` so the old ✓ no longer counts.
+// crew: 'all' means every animatronic in the game at once.
+const CHALLENGES = [
+  { id: 'max', name: 'Max mode', v: 1, guard: 'tendons8', skill: 20, tools: TOOL_IDS.slice(), crew: 'all', level: 10,
+    power: 100, hour: HOUR_SECONDS, speed: 100,
+    desc: 'Every animatronic in the game at once, against The Tendons 8: skill 20 and every tool.' },
+];
+const challengeKey = c => `${c.name} v${c.v}`;
