@@ -65,6 +65,14 @@ function crewLine(id) {
 const CUSTOM_LIMITS = { skill: [0, 20, 1], power: [10, 100, 10], hour: [15, 60, 5], speed: [50, 200, 10] };
 
 function renderCustom() {
+  // The ready-made challenges at the top: click one to play it straight away.
+  setHtml($('cChallenges'), CHALLENGES.map(c => {
+    const crewCount = c.crew === 'all' ? CREW.length : c.crew.length;
+    return `<button class="challenge" data-challenge="${c.id}">${iconHtml(c.guard)}<span class="cbody">` +
+      `<span><b>${escText(c.name)}</b>${challengeBeaten(c) ? ' <span class="tick">&#10003;</span>' : ''}` +
+      `<span class="dim"> · vs ${escText(GUARD_BY_ID[c.guard].name)} · your crew: ${crewCount}</span></span>` +
+      `<span class="cdesc">${escText(c.desc)}</span></span></button>`;
+  }).join(''));
   const g = GUARD_BY_ID[custom.guard] || GUARDS[0];
   setHtml($('cGuards'), GUARDS.map(x =>
     `<button class="pickg ${x.id === g.id ? 'on' : ''}" data-guard="${x.id}">${iconHtml(x.id)}<span>${escText(x.name)}</span></button>`).join(''));
@@ -131,7 +139,8 @@ function showEnd() {
       : `${r.by.def.name} got ${g.name} at ${clockLabel()}.`;
     setHtml($('endArt'), `<span class="big">${iconHtml(r.by.id)}</span>`);
     $('endTitle').textContent = 'GOT HIM!';
-    $('endText').textContent = why + (n === 10 && r.won ? ' You beat every night: the Custom Night is open!' : '');
+    $('endText').textContent = why + (n === 10 ? ' You beat every night: the Custom Night is open!' : '')
+      + (G.setup.challenge ? ` Challenge complete: ${G.setup.challenge.name}!` : '');
   } else {
     setHtml($('endArt'), `<span class="big">${iconHtml(g.def.id)}</span>`);
     $('endTitle').textContent = '6 AM';

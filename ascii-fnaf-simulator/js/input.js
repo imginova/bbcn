@@ -33,6 +33,11 @@ $('nightList').addEventListener('click', e => {
 $('btnStart').addEventListener('click', () => { if (nightOpen(pickedNight)) startNight(storySetup(pickedNight)); });
 
 // The custom night.
+$('cChallenges').addEventListener('click', e => {
+  const b = e.target.closest('[data-challenge]');
+  const c = b && CHALLENGES.find(x => x.id === b.dataset.challenge);
+  if (c) startNight(challengeSetup(c));
+});
 $('cGuards').addEventListener('click', e => { const b = e.target.closest('[data-guard]'); if (b) { sfx.select(); pickGuard(b.dataset.guard); } });
 $('cTools').addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b) { sfx.select(); toggleTool(b.dataset.tool); } });
 $('cCrew').addEventListener('click', e => {
@@ -106,10 +111,17 @@ document.addEventListener('keydown', e => {
   if (k === 'p' || k === 'escape') { setPaused(!G.paused); e.preventDefault(); return; }
   if (G.paused) return;
   if (e.repeat) return;                       // holding a key down shouldn't repeat actions
-  if (k >= '1' && k <= '6') selectUnit(Number(k) - 1);
+  // 1 to 9 pick the first nine, 0 the tenth. Tab (or ]) picks the next one and Shift+Tab (or [) the one
+  // before, which is how to reach everyone in a big crew like Max mode's.
+  if (k >= '1' && k <= '9') selectUnit(Number(k) - 1);
+  else if (k === '0') selectUnit(9);
   else if (k === 'q') useAbility();
   else if (k === 'e') attackSelected();
-  else if (k === 'tab') { selectUnit((G.sel + 1) % G.crew.length); e.preventDefault(); }
+  else if (k === 'tab' || k === ']' || k === '[') {
+    const back = (k === 'tab' && e.shiftKey) || k === '[';
+    selectUnit((G.sel + (back ? G.crew.length - 1 : 1)) % G.crew.length);
+    e.preventDefault();
+  }
 });
 
 // Pause by itself when you switch to another tab or window, so the guard doesn't win while you're away.

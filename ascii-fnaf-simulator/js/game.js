@@ -25,6 +25,11 @@ const customDefaults = () => ({ guard: 'mike', skill: 10, tools: GUARD_BY_ID.mik
 let custom = Object.assign(customDefaults(), store.get('custom', {}));
 const saveCustom = () => store.set('custom', custom);
 const nightBeaten = n => beaten.includes(n);
+// The custom night challenges you've beaten, by challengeKey ("Max mode v1"). Only ever added to: a ✓
+// this version doesn't recognise is kept too.
+let challengesBeaten = store.get('challenges', []);
+if (!Array.isArray(challengesBeaten)) challengesBeaten = [];
+const challengeBeaten = c => challengesBeaten.includes(challengeKey(c));
 // The custom night opens once Night 10 is beaten (like the real games' extra night).
 const customUnlocked = () => nightBeaten(10);
 
@@ -44,6 +49,12 @@ function customSetup() {
   return { night: null, guard: GUARD_BY_ID[custom.guard] || GUARDS[0], skill: custom.skill, tools: custom.tools,
     crew: Object.entries(custom.crew).filter(([id]) => CREW_BY_ID[id]).slice(0, MAX_CREW).map(([id, level]) => ({ id, level })),
     power: custom.power, hour: custom.hour, speed: custom.speed };
+}
+// A challenge from CHALLENGES (data.js). Its crew can be bigger than MAX_CREW: Max mode has everyone.
+function challengeSetup(c) {
+  const ids = c.crew === 'all' ? CREW.map(x => x.id) : c.crew;
+  return { night: null, challenge: c, guard: GUARD_BY_ID[c.guard], skill: c.skill, tools: c.tools,
+    crew: ids.map(id => ({ id, level: c.level })), power: c.power, hour: c.hour, speed: c.speed };
 }
 
 function newGame(setup) {
@@ -120,6 +131,9 @@ const monitorUp = () => G.guard.focus === 'cam' || G.guard.focus === 'wind';
 const stunned = u => G.t < u.stunUntil;
 const selected = () => G.crew[G.sel];
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+// Some guards shrug off your tricks: grit (from GUARDS) scales how long a trick lasts or how much power
+// it costs them. 1 = the full effect (most guards), 0.5 = half (The Tendons 8).
+const grit = x => x * (G.guard.def.grit ?? 1);
 // Can the guard see this room clearly on its camera right now? (No static, not the sound-only kitchen.)
 const roomClear = room => G.t >= G.guard.scrambleUntil && !(G.staticRooms[room] > G.t) && !ROOMS[room].audioOnly;
 // Is the guard watching this room on its camera right now?
@@ -199,7 +213,7 @@ function endGuardStates() {
 function drainPower(dt) {
   const g = G.guard;
   if (g.dead) return;
-  g.power -= (usage() + CUPCAKE_DRAIN * G.pests.filter(p => p === 'cupcake').length) * dt;
+  g.power -= (usage() + grit(CUPCAKE_DRAIN) * G.pests.filter(p => p === 'cupcake').length) * dt;
   if (g.power <= 0) powerOut();
 }
 // How much power the guard is using per second right now.
@@ -209,7 +223,7 @@ function usage() {
   if (monitorUp()) use += CAM_DRAIN;
   for (const s of ['L', 'R', 'V']) if (g.doors[s]) use += DOOR_DRAIN;
   for (const s of ['L', 'R']) if (g.light[s] > G.t) use += LIGHT_DRAIN;
-  return use;
+  return use * (g.def.thrift ?? 1);   // a thrifty guard (The Tendons 8) uses less for the same things
 }
 function powerOut() {
   const g = G.guard;
@@ -407,12 +421,18 @@ function counter(u) {
     if (u.def.withered && guardHas('mask')) { g.focus = 'mask'; g.maskUntil = G.t + MASK_HOLD; sfx.mask(); bonk(u, 'mask'); return true; }
     // Either Golden Freddy in the office: flip the monitor up and he's gone.
     if (camsOk()) { g.focus = 'cam'; g.cam = pickCam(); bonk(u, 'cams'); return true; }
+    // Broken cameras: start rebooting them, then flip them up (it keeps trying) if there's still time.
+    if (guardHas('cams') && g.camsBroken && g.focus !== 'reboot' && g.focus !== 'stun') {
+      g.focus = 'reboot';
+      g.busyUntil = G.t + (g.def.reboot || REBOOT_TIME);
+      log('The guard is rebooting its cameras in a hurry...', 'g');
+    }
     return false;
   }
   if ((e === 'L' || e === 'R') && guardHas('doors') && G.t >= g.jam[e]) { shutDoor(e); bonk(u, 'door'); return true; }
   if (e === 'V' && guardHas('ventdoor') && G.t >= g.jam.V) { shutDoor('V'); bonk(u, 'vent'); return true; }
   if (d.flashable && guardHas('flash') && lightsOk()) {
-    g.power -= FLASH_COST; g.flashUntil = G.t + 0.5; g.flashSide = e; sfx.flash();
+    g.power -= FLASH_COST * (g.def.thrift ?? 1); g.flashUntil = G.t + 0.5; g.flashSide = e; sfx.flash();
     bonk(u, 'flash'); return true;
   }
   if (d.maskable && guardHas('mask')) {
@@ -462,8 +482,8 @@ function bonk(u, how) {
   if (u.def.kind === 'foxy') {
     u.stage = 0; u.stageT = 0;
     if (how === 'door' && !g.dead) {
-      g.power -= FOXY_BONK_POWER;
-      log(`Foxy banged on the door: ${FOXY_BONK_POWER}% of the guard's power gone.`, 'you');
+      g.power -= grit(FOXY_BONK_POWER);
+      log(`Foxy banged on the door: ${grit(FOXY_BONK_POWER)}% of the guard's power gone.`, 'you');
     }
   }
   u.room = u.def.home;
@@ -561,7 +581,7 @@ function noticeChance(u) {
   else if (g.focus === 'wind' || g.focus === 'reboot') base = noticeCam(s) * 0.7;
   else base = noticeDesk(s);
   // Freddles and cupcakes in the office are distracting.
-  const pests = 1 - PEST_NOTICE * G.pests.length;
+  const pests = 1 - grit(PEST_NOTICE) * G.pests.length;
   return clamp(base * (1 - stealthOf(u)) * pests, 0, 1);
 }
 // noticeChance is "per second": the longer you stand in the doorway, the likelier it notices. Over a short
@@ -609,7 +629,7 @@ function think() {
   // 3. Freddles and cupcakes: a sharp guard deals with one at once, a dull one waits until there are two.
   if (G.pests.length >= (s >= 10 ? 1 : 2)) {
     if (guardHas('flash') && lightsOk()) {   // a flash gets rid of one straight away
-      g.power -= FLASH_COST; g.flashUntil = t + 0.4; g.flashSide = 'O'; sfx.flash();
+      g.power -= FLASH_COST * (g.def.thrift ?? 1); g.flashUntil = t + 0.4; g.flashSide = 'O'; sfx.flash();
       G.pests.shift();
       log('The guard flashed a pest out of the office.', 'g');
     } else {                                 // otherwise it has to shoo it by hand
@@ -665,7 +685,7 @@ function tryShock() {
   const here = G.crew.filter(u => u.room === room && showsOnCam(u) && !stunned(u));
   if (!here.length) return;
   g.cd.shock = G.t + SHOCK_COOLDOWN;
-  g.power -= SHOCK_COST;
+  g.power -= SHOCK_COST * (g.def.thrift ?? 1);
   sfx.shock();
   G.fx.push({ room, text: 'ZAP', until: G.t + 1.2 });
   G.crew.filter(u => u.room === room && !u.attack).forEach(u => { u.stunUntil = G.t + SHOCK_STUN; });
@@ -729,16 +749,16 @@ function abilityEffect(u) {
   switch (u.id) {
     case 'fre':
       if (g.dead) return 'The power is already out.';
-      g.power -= LAUGH_POWER; sfx.laugh();
-      log(`Freddy laughed in the dark: the guard lost ${LAUGH_POWER}% power.`, 'you'); return '';
+      g.power -= grit(LAUGH_POWER); sfx.laugh();
+      log(`Freddy laughed in the dark: the guard lost ${grit(LAUGH_POWER)}% power.`, 'you'); return '';
     case 'bon':
       if (u.attack) return 'Not while attacking.';
-      G.staticRooms[u.room] = t + STATIC_TIME; sfx.stat();
+      G.staticRooms[u.room] = t + grit(STATIC_TIME); sfx.stat();
       log(`${ROOMS[u.room].cam} turned to static.`, 'you'); return '';
     case 'chi':
       if (!camsOk()) return 'The guard has no working cameras to listen with.';
       if (['stun', 'hide', 'mask', 'reboot', 'dead'].includes(g.focus)) return 'The guard is too busy to listen right now.';
-      g.focus = 'cam'; g.cam = 'kitchen'; g.lockUntil = t + CLATTER_TIME; sfx.clatter();
+      g.focus = 'cam'; g.cam = 'kitchen'; g.lockUntil = t + grit(CLATTER_TIME); sfx.clatter();
       log('Clatter! The guard is listening to the kitchen.', 'you'); return '';
     case 'fox':
       if (u.attack) return 'Foxy is already running.';
@@ -750,7 +770,7 @@ function abilityEffect(u) {
       moveUnit(u, 'vent3'); log('Toy Bonnie slid down to Vent C.', 'you'); return '';
     case 'tch':
       if (!guardHas('lights') && !guardHas('flash')) return 'This guard has no lights to turn off.';
-      g.lightsOffUntil = t + LIGHTS_OUT_TIME; g.light = { L: 0, R: 0 }; sfx.stat();
+      g.lightsOffUntil = t + grit(LIGHTS_OUT_TIME); g.light = { L: 0, R: 0 }; sfx.stat();
       log('Toy Chica cut the lights: no door lights or flashlight for a while.', 'you'); return '';
     case 'wfx':
       if (u.cd <= 0) return 'Withered Foxy is already ready to move.';
@@ -764,7 +784,7 @@ function abilityEffect(u) {
       log('Withered Bonnie went faceless: no camera shows him.', 'you'); return '';
     case 'wch':
       if (!guardHas('ventdoor')) return 'This guard has no vent door to jam.';
-      g.jam.V = t + JAM_TIME; openDoor('V'); sfx.vent();
+      g.jam.V = t + grit(JAM_TIME); openDoor('V'); sfx.vent();
       log('Withered Chica jammed the vent door open!', 'you'); return '';
     case 'wgf':
       if (u.attack) return 'Withered Golden Freddy is already there.';
@@ -772,19 +792,19 @@ function abilityEffect(u) {
       startAttack(u, 'O'); return '';
     case 'lol':
       if (g.dead) return 'The power is already out.';
-      if (['stun', 'hide', 'lol'].includes(g.focus)) return 'The guard is busy with something else.';
-      g.focus = 'lol'; g.busyUntil = t + LOL_TIME; sfx.hi();
+      if (['stun', 'hide', 'lol', 'reboot'].includes(g.focus)) return 'The guard is busy with something else.';
+      g.focus = 'lol'; g.busyUntil = t + grit(LOL_TIME); sfx.hi();
       log('PLEASE STAND BY. Lolbit took over the guard\'s computer: it has to type L-O-L.', 'you'); return '';
     case 'mng':
       if (!guardHas('cams')) return 'This guard has no cameras.';
-      g.scrambleUntil = t + SCRAMBLE_TIME; sfx.stat();
+      g.scrambleUntil = t + grit(SCRAMBLE_TIME); sfx.stat();
       log('Radio static! Every camera is scrambled.', 'you'); return '';
     case 'bb':
-      g.distractedUntil = t + DISTRACT_TIME; sfx.hi();
+      g.distractedUntil = t + grit(DISTRACT_TIME); sfx.hi();
       log('"Hi!" The guard looks around, confused.', 'you'); return '';
     case 'pup':
       if (G.puppetOutAt != null) return 'The Puppet is already out.';
-      G.box = Math.max(0, G.box - UNWIND); sfx.musicBox(true);
+      G.box = Math.max(0, G.box - grit(UNWIND)); sfx.musicBox(true);
       log(`The music box unwinds: ${Math.round(G.box)}% left.`, 'you'); return '';
     case 'spr':
       u.immuneUntil = t + SHRUG_TIME;
@@ -833,12 +853,12 @@ function abilityEffect(u) {
       const entry = Object.keys(ENTRIES).find(e => ENTRIES[e] === u.room);
       if (!entry || u.attack) return 'Only from the W. Corner, the E. Corner or Vent C.';
       if (!g.doors[entry]) return `The ${ENTRY_NAME[entry]} is already open.`;
-      openDoor(entry); g.jam[entry] = t + PRY_TIME; sfx.door(entry);
+      openDoor(entry); g.jam[entry] = t + grit(PRY_TIME); sfx.door(entry);
       log(`Ennard pried the ${ENTRY_NAME[entry]} open!`, 'you'); return '';
     }
     case 'pfx':
       if (monitorUp() || ['stun', 'hide', 'dead'].includes(g.focus)) return 'Only works while the guard\'s monitor is down.';
-      g.focus = 'stun'; g.stunUntil = t + LUNGE_TIME; sfx.sting();
+      g.focus = 'stun'; g.stunUntil = t + grit(LUNGE_TIME); sfx.sting();
       log('Phantom Foxy lunged out of the dark: the guard is frozen!', 'you'); return '';
     case 'pfr':
       if (!guardHas('cams')) return 'This guard has no cameras to break.';
@@ -847,7 +867,7 @@ function abilityEffect(u) {
       log('Phantom Freddy haunts the system: the cameras are broken!', 'you'); return '';
     case 'pbb':
       if (!monitorUp()) return 'Only works while the guard is looking at its monitor.';
-      g.focus = 'stun'; g.stunUntil = t + STUN_TIME; sfx.sting();
+      g.focus = 'stun'; g.stunUntil = t + grit(STUN_TIME); sfx.sting();
       log('Phantom BB jumped out of the monitor: the guard is frozen!', 'you'); return '';
     case 'gol':
       if (u.gold) return 'Golden Freddy is already on his way.';
@@ -875,6 +895,8 @@ function win(u, how) {
   G.over = true;
   G.result = { won: true, by: u, how };
   if (G.setup.night && !beaten.includes(G.setup.night)) { beaten.push(G.setup.night); store.set('beaten', beaten); }
+  const ch = G.setup.challenge;
+  if (ch && !challengeBeaten(ch)) { challengesBeaten.push(challengeKey(ch)); store.set('challenges', challengesBeaten); }
   catches[u.id] = (catches[u.id] || 0) + 1;
   store.set('catches', catches);
   sfx.humOff();

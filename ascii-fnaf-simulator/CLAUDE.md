@@ -11,7 +11,7 @@ The owner's request: "a reverse fnaf-like ASCII game where your goal is to use y
 - **Owner:** the `imginova` GitHub account (Jake Harris's son). New to programming: explain in plain language.
 - **Private Artifact link:** https://claude.ai/artifact/2jfk4WEHXSCrWAqV8X1Mx3 (only the owner and people they share it with can open it; see "Publishing" below).
 - **Public site:** https://imginova.github.io/bbcn/ascii-fnaf-simulator/ once merged to `main` (the root `.github/workflows/deploy.yml` checks and builds it).
-- **Its own saves:** prefix `asciifnafsim:` (`store` in `helpers.js`): `beaten` (night numbers won), `catches` ({ crew id: count }), `custom` (the custom night settings), `muted`. Never mix with the other games' prefixes.
+- **Its own saves:** prefix `asciifnafsim:` (`store` in `helpers.js`): `beaten` (night numbers won), `challenges` (custom night challenges won, as "Max mode v1"), `catches` ({ crew id: count }), `custom` (the custom night settings), `muted`. Never mix with the other games' prefixes.
 
 ## Fan game rules (keep these)
 
@@ -26,7 +26,7 @@ Same as the other games: plan before big features and ask about real design choi
 
 - **Clock:** 12 AM to 6 AM, `HOUR_SECONDS` (30) per hour; the custom night can change it. At 6 AM the guard wins.
 - **Map** (`ROOMS` in `data.js`): 14 rooms on a 4 × 4 grid with the office at row 4, column 2. `to` lists which rooms join. Three ways in (`ENTRIES`): the W. Corner → LEFT door, the E. Corner → RIGHT door, Vent C → VENT. Vent rooms only fit `vents: true` animatronics. The Kitchen (CAM 6) is sound-only: the guard can never see anyone there. `DIST` (moves from the office) is worked out by a flood fill.
-- **Your controls:** pick with 1–6 or a card; click a lit room next to it to walk (each has a `move` cooldown); from a corner (or Vent C) click LEFT / RIGHT / VENT on the office square or press E to attack; Q uses the ability. P/Esc pause, M mute. The night pauses itself on tab switch or window blur.
+- **Your controls:** pick with 1–9 / 0, Tab, or a card; click a lit room next to it to walk (each has a `move` cooldown); from a corner (or Vent C) click LEFT / RIGHT / VENT on the office square or press E to attack; Q uses the ability. P/Esc pause, M mute. The night pauses itself on tab switch or window blur.
 - **An attack:** the animatronic stands in the doorway for its `attack` seconds. If the guard notices (`noticeChance`, a **per-second** chance rolled every frame in `rollNotice`), it reacts after `guardReact(skill)` (+`LOWER_CAM` if its monitor was up) with the first counter that works (`counter`): shut door / vent door, flashlight (`flashable`), mask (`maskable`), audio lure (`lurable`), hide. If nothing works right then (lights cut, door jammed or pried, lure on cooldown), it keeps trying every 0.4 s (`helpless`). A door already shut (or the mask/hide already on) knocks you back at once. Stopped = sent home and frozen `BONK_STUN` (5 s). Foxy banging on a shut door costs the guard `FOXY_BONK_POWER` (6%).
 - **Winning:** an attack lands; the guard's power hits 0 (`POWER_OUT_WIN` 4 s later, Freddy or the first walker walks in); or the music box empties (the Puppet, `PUPPET_DELAY` 4 s later).
 
@@ -53,6 +53,9 @@ The guard only knows what it **sees** or **hears**:
 | 8 | Vanessa | 12 | cams, doors, lights, flash, vent door | lights a lot, saves power |
 | 9 | Henry Emily | 17 | cams, doors, lights, lure, shock | saves power (`doorHold` 0.6) |
 | 10 | Mike Schmidt (veteran) | 18 | everything | — |
+| Max mode | **The Tendons 8** | 20 | everything | the hardest guard (on request, 2026-11-20; the name is the owner's): hears ×1.5, reboots in 1 s, puts the monitor down faster (`slowDown` −0.15), `grit` 0.35 (every trick that messes with it lasts or costs 0.35 as much: stuns, Lolbit, Clatter, Radio static, Lights out, Static, Hi!, Jam, Pry open, Laugh, Unwind, Foxy's bang, cupcakes, Freddles), `thrift` 0.35 (uses 0.35 as much power for everything) |
+
+`grit` and `thrift` are general guard traits (default 1), so a future guard can use them too. On the custom night The Tendons 8 can be picked like any guard.
 
 ### Your crew (`CREW` in `data.js`, 31)
 
@@ -98,6 +101,8 @@ Kinds: `walker` (moves and attacks), `foxy` (Pirate Cove stages), `puppet` (musi
 
 ### Custom night (`screens.js`)
 
+**Challenges** (`CHALLENGES` in `data.js`, shown at the top of the custom night screen, started with `challengeSetup`): ready-made nights with a name and a version `v`. Beating one saves `challengeKey` ("Max mode v1") in the `challenges` store key (only ever added to). Raise `v` when a change makes a challenge harder. **Max mode** (on request, 2026-11-20: "every character available" against "the hardest nightguard"): all 31 animatronics at once (`crew: 'all'`, which can go past `MAX_CREW`) at level 10, against The Tendons 8 at skill 20 with every tool. The crew is level 10, not 20, because level 20 cooldowns let the bot win every time. With more than 6 animatronics the cards get smaller (`.crew.many`); 1–9 and 0 pick the first ten, Tab / Shift+Tab (or ] / [) step through everyone.
+
 Guard (picking one loads its tools and skill), skill 0–20 (0 never notices anything), each tool on/off, any crew up to `MAX_CREW` (6) with a level 1–20 each (`crewSpeed`: cooldowns ×1.4 at 1 to ×0.6 at 20), starting power 10–100%, hour length 15–60 s, cooldown speed 50–200%. Saved in `custom`.
 
 ## Defaults chosen by Claude (tell the owner if asked; change on request)
@@ -107,6 +112,8 @@ The whole guard AI and every number in `config.js`; the map; which guard goes wi
 ## Balance (2026-11-20)
 
 A bot played each night 20–30 times (`botRun`, kept in the test page's localStorage, not in the repo): 0.6 s between actions, walks the shortest way to a random door, attacks when the door is open and the guard is busy (monitor up, frozen, rebooting, typing, shooing) or after waiting 5 s, uses abilities with simple rules. Results after tuning: Night 1 100%, 2 83%, 3 93%, 4 77%, 5 87%, 6 70%, 7 67%, 8 63%, 9 63%, 10 20%. 80 random custom nights ran with no errors. Tuning that got there: attacks lengthened about 30% (`attack` in `CREW`), noticing became a per-second chance, `guardReact` 1.6–0.6 s, Lights out 12 → 3 s, Shrug off 12 → 5 s, Jam 10 → 4 s (they used to guarantee a win), and the guards' skills above. **Not play-tested by a person, and the sounds have never been heard.**
+
+Max mode (2026-11-20): first the bot won it 20/20 in about 20 s. Two fixes for every guard came out of it: a guard facing Golden Freddy with broken cameras now starts rebooting as its answer (it used to be stuck "busy reacting" and never rebooted, so Haunt + Golden Freddy always won), and Lolbit can't interrupt a reboot. Then The Tendons 8 got `grit` and `thrift` and the crew went to level 10: the bot wins Max mode about 25% of the time (40 runs), with its wins spread over many animatronics. That's close to Night 10 for the bot, but the bot steers 31 animatronics without effort; a person won't. The story nights stayed on the same curve after the fixes (Night 1 95%, Night 10 20–30%).
 
 ## Testing
 
@@ -118,6 +125,7 @@ A bot played each night 20–30 times (`botRun`, kept in the test page's localSt
 
 - Same as the other games: `index.html` is a page fragment; keep `<meta charset="utf-8">` and `[hidden] { display: none !important; }`; scripts share one global scope (unique names; don't shadow browser built-ins like `open`, which is why the door helpers are `shutDoor`/`openDoor`); art is ASCII only; things redrawn often react on `pointerdown`.
 - The game loop only runs during a night.
+- **Speed** (2026-11-20, on request: "the game is laggy"). The crew cards and the map used to be rebuilt from an HTML string 15 times a second, and the browser then re-measured the whole page each time: about 8 ms per redraw in Max mode (31 cards) with spikes of 40–60 ms, 1.4 ms on a normal night. Now `renderCrew` and `renderMap` (`render.js`) build their boxes once (per night for the cards, once for the map) and each redraw only changes the bits inside with `setHtml` / `setClass`, which skip anything unchanged; move cooldowns show whole seconds so their text changes once a second; and `contain` in `style.css` keeps a change inside one card or room from re-measuring the rest of the page. After: about 3 ms per redraw in Max mode and 1.5 ms on a normal night (with layout), worst spikes 6–9 ms. Keep it that way: don't go back to rebuilding whole lists every frame.
 
 ## Publishing
 
