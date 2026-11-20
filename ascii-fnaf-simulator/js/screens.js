@@ -1,0 +1,145 @@
+/* =====================================================================
+   screens.js: the MENUS. The title, the list of nights, the custom
+   night, pause, "How to play" and the end of the night.
+
+   Screens are switched with show('nights') and so on: every screen is
+   in index.html, and all but one carry the `hidden` attribute.
+   ===================================================================== */
+
+let currentScreen = 'title';   // 'title', 'nights', 'custom' or 'game' (not `screen`: that's a browser built-in)
+let pickedNight = 1;           // the night selected on the night list
+
+function show(name) {
+  currentScreen = name;
+  for (const s of ['title', 'nights', 'custom', 'game']) $('scr-' + s).hidden = s !== name;
+  $('end').hidden = true;
+  $('pause').hidden = true;
+  if (name === 'title') renderTitle();
+  if (name === 'nights') renderNights();
+  if (name === 'custom') renderCustom();
+  if (name !== 'game') sfx.humOff();
+}
+
+function renderTitle() {
+  $('btnCustom').disabled = !customUnlocked();
+  $('btnCustom').textContent = customUnlocked() ? 'Custom Night' : 'Custom Night (beat Night 10)';
+  $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / 10`;
+}
+
+// ---------- the night list ----------
+const nightOpen = n => n === 1 || nightBeaten(n - 1) || nightBeaten(n);
+
+function renderNights() {
+  setHtml($('nightList'), NIGHTS.map((night, i) => {
+    const n = i + 1, open = nightOpen(n);
+    const cls = ['night', open ? '' : 'locked', n === pickedNight ? 'picked' : '', nightBeaten(n) ? 'beaten' : ''].join(' ');
+    return `<button class="${cls}" data-night="${n}" ${open ? '' : 'disabled'}>` +
+      `<span class="nnum">NIGHT ${n}${nightBeaten(n) ? ' <span class="tick">&#10003;</span>' : ''}</span>` +
+      `<span class="nname">${open ? escText(night.name) : 'LOCKED'}</span>` +
+      `<span class="ncrew">${open ? night.crew.map(id => faceHtml(id)).join(' ') : ''}</span></button>`;
+  }).join(''));
+  renderNightInfo();
+}
+
+// The details of the selected night: the guard, its tools, your crew and a tip.
+function renderNightInfo() {
+  const night = NIGHTS[pickedNight - 1], g = GUARD_BY_ID[night.guard];
+  $('btnStart').disabled = !nightOpen(pickedNight);
+  setHtml($('nightInfo'),
+    `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${g.skill}</span>` +
+    `<div>${escText(g.desc)}</div><div class="tools">${g.tools.map(t => `<span class="tool" title="${escText(TOOLS[t].desc)}">${TOOLS[t].name}</span>`).join('')}</div></div></div></div>` +
+    `<div class="crewlist">${night.crew.map(id => crewLine(id)).join('')}</div>` +
+    `<p class="tip"><b>Tip:</b> ${escText(night.tip)}</p>`);
+}
+// One animatronic: face, name, what it does and its ability.
+function crewLine(id) {
+  const c = CREW_BY_ID[id];
+  const count = catches[id] ? ` <span class="dim">· caught the guard ${catches[id]} time${catches[id] === 1 ? '' : 's'}</span>` : '';
+  return `<div class="cline">${iconHtml(id)}<div><b class="c-${id}">${escText(c.name)}</b> <span class="dim">(${c.from})</span>${count}` +
+    `<div>${escText(c.desc)}</div><div><span class="you">Q · ${escText(c.ability.name)}:</span> ${escText(c.ability.desc)}</div></div></div>`;
+}
+
+// ---------- the custom night ----------
+// Everything about the night can be changed: the guard, its skill, its tools, the crew (with a level
+// each), the guard's starting power, the length of an hour, and how fast your cooldowns recharge.
+const CUSTOM_LIMITS = { skill: [0, 20, 1], power: [10, 100, 10], hour: [15, 60, 5], speed: [50, 200, 10] };
+
+function renderCustom() {
+  const g = GUARD_BY_ID[custom.guard] || GUARDS[0];
+  setHtml($('cGuards'), GUARDS.map(x =>
+    `<button class="pickg ${x.id === g.id ? 'on' : ''}" data-guard="${x.id}">${iconHtml(x.id)}<span>${escText(x.name)}</span></button>`).join(''));
+  setHtml($('cGuardInfo'), `<b>${escText(g.name)}</b> <span class="dim">(${g.from})</span>: ${escText(g.desc)}`);
+  setHtml($('cTools'), TOOL_IDS.map(t =>
+    `<button class="pickt ${custom.tools.includes(t) ? 'on' : ''}" data-tool="${t}" title="${escText(TOOLS[t].desc)}">${custom.tools.includes(t) ? '[x]' : '[ ]'} ${TOOLS[t].name}</button>`).join(''));
+  const n = Object.keys(custom.crew).length;
+  $('cCrewCount').textContent = `${n} / ${MAX_CREW}`;
+  setHtml($('cCrew'), CREW.map(c => {
+    const on = custom.crew[c.id] != null;
+    return `<div class="pickc ${on ? 'on' : ''}" data-crew="${c.id}" title="${escText(c.desc)}">${iconHtml(c.id)}` +
+      `<span class="c-${c.id}">${escText(c.name)}</span>` +
+      (on ? `<span class="lvl"><button data-lvl="-1" data-for="${c.id}">-</button> ${custom.crew[c.id]} <button data-lvl="1" data-for="${c.id}">+</button></span>`
+        : '<span class="dim">off</span>') + '</div>';
+  }).join(''));
+  for (const k in CUSTOM_LIMITS) $('cv-' + k).textContent = k === 'speed' ? custom.speed + '%' : k === 'hour' ? custom.hour + ' s' : k === 'power' ? custom.power + '%' : custom.skill;
+  $('btnCustomStart').disabled = n === 0;
+}
+
+function pickGuard(id) {
+  const g = GUARD_BY_ID[id];
+  if (!g) return;
+  custom.guard = id;
+  custom.skill = g.skill;
+  custom.tools = g.tools.slice();   // a new guard comes with its own tools (you can change them after)
+  saveCustom(); renderCustom();
+}
+function toggleTool(t) {
+  custom.tools = custom.tools.includes(t) ? custom.tools.filter(x => x !== t) : [...custom.tools, t];
+  saveCustom(); renderCustom();
+}
+function toggleCrew(id) {
+  if (custom.crew[id] != null) delete custom.crew[id];
+  else if (Object.keys(custom.crew).length < MAX_CREW) custom.crew[id] = 10;
+  else { sfx.deny(); return; }
+  saveCustom(); renderCustom();
+}
+function changeCrewLevel(id, step) {
+  if (custom.crew[id] == null) return;
+  custom.crew[id] = Math.max(1, Math.min(20, custom.crew[id] + step));
+  saveCustom(); renderCustom();
+}
+function changeRule(key, dir) {
+  const [lo, hi, step] = CUSTOM_LIMITS[key];
+  custom[key] = Math.max(lo, Math.min(hi, custom[key] + dir * step));
+  saveCustom(); renderCustom();
+}
+
+// ---------- pause ----------
+function showPause(on) {
+  $('pause').hidden = !on;
+  if (on) setHtml($('pauseInfo'), `<div class="crewlist">${G.crew.map(u => crewLine(u.id)).join('')}</div>`);
+}
+
+// ---------- the end of the night ----------
+function showEnd() {
+  const r = G.result, g = G.guard, n = G.setup.night;
+  renderGame();
+  $('end').hidden = false;
+  $('end').classList.toggle('won', r.won);
+  if (r.won) {
+    const why = r.how === 'power' ? `The power ran out, and ${r.by.def.name} walked right in.`
+      : r.how === 'box' ? 'The music box ran out. The Puppet came for the guard.'
+      : `${r.by.def.name} got ${g.name} at ${clockLabel()}.`;
+    setHtml($('endArt'), `<span class="big">${iconHtml(r.by.id)}</span>`);
+    $('endTitle').textContent = 'GOT HIM!';
+    $('endText').textContent = why + (n === 10 && r.won ? ' You beat every night: the Custom Night is open!' : '');
+  } else {
+    setHtml($('endArt'), `<span class="big">${iconHtml(g.def.id)}</span>`);
+    $('endTitle').textContent = '6 AM';
+    $('endText').textContent = `${g.name} survived the night with ${pct(g.power)}% power left.`;
+  }
+  $('btnNext').hidden = !(r.won && n && n < 10);
+}
+
+// ---------- how to play, mute ----------
+function showHowto(on) { $('howto').hidden = !on; }
+function renderMute() { $('btnMute').textContent = sfx.muted ? 'Sound: off' : 'Sound: on'; }
