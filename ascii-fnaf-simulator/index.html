@@ -1,0 +1,172 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ASCII FNAF Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+  =====================================================================
+  index.html: the page STRUCTURE (what is on the screen).
+
+  ASCII FNAF Simulator is an unofficial fan game. It is not affiliated
+  with Scott Cawthon or Five Nights at Freddy's; the characters belong
+  to their creator.
+
+  FNAF backwards: YOU control the animatronics, and the computer plays
+  the night guard. Catch the guard before 6 AM.
+
+  This file only lists the pieces of the page: screens, buttons, empty
+  boxes the game draws into. How they look lives in style.css, and what
+  they do lives in the js/ folder (loaded at the very bottom).
+
+  Note: there is no <!doctype>, <html>, <head> or <body> here on purpose.
+  tools/build.js wraps the page in those for the website, and browsers
+  also cope fine when you double-click this file to open it locally.
+  The two <meta> lines at the very top are for that local case.
+
+  Screens (only one is visible at a time; the others carry `hidden`):
+    #scr-title   title screen
+    #scr-nights  the 10 story nights
+    #scr-custom  the custom night
+    #scr-game    the night itself
+  plus #end (got him / 6 AM), #pause and #howto, which cover the window.
+  =====================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<div class="app">
+  <div class="topbar">
+    <span class="id">ASCII FNAF Simulator · unofficial fan game</span>
+    <button id="btnMute" class="small">Sound: on</button>
+  </div>
+
+  <main class="monitor">
+    <!-- ===== title ===== -->
+    <section id="scr-title" class="screen center">
+      <h1 class="logo">ASCII FNAF<span>SIMULATOR</span></h1>
+      <p class="lead">You are the animatronics. The night guard is the computer.<br>Catch it before 6 AM.</p>
+      <div id="titleFaces" class="faces"></div>
+      <div class="menu">
+        <button id="btnNights" class="big">Nights</button>
+        <button id="btnCustom" class="big">Custom Night</button>
+        <button id="btnHowto">How to play</button>
+      </div>
+      <p id="titleProgress" class="dim"></p>
+      <p class="legal">An unofficial, free fan game. Not affiliated with Scott Cawthon or Five Nights at Freddy's.</p>
+    </section>
+
+    <!-- ===== the 10 nights ===== -->
+    <section id="scr-nights" class="screen" hidden>
+      <div class="head"><button data-back>&lt; Back</button><h2>The nights</h2></div>
+      <div id="nightList" class="nightlist"></div>
+      <div id="nightInfo" class="info"></div>
+      <div class="startrow"><button id="btnStart" class="big">Start the night</button></div>
+    </section>
+
+    <!-- ===== custom night ===== -->
+    <section id="scr-custom" class="screen" hidden>
+      <div class="head"><button data-back>&lt; Back</button><h2>Custom Night</h2></div>
+      <h3>The guard</h3>
+      <div id="cGuards" class="guards"></div>
+      <p id="cGuardInfo" class="dim"></p>
+      <div class="rules">
+        <span>Skill <button data-rule="skill" data-dir="-1">-</button> <b id="cv-skill"></b> <button data-rule="skill" data-dir="1">+</button></span>
+        <span>Starting power <button data-rule="power" data-dir="-1">-</button> <b id="cv-power"></b> <button data-rule="power" data-dir="1">+</button></span>
+      </div>
+      <h3>The guard's tools</h3>
+      <div id="cTools" class="tools-pick"></div>
+      <h3>Your crew <span id="cCrewCount" class="dim"></span></h3>
+      <p class="dim">Click a face to add or remove it. − and + set its level (higher = faster cooldowns).</p>
+      <div id="cCrew" class="crewpick"></div>
+      <h3>Night rules</h3>
+      <div class="rules">
+        <span>One hour lasts <button data-rule="hour" data-dir="-1">-</button> <b id="cv-hour"></b> <button data-rule="hour" data-dir="1">+</button></span>
+        <span>Cooldown speed <button data-rule="speed" data-dir="-1">-</button> <b id="cv-speed"></b> <button data-rule="speed" data-dir="1">+</button></span>
+      </div>
+      <div class="startrow"><button id="btnCustomStart" class="big">Start the custom night</button></div>
+    </section>
+
+    <!-- ===== the night ===== -->
+    <section id="scr-game" class="screen" hidden>
+      <div class="hud">
+        <span id="hudNight"></span>
+        <span id="hudClock" class="clock"></span>
+        <span id="hudGuard"></span>
+        <span id="hudPower"></span>
+      </div>
+      <div class="field">
+        <div class="mapwrap">
+          <div class="label">BUILDING MAP · click a lit room to walk there</div>
+          <div id="map" class="map"></div>
+          <div id="hint" class="hint"></div>
+        </div>
+        <div class="officewrap">
+          <div class="label">OFFICE CAM</div>
+          <pre id="office" class="art"></pre>
+          <div id="guardSays" class="says"></div>
+          <ol id="log" class="log"></ol>
+        </div>
+      </div>
+      <div id="crew" class="crew"></div>
+      <div class="controls">
+        <span class="dim">1-6 pick · Q ability · E attack · P pause</span>
+        <button id="btnPause">Pause</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===== end of the night ===== -->
+<div id="end" class="overlay" hidden>
+  <div class="panel center">
+    <div id="endArt"></div>
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <div class="menu">
+      <button id="btnNext" class="big">Next night</button>
+      <button id="btnRetry">Try again</button>
+      <button id="btnMenu">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== pause ===== -->
+<div id="pause" class="overlay" hidden>
+  <div class="panel">
+    <h2 class="center">PAUSED</h2>
+    <div class="menu"><button id="btnResume" class="big">Resume</button><button id="btnQuit">Quit the night</button></div>
+    <div id="pauseInfo"></div>
+  </div>
+</div>
+
+<!-- ===== how to play ===== -->
+<div id="howto" class="overlay" hidden>
+  <div class="panel">
+    <h2>How to play</h2>
+    <p><b>FNAF backwards.</b> You control the animatronics. The night guard is played by the computer. Catch it before 6 AM (a night lasts 3 minutes).</p>
+    <ul>
+      <li><b>Pick</b> an animatronic: click its card or press <b>1-6</b>.</li>
+      <li><b>Walk:</b> click a lit room next to it on the map. Each one needs a few seconds between moves.</li>
+      <li><b>Attack:</b> from the W. Corner, the E. Corner or Vent C, click LEFT, RIGHT or VENT on the office square (or press <b>E</b>). If the guard doesn't stop it in time, you win.</li>
+      <li><b>Abilities:</b> every animatronic has one (press <b>Q</b> or its button). Some never attack at all: they only help.</li>
+    </ul>
+    <p><b>The guard only knows what it sees and hears.</b> The red <b>REC</b> on the map is the camera it's watching: a room it's watching sees you. Every move might be heard. When it notices an attack it needs a moment to react: attack while it's busy on the cameras, winding the music box, rebooting or frozen.</p>
+    <p><b>The office cam</b> shows the doors, the vent, the guard's power and what it's doing. A shut door costs it power: keep it scared, and when its power runs out, you win.</p>
+    <p><b>Being stopped</b> sends that animatronic home, frozen for a few seconds.</p>
+    <p class="dim">P or Esc pauses, M mutes. The night pauses by itself if you switch windows.</p>
+    <div class="menu"><button id="btnHowtoClose" class="big">Got it</button></div>
+  </div>
+</div>
+
+<!-- The scripts, in order: each one can use what the ones above it made. -->
+<script src="js/helpers.js"></script>
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/art.js"></script>
+<script src="js/game.js"></script>
+<script src="js/render.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
