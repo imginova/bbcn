@@ -86,7 +86,7 @@ Kinds: `walker` (moves and attacks), `foxy` (Pirate Cove stages), `puppet` (musi
 | Phantom BB | Jumpscare (monitor up): guard frozen 2.5 s | — |
 | Phantom Foxy | Lunge (monitor down): guard frozen 1.5 s | partner of Phantom BB |
 | Shadow Bonnie | Glitch: everyone frozen is free | undoes shocks and bonks |
-| Circus Baby | Showtime: everyone else moves twice as often 10 s | leader |
+| Circus Baby | Showtime: everyone else is ready to move and moves twice as often 10 s; every countdown that helps you keeps only `SHOWTIME_CUT` (half) of what it has left: move and ability cooldowns, freezes, attacks in a doorway, Foxy's next stage, the next Freddle, the music box, the Puppet getting out, the power-out win (on request 2026-11-20, "decrease every timer that would yield a positive effect": the owner was stuck on Night 6) | leader |
 | Ballora | Waltz: everyone quieter 10 s | never on camera, only in a door light |
 | Funtime Freddy | Bon-Bon: a fake attack on the other door | fake-out |
 | Ennard | Pry open: a shut door can't be shut 4 s | vents |
@@ -123,6 +123,8 @@ Max mode (2026-11-20): first the bot won it 20/20 in about 20 s. Two fixes for e
 **Auto-wins fixed** (2026-11-20, on request: "some character combos cause an auto win, and Springtrap can do it himself"). A test of every animatronic alone against every guard (8 nights each) found three causes: (1) most guards had no vent door, so anything in the vent (Springtrap, Toy Bonnie...) was unstoppable: the Doors tool now includes the vent door (`canShut`); (2) a guard with nothing that works against an attacker (Jeremy, who has no doors) simply lost: every guard can now duck (`DUCK_COOLDOWN`), and the mask now also fools Freddy, Bonnie and Chica (like FNAF 2); (3) a few were too strong alone: Ballora (stealth 0.4 → 0.25, slower, and her Waltz no longer hides herself), Nightmare Bonnie (`SILENT_STEALTH` 0.85 → 0.45, cooldown 22 → 30), Withered Freddy (`LURCH` 0.5 → 0.7, cooldown 20 → 30), Mangle (stealth 0.25 → 0.15), Plushtrap (slower, quieter, can be lured), Springtrap (stealth 0.3 → 0.2), Chica (`CLATTER_TIME` 5 → 3). Also Plushtrap alone beat the veteran Mike by parking outside a door until his power ran out, which led to `savingPower`. Afterwards a lone animatronic beats a guard of skill 8+ at most about 2 times in 8; the weakest guards (Mike skill 2, Fritz, Jeremy) still lose to some loners, which is fine for them. Then the nights were retuned (skills in the table above): bot wins Night 1 87%, 2 87%, 3 93%, 4 73%, 5 77%, 6 60%, 7 60%, 8 47%, 9 33%, 10 13% (30 runs each), Max mode about 15% (6/40). These made challenges harder, so Max mode went to v2 (it went up anyway for the new tools). 40 random custom nights with death coins and Lockdown on ran with no errors.
 
 **Yenndo** (2026-11-20): Night 6 with him, the bot won 48/60 (80%) against 45/60 (75%) without, about even with Night 5 (46/60); Michael at skill 9 made no real difference, so he stayed at 8. 40 random custom nights with Yenndo in the crew ran with no errors, and Yenndo alone never wins.
+
+**Showtime cuts** (2026-11-20): Night 6 went from 48/60 to 59/60 for the bot, so it is now one of the easiest nights for the bot (on purpose: the owner was stuck on it). Max mode stayed about the same (7/40) and kept v2, since this only helps the player. 30 random custom nights with Circus Baby ran with no errors.
 
 ## Testing
 

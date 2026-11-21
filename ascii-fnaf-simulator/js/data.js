@@ -147,7 +147,7 @@ const CREW = [
     ability: { name: 'It\'s me', cd: 35, desc: 'Appear in the office. The guard must flip its cameras up in time, or else.' },
     desc: 'Not in any room. Waits for the guard to put its monitor down, then appears. Broken cameras can\'t save the guard.' },
   { id: 'bab', name: 'Circus Baby', from: 'Sister Location', kind: 'walker', home: 'backstage', move: 4.0, attack: 4.6, stealth: 0.2, lurable: true,
-    ability: { name: 'Showtime', cd: 40, desc: 'Everyone else is ready to move, and moves twice as often, for 10 s.' },
+    ability: { name: 'Showtime', cd: 40, desc: 'Everyone else is ready to move, and moves twice as often, for 10 s. Every countdown on your side is cut in half: cooldowns, freezes, attacks in a doorway, the music box.' },
     desc: 'The leader. Slow herself, but Showtime makes a rush possible.' },
   { id: 'bal', name: 'Ballora', from: 'Sister Location', kind: 'walker', home: 'dining', move: 3.8, attack: 4.6, stealth: 0.25,
     hidden: 'always',
