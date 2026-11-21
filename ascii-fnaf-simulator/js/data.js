@@ -1,6 +1,6 @@
 /* =====================================================================
    data.js: WHO and WHERE. The building, your animatronics, the night
-   guards, and the 20 story nights.
+   guards, the story nights and the gimmick nights.
 
    Everything here is plain information (lists and objects). The rules
    that use it are in game.js.
@@ -59,7 +59,7 @@ const TOOLS = {
   shock:    { name: 'Shock',       desc: 'Zaps everyone in the room it is watching: they freeze for a few seconds.' },
   hide:     { name: 'Hide',        desc: 'Ducks under the desk: any attack just then fails. Every guard can duck now and then; this one does it far more often.' },
   lockdown: { name: 'Lockdown',    desc: 'Switches off every animatronic ability for 5 s when an attack is coming. Long cooldown.' },
-  coins:    { name: 'Death coins', desc: 'Two coins. Each one removes an animatronic for the rest of the night, used when the guard would otherwise be caught.' },
+  coins:    { name: 'Death coins', desc: 'Two coins (one for William). Each one removes an animatronic for the rest of the night, used when the guard would otherwise be caught.' },
 };
 const TOOL_IDS = Object.keys(TOOLS);
 
@@ -184,9 +184,50 @@ const CREW = [
   { id: 'pfx', name: 'Phantom Foxy', from: 'FNAF 3', kind: 'phantom',
     ability: { name: 'Lunge', cd: 22, desc: 'Only while the guard\'s monitor is DOWN: it freezes for 1.5 s.' },
     desc: 'A ghost: never attacks. The partner of Phantom BB, who only works while the monitor is up.' },
-  { id: 'yen', name: 'Yenndo', from: 'Sister Location', kind: 'phantom',
+  { id: 'yen', name: 'Yenndo', from: 'Sister Location', kind: 'phantom', idle: 'Waiting in the dark',
     ability: { name: 'Stare', cd: 26, desc: 'Stands beside the guard\'s desk in the dark: it freezes for 2 s, monitor up or down. A guard with a working light spots him and is free after 1 s.' },
     desc: 'A bare endoskeleton: never attacks. Stalls the guard any time, best against guards with no lights (like Michael).' },
+  // Nine more (on request: FNAF 4 nightmares, FNAF 6 salvage and others, Security Breach).
+  { id: 'nfx', name: 'Nightmare Foxy', from: 'FNAF 4', kind: 'walker', home: 'cove', move: 3.0, attack: 4.2, stealth: 0.15, flashable: true,
+    ability: { name: 'Closet', cd: 30, desc: 'From the W. Corner or the E. Corner, slip into the office closet and attack from inside: doors can\'t stop him, only a flashlight (or a duck).' },
+    desc: 'Hides in the closet, like in FNAF 4. Deadly against guards who trust their doors.' },
+  { id: 'nmr', name: 'Nightmarionne', from: 'FNAF 4', kind: 'phantom', idle: 'Pulling the strings',
+    ability: { name: 'Strings', cd: 32, desc: 'Every other animatronic that can walk takes one step closer to the office at once, without a sound.' },
+    desc: 'Never attacks. Pulls the whole crew forward on its strings.' },
+  { id: 'scb', name: 'Scrap Baby', from: 'FNAF 6', kind: 'walker', home: 'backstage', move: 3.8, attack: 4.4, stealth: 0.2, vents: true, lurable: true,
+    ability: { name: 'Creep', cd: 24, desc: 'If the guard isn\'t watching her room, she takes two steps toward the office at once, quietly.' },
+    desc: 'Slow until no one is looking. Fits in the vents.' },
+  { id: 'mfr', name: 'Molten Freddy', from: 'FNAF 6', kind: 'walker', home: 'backstage', move: 3.4, attack: 4.6, stealth: 0.15, vents: true, lurable: true,
+    ability: { name: 'Split', cd: 28, desc: 'Leaves a decoy of wires where he stands: for 10 s the cameras show the decoy, and not him.' },
+    desc: 'A tangle of wires that fits in the vents. The guard watches the decoy while he moves on.' },
+  { id: 'rfr', name: 'Rockstar Freddy', from: 'FNAF 6', kind: 'phantom', idle: 'Waiting for coins',
+    ability: { name: 'Five coins', cd: 26, desc: '"Deposit five coins!" The guard stops to pay: it loses 3% power and fumbles for 2.5 s, noticing less.' },
+    desc: 'Never attacks. Never stops asking for coins.' },
+  { id: 'mus', name: 'Music Man', from: 'FNAF 6', kind: 'phantom', idle: 'Tuning up',
+    ability: { name: 'Cymbals', cd: 30, desc: 'CRASH! For 8 s the guard can\'t hear your footsteps, so it gets no warning before you reach a door.' },
+    desc: 'Never attacks. So loud that nobody can hear anything else.' },
+  { id: 'gfr', name: 'Glamrock Freddy', from: 'Security Breach', kind: 'walker', home: 'stage', move: 3.4, attack: 4.6, stealth: 0.1, lurable: true,
+    ability: { name: 'Friendly face', cd: 30, desc: 'His next attack: the guard thinks he\'s on its side and takes twice as long to react.' },
+    desc: 'Everybody trusts Freddy. That\'s the problem.' },
+  { id: 'rox', name: 'Roxy', from: 'Security Breach', kind: 'walker', home: 'backstage', move: 2.8, attack: 4.4, stealth: 0.1, lurable: true,
+    ability: { name: 'Pounce', cd: 30, desc: 'From the West Hall or the East Hall, leap straight into that doorway and attack.' },
+    desc: 'Roxanne Wolf: fast, and she skips the corner entirely.' },
+  { id: 'mty', name: 'Monty', from: 'Security Breach', kind: 'walker', home: 'stage', move: 3.2, attack: 4.4, stealth: 0.05, lurable: true,
+    ability: { name: 'Smash', cd: 35, desc: 'From a corner, smash the door light on that side: it\'s broken for the rest of the night.' },
+    desc: 'Montgomery Gator: loud, and he breaks things. Takes away a guard\'s door lights one side at a time.' },
+  // Four that had been left out (on request: "add a few left out characters").
+  { id: 'ffx', name: 'Funtime Foxy', from: 'Sister Location', kind: 'walker', home: 'stage', move: 3.2, attack: 4.4, stealth: 0.2, flashable: true,
+    ability: { name: 'Curtain call', cd: 26, desc: 'The guard\'s monitor flips up onto her camera and stays there for 3 s: it has to watch the show. Sets up Phantom BB and Plushtrap.' },
+    desc: 'A showgirl. Makes the guard look at her, and at nothing else.' },
+  { id: 'lft', name: 'Lefty', from: 'FNAF 6', kind: 'walker', home: 'stage', move: 3.8, attack: 4.6, stealth: 0.15, lurable: true,
+    ability: { name: 'Black box', cd: 30, desc: 'The next time someone else is stopped, Lefty takes the hit instead: they stay where they are, and Lefty is sent home.' },
+    desc: 'A protector. Keeps your best attacker in place after a failed attack.' },
+  { id: 'gch', name: 'Glamrock Chica', from: 'Security Breach', kind: 'walker', home: 'kitchen', move: 3.2, attack: 4.4, stealth: 0.15, lurable: true,
+    ability: { name: 'Trash dive', cd: 28, desc: 'For 8 s no camera or door light shows her, and her footsteps make no sound.' },
+    desc: 'Starts in the kitchen, where no camera can see her, and hides in the trash.' },
+  { id: 'dca', name: 'Daycare Attendant', from: 'Security Breach', kind: 'phantom', idle: 'Watching the daycare',
+    ability: { name: 'Nap time', cd: 28, desc: '"Time for a nap!" For 10 s the guard is drowsy and reacts 1 s slower to everything.' },
+    desc: 'Sun and Moon. Never attacks. Puts the guard to sleep... almost.' },
 ];
 const CREW_BY_ID = Object.fromEntries(CREW.map(c => [c.id, c]));
 const MAX_CREW = 6;   // the most animatronics in one night (keys 1 to 6)
@@ -211,7 +252,7 @@ const GUARDS = [
     desc: 'No doors: keeps you away with audio lures, and seals the vent. Reboots systems very fast.' },
   { id: 'michael', name: 'Michael Afton', from: 'Sister Location', skill: 8, tools: ['cams', 'doors', 'shock'], camLove: 0.55, doorHold: 1, lightLove: 0,
     desc: 'Shocks whoever he catches on camera. No door lights.' },
-  { id: 'gregory', name: 'Gregory', from: 'Security Breach', skill: 10, tools: ['cams', 'doors', 'hide'], camLove: 0.5, doorHold: 1, lightLove: 0,
+  { id: 'gregory', name: 'Gregory', from: 'Security Breach', skill: 7, tools: ['cams', 'doors', 'hide'], camLove: 0.5, doorHold: 1, lightLove: 0,
     desc: 'Small and sneaky: when he can\'t stop an attack, he hides. One hide, then a long wait.' },
   { id: 'vanessa', name: 'Vanessa', from: 'Security Breach', skill: 8, tools: ['cams', 'doors', 'lights', 'flash', 'ventdoor'], camLove: 0.5, doorHold: 0.8, lightLove: 0.6,
     desc: 'Careful. Checks the lights all the time and wastes little power.' },
@@ -228,6 +269,29 @@ const GUARDS = [
     desc: 'Sneaks instead of fighting: no doors, but a mask, a flashlight, audio lures and lots of hiding.' },
   { id: 'tech', name: 'The Technician', from: 'FNAF: Help Wanted', skill: 16, tools: ['cams', 'doors', 'lights', 'flash', 'mask'], camLove: 0.5, doorHold: 0.8, lightLove: 0.5, reboot: 1.2,
     desc: 'Fixes things for a living: doors, lights, a flashlight and a mask, and reboots broken cameras in no time.' },
+  // William Afton (on request): both of The Tendons 8's signature tools, but only one death coin, a
+  // plain set of other tools and none of its special habits (no grit, no thrift).
+  { id: 'william', name: 'William Afton', from: 'FNAF', skill: 14, tools: ['cams', 'doors', 'lights', 'coins', 'lockdown'], coins: 1,
+    camLove: 0.5, doorHold: 0.9, lightLove: 0.4,
+    desc: 'He always comes back. One death coin and a Lockdown, like The Tendons 8, but only cameras, doors and lights besides.' },
+
+  // ---------- gimmick guards (their own list of nights, GIMMICKS below) ----------
+  // Each has a `gimmick`: a rule of its own in game.js that turns the night into a puzzle or something
+  // silly. They're left out of Random mode and of the "Guard hunter" achievement.
+  { id: 'sleepy', name: 'The Sleepyhead', from: 'gimmick', gimmick: 'sleep', skill: 9, tools: ['cams', 'doors', 'lights'], camLove: 0.5, doorHold: 1, lightLove: 0.3,
+    desc: 'Asleep at the desk. Every noise you make fills his wake-up meter; at 100% he wakes up for a while, and he\'s no pushover awake.' },
+  { id: 'locksmith', name: 'The Locksmith', from: 'gimmick', gimmick: 'lock', skill: 6, tools: ['cams', 'doors'], camLove: 0.5, doorHold: 1, lightLove: 0,
+    desc: 'His office only opens to a code: attack the ways in in the right order. A wrong one resets the lock. The code is written in three rooms: walk in to read it.' },
+  { id: 'clockwork', name: 'The Clockwork Guard', from: 'gimmick', gimmick: 'clock', skill: 1, tools: ['doors'], thrift: 0, camLove: 0, doorHold: 1, lightLove: 0,
+    desc: 'Never reacts to anything. He just opens and shuts his doors in the same pattern, every night. Learn it, and be in the doorway when it opens.' },
+  { id: 'cutout', name: 'The Cardboard Guard', from: 'gimmick', gimmick: 'cutout', skill: 11, tools: ['cams', 'doors', 'lights'], camLove: 0.5, doorHold: 1, lightLove: 0.3,
+    desc: 'Three guards in the office, and two are cardboard. Attack a cutout and you just knock it over. The real one blinks. Every 25 s the lights flicker and he moves.' },
+  { id: 'mixedup', name: 'The Mixed-up Guard', from: 'gimmick', gimmick: 'mixed', skill: 14, tools: ['cams', 'doors', 'lights'], camLove: 0.5, doorHold: 1, lightLove: 0.3,
+    desc: 'Means well. Always shuts the wrong door first, then has to fix it.' },
+  { id: 'copycat', name: 'The Copycat', from: 'gimmick', gimmick: 'copy', skill: 14, tools: ['cams', 'doors', 'lights'], camLove: 0.8, doorHold: 1, lightLove: 0.2,
+    desc: 'Always looks at the camera of whoever moved last. Move a decoy after your real attacker.' },
+  { id: 'pizza', name: 'The Pizza Guy', from: 'gimmick', gimmick: 'pizza', skill: 15, tools: ['cams', 'doors', 'lights'], camLove: 0.5, doorHold: 1, lightLove: 0.3,
+    desc: 'Keeps ordering pizza. Every 28 s he leaves (shutting every door behind him), the doorbell tells you which door he comes back through, and while he walks in he can\'t stop anyone at that door.' },
   // The hardest guard (on request): the highest skill, every tool, and every other guard's good habit,
   // each at least as strong as on the guard it comes from: Fritz's ears (hears 1.4 -> 1.5), the Fright
   // guard's fast reboots (1.6 -> 1.0 s), Vanessa's light checks (lightLove 0.6) and Henry's careful doors
@@ -239,54 +303,89 @@ const GUARDS = [
 ];
 const GUARD_BY_ID = Object.fromEntries(GUARDS.map(g => [g.id, g]));
 
-// ---------- the 20 story nights ----------
+// ---------- the story nights ----------
 // Each night picks its crew for a kind of play (its "niche"), not just one game's characters, and
 // pairs it with a guard that makes that play interesting.
 const NIGHTS = [
-  { name: 'First shift', guard: 'mike', crew: ['bon', 'chi'],
+  { name: 'First shift', diff: 1, guard: 'mike', crew: ['bon', 'chi'],
     tip: 'Move when the guard\'s camera (the red REC dot) is somewhere else. Attack from a corner when he\'s busy on the cameras.' },
-  { name: 'Pirate Cove', guard: 'fritz', crew: ['fre', 'fox', 'bon'],
+  { name: 'Pirate Cove', diff: 1, guard: 'fritz', crew: ['fre', 'fox', 'bon'],
     tip: 'Fritz shuts doors at any noise. Keep him scared on both sides and his power will run out. Foxy bangs 6% off every time.' },
-  { name: 'Toy box', guard: 'jeremy', crew: ['tbn', 'tch', 'tfr', 'mng', 'pup'],
+  { name: 'Toy box', diff: 1, guard: 'jeremy', crew: ['tbn', 'tch', 'tfr', 'mng', 'pup'],
     tip: 'No doors tonight. The mask stops the toys and the flashlight stops Mangle, but every second he spends winding is a second he isn\'t looking.' },
-  { name: 'Distraction', guard: 'phone', crew: ['chi', 'lol', 'bb', 'bon'],
+  { name: 'Distraction', diff: 1, guard: 'phone', crew: ['chi', 'lol', 'bb', 'bon'],
     tip: 'Phone Guy lives on the cameras. Keep him busy: Lolbit takes over his computer, Chica clatters, and Balloon Boy can steal his lights.' },
-  { name: 'Fazbear\'s Fright', guard: 'fright', crew: ['spr', 'pfr', 'pbb', 'pfx'],
+  { name: 'Fazbear\'s Fright', diff: 1, guard: 'fright', crew: ['spr', 'pfr', 'pbb', 'pfx'],
     tip: 'Only Springtrap can catch him. Use Shrug off so his lures fail, and frighten him with the phantoms: BB while the monitor is up, Foxy while it\'s down.' },
-  { name: 'Circus Gallery', guard: 'michael', crew: ['bab', 'bal', 'ffr', 'enn', 'yen'],
+  { name: 'Circus Gallery', diff: 1, guard: 'michael', crew: ['bab', 'bal', 'ffr', 'enn', 'yen'],
     tip: 'Michael shocks whatever he sees, but he can\'t see Ballora, and with no lights he can\'t shake off Yenndo\'s stare. Bon-Bon fakes one door, Ennard pries the other open.' },
-  { name: 'Golden hour', guard: 'gregory', crew: ['gol', 'fre', 'bon', 'tch', 'pup'],
+  { name: 'Golden hour', diff: 1, guard: 'gregory', crew: ['gol', 'fre', 'bon', 'tch', 'pup'],
     tip: 'Gregory hides once, then waits a long time. Make him hide, then hit him again straight away.' },
-  { name: 'Parts & Service', guard: 'vanessa', crew: ['wfr', 'wbn', 'wch', 'wfx'],
+  { name: 'Parts & Service', diff: 2, guard: 'vanessa', crew: ['wfr', 'wbn', 'wch', 'wfx'],
     tip: 'The withered crew. Vanessa watches the doors with her lights: Jam her vent door, hide Bonnie\'s face, then Lurch through.' },
-  { name: 'Nightmares', guard: 'henry', crew: ['nfb', 'nbn', 'nch', 'nfr', 'ptr'],
+  { name: 'Nightmares', diff: 3, guard: 'henry', crew: ['nfb', 'nbn', 'nch', 'nfr', 'ptr'],
     tip: 'Henry has an answer for everything, but not all at once. Bury him in Freddles and cupcakes, make him shut one door, then Switch Fredbear to the other.' },
-  { name: 'One more night', guard: 'mike2', crew: ['wgf', 'wfx', 'pup', 'pfr', 'mng', 'sbn'],
+  { name: 'One more night', diff: 3, guard: 'mike2', crew: ['wgf', 'wfx', 'pup', 'pfr', 'mng', 'sbn'],
     tip: 'Every tool against every trick. Break his cameras and he can\'t wind the box, then let the withereds in.' },
   // Nights 11-20 (on request: "add a bunch more levels"). A second week: it starts easier than Night 10
   // and climbs to the hardest story night (ordered by how often the test bot won each one).
   // `skill` makes a returning guard sharper than its first night.
-  { name: 'Blackout', guard: 'fritz', skill: 14, crew: ['fre', 'fox', 'nch', 'chi', 'ptr'],
+  { name: 'Blackout', diff: 1, guard: 'fritz', skill: 14, crew: ['fre', 'fox', 'nch', 'chi', 'ptr'],
     tip: 'Win by power. Keep Fritz scared so his doors stay shut, bang with Foxy, laugh with Freddy, and let the cupcake eat.' },
-  { name: 'Hide and seek', guard: 'phone', skill: 15, crew: ['fre', 'bal', 'wbn', 'tfr', 'sbn'],
+  { name: 'Hide and seek', diff: 2, guard: 'phone', skill: 15, crew: ['fre', 'bal', 'wbn', 'tfr', 'sbn'],
     tip: 'Phone Guy watches the cameras, so don\'t be on them: Freddy hides off the stage, Ballora never shows, Bonnie goes faceless, and Toy Freddy wipes his memory.' },
-  { name: 'Music box', guard: 'cassie', crew: ['pup', 'pfr', 'tfr', 'lol', 'bb'],
+  { name: 'Music box', diff: 2, guard: 'cassie', crew: ['pup', 'pfr', 'tfr', 'lol', 'bb'],
     tip: 'Make her stop winding. Phantom Freddy breaks her cameras and Lolbit takes her computer. Her mask fools Toy Freddy, so send him in while she\'s busy.' },
-  { name: 'Bedtime', guard: 'cc', crew: ['nbn', 'nch', 'tch', 'bb', 'nfr'],
+  { name: 'Bedtime', diff: 2, guard: 'cc', crew: ['nbn', 'nch', 'tch', 'bb', 'nfr'],
     tip: 'No cameras: he only hears you and shines his light. Take the light away (Toy Chica, Balloon Boy) and Nightmare Bonnie\'s held breath does the rest.' },
-  { name: 'Hallucinations', guard: 'tech', crew: ['gol', 'wgf', 'pbb', 'wfr', 'wbn'],
+  { name: 'Hallucinations', diff: 2, guard: 'tech', crew: ['gol', 'wgf', 'pbb', 'wfr', 'wbn'],
     tip: 'Freeze him, then appear. Phantom BB while his monitor is up, then Golden Freddy the moment he puts it down. His mask fools Withered Golden Freddy and Withered Freddy, so time them well.' },
-  { name: 'Rush hour', guard: 'gregory', skill: 12, crew: ['bab', 'wfx', 'bon', 'ptr', 'fox'],
+  { name: 'Rush hour', diff: 1, guard: 'gregory', skill: 9, crew: ['bab', 'wfx', 'bon', 'ptr', 'fox'],
     tip: 'Speed against a hider. Showtime, then send two at once: he can only hide from one of them.' },
-  { name: 'Ventilation', guard: 'franchisee', crew: ['tbn', 'wch', 'mng', 'spr', 'enn'],
+  { name: 'Ventilation', diff: 3, guard: 'franchisee', crew: ['tbn', 'wch', 'mng', 'spr', 'enn'],
     tip: 'Everyone fits in the vents. Jam the vent door with Withered Chica, pry a door with Ennard, and let Springtrap shrug off his lures. Mangle can\'t be lured at all.' },
-  { name: 'Fake-out', guard: 'vanessa', skill: 16, crew: ['ffr', 'nfb', 'enn', 'wch', 'tbn', 'chi'],
+  { name: 'Fake-out', diff: 3, guard: 'vanessa', skill: 16, crew: ['ffr', 'nfb', 'enn', 'wch', 'tbn', 'chi'],
     tip: 'Three ways in, and she can\'t watch all of them. Bon-Bon one door, Switch Fredbear to the other, and send someone up the vent.' },
-  { name: 'Graveyard shift', guard: 'henry', skill: 18, crew: ['spr', 'wfx', 'mng', 'nbn', 'pfr', 'sbn'],
+  { name: 'Graveyard shift', diff: 3, guard: 'henry', skill: 18, crew: ['spr', 'wfx', 'mng', 'nbn', 'pfr', 'sbn'],
     tip: 'Henry is at his sharpest. Break his cameras, let Shadow Bonnie undo his shocks, and let Springtrap shrug off his lures.' },
-  { name: 'Last call', guard: 'mike2', skill: 20, crew: ['bab', 'bal', 'enn', 'gol', 'nfr', 'wfx'],
+  { name: 'Last call', diff: 4, guard: 'mike2', skill: 20, crew: ['bab', 'bal', 'enn', 'gol', 'nfr', 'wfx'],
     tip: 'The hardest story night. Freddles slow him down, Showtime speeds you up, and Golden Freddy waits for the moment he looks away.' },
+  // Nights 21-26 (on request): the newer animatronics, at assorted difficulties (each shows its own tag,
+  // `diff` below, measured with the test bot).
+  { name: 'Halloween', diff: 3, guard: 'cc', skill: 10, crew: ['nfx', 'nmr', 'nbn', 'nch', 'nfb'],
+    tip: 'He has no cameras, so Nightmarionne can pull everyone forward unseen. Nightmare Foxy\'s closet beats his doors; his flashlight doesn\'t care, so wait until his light is busy.' },
+  { name: 'Salvage', diff: 2, guard: 'franchisee', skill: 13, crew: ['scb', 'mfr', 'rfr', 'mus', 'lft'],
+    tip: 'Music Man\'s cymbals hide your footsteps, Rockstar Freddy makes him pay, and Molten Freddy\'s decoy keeps his eyes elsewhere.' },
+  { name: 'Pizzaplex', diff: 3, guard: 'vanessa', skill: 14, crew: ['gfr', 'rox', 'mty', 'gch', 'dca'],
+    tip: 'Monty smashes her door lights so she can\'t check the corners, Roxy pounces from the halls, and Glamrock Freddy gets a friendly welcome.' },
+  { name: 'The band', diff: 1, guard: 'gregory', skill: 8, crew: ['fre', 'chi', 'rfr', 'mus', 'gfr', 'ffx'],
+    tip: 'A noisy night. Five coins and cymbals keep him busy while Freddy and Chica walk in.' },
+  { name: 'Closet monsters', diff: 4, guard: 'tech', crew: ['nfx', 'mfr', 'rox', 'scb', 'wbn'],
+    tip: 'Hide from his cameras: Withered Bonnie goes faceless, Molten Freddy leaves a decoy, and Nightmare Foxy waits in the closet.' },
+  { name: 'I always come back', diff: 4, guard: 'william', crew: ['nmr', 'scb', 'mty', 'nfx', 'mfr', 'gfr'],
+    tip: 'William has one death coin and a Lockdown. Make him spend the coin on someone you can lose, then strike while his Lockdown recharges.' },
 ];
+
+// ---------- gimmick nights ----------
+// Their own list on the night screen (on request: "a separate gimmick list"). `type` is 'puzzle' (a
+// rule to figure out) or 'silly'. Beating one saves its id in the `gimmicks` store key.
+const GIMMICKS = [
+  { id: 'nap', name: 'Nap time', guard: 'sleepy', type: 'silly', crew: ['bon', 'chi', 'bal', 'wbn'],
+    tip: 'Every footstep near the office fills his meter, and so does standing in a doorway. Quiet animatronics (Ballora, Withered Bonnie) make less noise. Give the meter time to drop between moves.' },
+  { id: 'code', name: 'Crack the code', guard: 'locksmith', type: 'puzzle', crew: ['bon', 'chi', 'tbn', 'nfb'],
+    tip: 'Walk around until you find all three clues (they show in the room once someone has been there). Then attack the ways in in that order. A wrong one buzzes and resets the lock.' },
+  { id: 'clock', name: 'Clockwork', guard: 'clockwork', type: 'puzzle', crew: ['bon', 'chi', 'tbn', 'wfx'],
+    tip: 'Watch which door opens after which. An attack only lands if that way in stays open the whole time, so be waiting in the right corner, ready, before it opens.' },
+  { id: 'cardboard', name: 'Cardboard', guard: 'cutout', type: 'silly', crew: ['fre', 'bon', 'chi', 'tbn'],
+    tip: 'Watch the office cam: the real guard blinks, and only he picks up his monitor. Attack the way in next to him (LEFT, VENT in the middle, or RIGHT).' },
+  { id: 'wrongdoor', name: 'Wrong door', guard: 'mixedup', type: 'silly', crew: ['bon', 'chi', 'nfb', 'ffr'],
+    tip: 'When he sees you, he shuts the other door first. Use the time, or make him shut the wrong one on purpose.' },
+  { id: 'follow', name: 'Follow the leader', guard: 'copycat', type: 'puzzle', crew: ['bon', 'chi', 'tbn', 'wfx', 'bal'],
+    tip: 'His camera jumps to whoever moved last. Move your attacker, then move someone else far away so he looks there instead.' },
+  { id: 'delivery', name: 'Special delivery', guard: 'pizza', type: 'puzzle', crew: ['bon', 'chi', 'rox', 'nfb'],
+    tip: 'When he leaves, get someone into BOTH corners. The doorbell rings on the side he\'s coming back to: attack that door while he walks in.' },
+];
+const GIMMICK_BY_ID = Object.fromEntries(GIMMICKS.map(x => [x.id, x]));
 
 // ---------- custom night challenges ----------
 // Ready-made custom nights with a name. Beating one saves a ✓ under its name plus its version `v`
@@ -313,7 +412,9 @@ const ACHIEVEMENTS = [
   { id: 'golden',   name: 'It\'s me',         desc: 'Win with Golden Freddy or Withered Golden Freddy.' },
   { id: 'graduate', name: 'Graduation',      desc: 'Beat Night 10.' },
   { id: 'overtime', name: 'Overtime',        desc: 'Beat Night 20.' },
-  { id: 'allnights', name: 'Employee of the month', desc: 'Beat all 20 story nights.' },
+  { id: 'allnights', name: 'Employee of the month', desc: 'Beat every numbered story night.' },
+  { id: 'puzzler',  name: 'Puzzle solver',   desc: 'Beat every gimmick night.' },
+  { id: 'lucky',    name: 'Lucky roll',      desc: 'Win a Random night.' },
   { id: 'bankrupt', name: 'Out of coins',    desc: 'Catch The Tendons 8 after it spent both death coins.' },
   { id: 'maxed',    name: 'Maxed out',       desc: 'Beat Max mode.' },
   { id: 'hunter',   name: 'Guard hunter',    desc: 'Catch every night guard at least once.' },

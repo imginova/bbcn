@@ -40,6 +40,10 @@ if (!Array.isArray(achieved)) achieved = [];
 // Every night and the custom night are open from the start (on request: "every level unlocked, I can just
 // pick which one"). Beating nights still saves a ✓ for each.
 const customUnlocked = () => true;
+// The gimmick nights you've beaten, by id (GIMMICKS in data.js). Only ever added to.
+let gimmicksBeaten = store.get('gimmicks', []);
+if (!Array.isArray(gimmicksBeaten)) gimmicksBeaten = [];
+const gimmickBeaten = id => gimmicksBeaten.includes(id);
 
 // ---------- the night's state ----------
 // G holds everything about the night being played (null when no night is running).
@@ -58,6 +62,27 @@ function customSetup() {
   return { night: null, guard: GUARD_BY_ID[custom.guard] || GUARDS[0], skill: custom.skill, tools: custom.tools,
     crew: Object.entries(custom.crew).filter(([id]) => CREW_BY_ID[id]).slice(0, MAX_CREW).map(([id, level]) => ({ id, level })),
     power: custom.power, hour: custom.hour, speed: custom.speed };
+}
+// A gimmick night (GIMMICKS in data.js): its guard always plays at its usual skill.
+function gimmickSetup(id) {
+  const gn = GIMMICK_BY_ID[id], def = GUARD_BY_ID[gn.guard];
+  return { night: null, gimmick: gn, guard: def, skill: def.skill, tools: def.tools, crew: gn.crew.map(c => ({ id: c, level: 10 })),
+    power: 100, hour: HOUR_SECONDS, speed: 100 };
+}
+// Random mode (on request): a random guard (never The Tendons 8, never a gimmick guard) at its usual
+// skill, and 2 to 8 random animatronics at level 10. At least one of them can catch the guard, and
+// nobody who would win by themselves against this guard is picked (the Puppet and the Goldens need the
+// guard to have cameras, or it could never stop them).
+function randomSetup() {
+  const def = pick(GUARDS.filter(g => g.id !== 'tendons8' && !g.gimmick));
+  const noCams = !def.tools.includes('cams');
+  const pool = CREW.filter(c => !(noCams && ['pup', 'gol', 'wgf', 'pfr'].includes(c.id)));
+  const ids = [], size = 2 + Math.floor(Math.random() * 7);   // 2 to 8
+  while (ids.length < size) { const c = pick(pool); if (!ids.includes(c.id)) ids.push(c.id); }
+  const canCatch = id => CREW_BY_ID[id].kind !== 'phantom' && !CREW_BY_ID[id].cantKill;
+  if (!ids.some(canCatch)) ids[0] = pick(pool.filter(c => canCatch(c.id) && !ids.includes(c.id))).id;
+  return { night: null, random: true, guard: def, skill: def.skill, tools: def.tools, crew: ids.map(id => ({ id, level: 10 })),
+    power: 100, hour: HOUR_SECONDS, speed: 100 };
 }
 // A challenge from CHALLENGES (data.js). Its crew can be bigger than MAX_CREW: Max mode has everyone.
 function challengeSetup(c) {
@@ -104,13 +129,133 @@ function newGame(setup) {
       foxStage: 0, foxT: -99,            // the Foxy stage it last saw, and when
       cd: { lure: 0, shock: 0, hide: 0, duck: 0, lockdown: 0 },// when each tool can be used again
       flashUntil: 0, flashSide: 'L',
-      coins: setup.tools.includes('coins') ? DEATH_COINS : 0,   // death coins left
+      // death coins left: two, or the guard's own number (William has one)
+      coins: setup.tools.includes('coins') ? (setup.guard.coins ?? DEATH_COINS) : 0,
+      deafUntil: 0,                      // Music Man's cymbals: it hears no footsteps until then
+      drowsyUntil: 0,                    // the Daycare Attendant's nap time: slower reactions until then
+      curtainUntil: 0,                   // Funtime Foxy's curtain call: its monitor is stuck on her camera
+      brokenLight: { L: false, R: false },// door lights Monty smashed
       dead: false,
     },
   };
   G.puppet = G.crew.find(u => u.def.kind === 'puppet') || null;
   G.ventsUsed = G.crew.some(u => u.def.vents);
+  G.gim = startGimmick(setup.guard.gimmick);
   dirty = true;
+}
+
+// ---------- gimmick guards ----------
+// Each gimmick guard (GUARDS in data.js with a `gimmick`) has a rule of its own. G.gim holds its state.
+const gimmick = () => G.guard.def.gimmick || '';
+function startGimmick(kind) {
+  const g = G.guard;
+  if (kind === 'sleep') { g.focus = 'sleep'; return { wake: 0, awakeUntil: 0 }; }
+  if (kind === 'lock') {
+    // A code of three ways in (the vent only if someone can crawl there), each written in a room.
+    const ways = G.ventsUsed ? ['L', 'R', 'V'] : ['L', 'R'];
+    const code = [pick(ways), pick(ways), pick(ways)];
+    const spots = ROOM_IDS.filter(r => !ROOMS[r].vent && !ROOMS[r].entry && DIST[r] >= 2);
+    const rooms = [];
+    while (rooms.length < 3) { const r = pick(spots); if (!rooms.includes(r)) rooms.push(r); }
+    return { code, rooms, found: [false, false, false], step: 0 };
+  }
+  if (kind === 'cutout') return { real: pick(['L', 'R', 'V']), nextSwap: CUTOUT_SWAP, darkUntil: 0, blinkAt: 2 };
+  if (kind === 'pizza') return { state: 'in', next: PIZZA_EVERY, side: 'L', at: 0 };
+  if (kind === 'copy') return { last: null };
+  return {};
+}
+
+// Called every frame (before the guard thinks). Returns true when the gimmick replaces the guard's own
+// thinking this frame (the Clockwork guard never thinks; a sleeping or absent guard does nothing).
+function updateGimmick(dt) {
+  const g = G.guard, t = G.t, s = G.gim;
+  switch (gimmick()) {
+    case 'sleep': {
+      // Someone standing in a doorway is noisy too.
+      for (const u of G.crew) if (u.attack && u.attack.knockAt == null) s.wake += SLEEP_ATTACK * (1 - stealthOf(u)) * dt;
+      if (g.focus === 'sleep') {
+        s.wake = Math.max(0, s.wake - SLEEP_DECAY * dt);
+        if (s.wake >= 100) {
+          g.focus = 'desk'; s.awakeUntil = t + SLEEP_AWAKE; s.wake = 100;
+          sfx.sting();
+          log('The Sleepyhead WOKE UP!', 'g');
+          // It wakes up to whatever made the noise: anyone in a doorway is noticed at once, and it
+          // jumps into action right away (no slow reaction: it was startled awake).
+          for (const u of G.crew) if (u.attack && !u.attack.noticed && u.attack.knockAt == null) { notice(u); u.attack.counterAt = t + 0.3; }
+        }
+        return true;
+      }
+      if (t >= s.awakeUntil && !G.crew.some(u => u.attack) && ['desk', 'cam'].includes(g.focus)) {
+        g.focus = 'sleep'; s.wake = 0;
+        g.doors = { L: false, R: false, V: false };   // it relaxes: every door opens again
+        log('The Sleepyhead nodded off again. Zzz...', 'you');
+        return true;
+      }
+      return false;
+    }
+    case 'clock': {
+      // Walk through the routine: the open way in for this moment, every other one shut.
+      let at = t % CLOCK_CYCLE, step = CLOCK_ROUTINE[0];
+      for (const st of CLOCK_ROUTINE) { if (at < st.t) { step = st; break; } at -= st.t; }
+      for (const side of ['L', 'R', 'V']) {
+        const shut = side !== step.open;
+        if (shut && !g.doors[side]) {
+          g.doors[side] = true; sfx.door(side); dirty = true;
+          // The door slams right in the face of anyone waiting just outside it: back home they go. So
+          // you have to arrive AFTER it shuts and be ready for the moment it opens.
+          for (const u of G.crew) if (u.room === ENTRIES[side] && !u.attack && !u.gone) { u.attack = { entry: side }; bonk(u, side === 'V' ? 'vent' : 'door'); }
+        }
+        else if (!shut && g.doors[side]) { g.doors[side] = false; dirty = true; }
+      }
+      g.focus = 'desk';
+      return true;
+    }
+    case 'lock':
+      // Walking into a clue's room reads it (and it stays on the map for the rest of the night).
+      s.rooms.forEach((room, k) => {
+        if (!s.found[k] && G.crew.some(u => u.room === room && !u.gone)) {
+          s.found[k] = true; sfx.click();
+          log(`Found clue ${k + 1}: the ${ENTRY_NAME[s.code[k]]}.`, 'you');
+        }
+      });
+      return false;
+    case 'cutout':
+      if (t >= s.nextSwap) {
+        // The lights flicker, and the real guard swaps places with a cutout.
+        s.nextSwap = t + CUTOUT_SWAP; s.darkUntil = t + CUTOUT_DARK;
+        s.real = pick(['L', 'R', 'V'].filter(x => x !== s.real));
+        sfx.powerDown();
+        log('The lights flickered... the guards shuffled around.', 'g');
+      }
+      if (t >= s.blinkAt) s.blinkAt = t + rand(2, 4);
+      return false;
+    case 'pizza':
+      if (s.state === 'in' && t >= s.next && !G.crew.some(u => u.attack) && ['desk', 'cam'].includes(g.focus)) {
+        // Ding dong: off to the front door. Every door is locked behind it.
+        s.state = 'away'; s.at = t + PIZZA_AWAY; s.side = pick(['L', 'R']); s.rang = false;
+        g.focus = 'away'; g.doors = { L: true, R: true, V: true };
+        sfx.door('L'); sfx.door('R');
+        log('Pizza\'s here! The guard left to pay for it and locked every door.', 'you');
+      }
+      if (s.state === 'away') {
+        if (!s.rang && t >= s.at - PIZZA_BELL) {
+          s.rang = true; sfx.knock(s.side);
+          log(`Ding dong... it's coming back through the ${ENTRY_NAME[s.side]}!`, 'you');
+        }
+        if (t >= s.at) {
+          s.state = 'walkin'; s.at = t + PIZZA_WALKIN;
+          g.focus = 'walkin'; g.doors = { L: false, R: false, V: true };
+          dirty = true;
+        }
+        return true;
+      }
+      if (s.state === 'walkin') {
+        if (t >= s.at) { s.state = 'in'; s.next = t + PIZZA_EVERY; g.focus = 'desk'; g.doors.V = false; dirty = true; }
+        return true;
+      }
+      return false;
+  }
+  return false;
 }
 
 // One of your animatronics during a night.
@@ -132,6 +277,10 @@ function makeUnit(id, level, speedPct) {
     silent: false,                        // Nightmare Bonnie is holding his breath for his next attack
     freeUntil: 0,                         // Plushtrap's Freeze tag
     gold: null,                           // Golden Freddy: null, or { state: 'wait' } until the monitor goes down
+    decoy: null,                          // Molten Freddy's decoy: { room, until }
+    trashUntil: 0,                        // Glamrock Chica's Trash dive
+    friendly: false,                      // Glamrock Freddy's Friendly face is waiting for his next attack
+    shield: false,                        // Lefty's Black box is ready to take the next hit
   };
 }
 
@@ -153,7 +302,8 @@ const watching = room => G.guard.focus === 'cam' && G.guard.cam === room && cams
 // Would this animatronic show up on a camera? (Freddy only on the stage, Ballora never.)
 function showsOnCam(u) {
   if (u.def.kind !== 'walker' && u.def.kind !== 'foxy') return false;
-  if (u.def.hidden === 'always' || G.t < u.facelessUntil) return false;
+  if (u.def.hidden === 'always' || G.t < u.facelessUntil || G.t < u.trashUntil) return false;
+  if (u.decoy && G.t < u.decoy.until) return false;   // the cameras are watching Molten Freddy's decoy
   if (u.def.hidden === 'offstage') return u.room === 'stage';
   return true;
 }
@@ -190,7 +340,8 @@ function update(dt) {
   updateBox(dt);
   updatePests(dt);
   observe();
-  if (G.t >= g.nextThink) {
+  const gimmickBusy = updateGimmick(dt);
+  if (G.t >= g.nextThink && !gimmickBusy) {
     g.nextThink = G.t + guardThink(g.skill) * rand(0.8, 1.2);
     think();
   }
@@ -208,6 +359,9 @@ function endGuardStates() {
   if (g.focus === 'hide' && G.t >= g.hideUntil) { g.focus = 'desk'; dirty = true; }
   if (g.focus === 'mask' && G.t >= g.maskUntil) { g.focus = 'desk'; sfx.mask(); dirty = true; }
   if (g.focus === 'lol' && G.t >= g.busyUntil) { g.focus = 'desk'; log('The guard got rid of Lolbit.', 'g'); }
+  if (g.focus === 'pay' && G.t >= g.busyUntil) { g.focus = 'desk'; dirty = true; }
+  // Funtime Foxy's show is over: it can look wherever it likes again.
+  if (g.focus === 'cam' && g.curtainUntil && G.t >= g.curtainUntil) { g.curtainUntil = 0; dirty = true; }
   if (g.focus === 'shoo' && G.t >= g.busyUntil) {
     g.focus = 'desk';
     const gone = G.pests.shift();
@@ -365,6 +519,7 @@ function moveTo(room) {
   if (why) { sfx.deny(); flashHint(why); return; }
   moveUnit(u, room);
   u.cd = (u.def.move || 0) * u.mult;
+  if (gimmick() === 'copy') G.gim.last = room;   // the Copycat looks wherever you moved last
 }
 
 // Actually move it, and give the guard a chance to hear it.
@@ -376,8 +531,11 @@ function moveUnit(u, room) {
   if (r.vent) sfx.vent(); else sfx.step(near, r.side === 'L' ? -0.6 : r.side === 'R' ? 0.6 : 0);
   // The guard's ears: closer and noisier is easier to hear.
   const closeness = DIST[room] <= 1 ? 1.4 : DIST[room] === 2 ? 1 : 0.5;
+  if (G.t < u.trashUntil) { dirty = true; return; }   // Glamrock Chica in the trash makes no sound
+  // The Sleepyhead doesn't "hear" you: every step just fills its wake-up meter while it sleeps.
+  if (g.focus === 'sleep') { G.gim.wake += SLEEP_STEP * closeness * (1 - stealthOf(u)); dirty = true; return; }
   const p = hearChance(g.skill) * (g.def.hears || 1) * (1 - stealthOf(u)) * closeness;
-  if (!g.dead && G.t >= g.distractedUntil && Math.random() < p) {
+  if (!g.dead && G.t >= g.distractedUntil && G.t >= g.deafUntil && Math.random() < p) {
     g.heard[room] = G.t;
     if (DIST[room] <= 2) log(`The guard heard something near ${r.name}.`, 'g');
   }
@@ -404,16 +562,40 @@ function startAttack(u, entry) {
   u.attack = { entry, end: G.t + time, noticed: false, counterAt: null, knockAt: null,
     // Withered Golden Freddy shows up ON the guard's monitor when it's up, and in the office when it's down.
     onMonitor: entry === 'O' && !!u.def.withered && monitorUp(),
-    silent: u.silent };   // Nightmare Bonnie holding his breath
-  u.silent = false;
+    silent: u.silent,     // Nightmare Bonnie holding his breath
+    friendly: u.friendly };   // Glamrock Freddy's friendly face
+  u.silent = false; u.friendly = false;
   u.cd = (u.def.move || 0) * u.mult;
   sfx.attack(entry === 'O' ? '' : entry);
   if (u.attack.onMonitor) log(`${u.def.name} is on the guard's monitor!`, 'you');
+  else if (entry === 'O' && u.def.kind === 'walker') log(`${u.def.name} is in the closet!`, 'you');
   else if (entry === 'O') log(`${u.def.name} is in the office!`, 'you');
   else log(`${u.def.name} is at the ${ENTRY_NAME[entry]}!`, 'you');
   // A door that's already shut (or the mask, or a hide) blocks it straight away: knock, knock.
   if (blockedNow(u, entry)) u.attack.knockAt = G.t + KNOCK_TIME;
+  else gimmickAttack(u, entry);
   dirty = true;
+}
+
+// What a gimmick guard does about an attack the moment it starts.
+function gimmickAttack(u, entry) {
+  const a = u.attack, s = G.gim;
+  switch (gimmick()) {
+    case 'lock':
+      // Each way in is one number of the code. Right but not the last: click (and back to the corner).
+      // Wrong: buzz, and the lock starts over. The last one is a real attack.
+      if (entry !== s.code[s.step]) { a.knockAt = G.t + KNOCK_TIME; a.lockStep = 'wrong'; }
+      else if (s.step < s.code.length - 1) { a.knockAt = G.t + KNOCK_TIME; a.lockStep = 'click'; }
+      break;
+    case 'cutout':
+      // Attack a way in next to a cardboard cutout and you just knock it over.
+      if (entry !== s.real && entry !== 'O') { a.knockAt = G.t + KNOCK_TIME; a.cardboard = true; }
+      break;
+    case 'pizza':
+      // Caught while walking back in with its pizza: nothing can stop that.
+      if (s.state === 'walkin' && entry === s.side) a.end = G.t + 0.3;
+      break;
+  }
 }
 
 // Is this attack blocked right now, without the guard doing anything new?
@@ -433,7 +615,16 @@ function blockedNow(u, entry) {
 function updateAttack(u, dt) {
   const a = u.attack, g = G.guard;
   if (a.knockAt != null) {
-    if (G.t >= a.knockAt) bonk(u, blockHow(u, a.entry));
+    if (G.t < a.knockAt) return;
+    if (a.lockStep === 'click') {
+      // The Locksmith's code: one more number right. Back to the corner, no harm done.
+      G.gim.step++; u.attack = null; u.cd = Math.max(u.cd, 1);
+      sfx.click();
+      log(`Click! ${G.gim.step} of 3 numbers of the code are in.`, 'you');
+      dirty = true;
+    } else if (a.lockStep === 'wrong') { G.gim.step = 0; bonk(u, 'code'); }
+    else if (a.cardboard) bonk(u, 'cutout');
+    else bonk(u, blockHow(u, a.entry));
     return;
   }
   rollNotice(u, dt);
@@ -462,7 +653,19 @@ const blockHow = (u, entry) => u.def.kind === 'golden' ? (u.attack && u.attack.o
 function counter(u) {
   const g = G.guard, d = u.def, e = u.attack.entry;
   if (g.dead) return false;
-  if (e === 'O') {
+  // The Mixed-up guard: the first time it reaches for a door, it shuts the wrong one, and needs
+  // another moment to notice and fix it.
+  if (gimmick() === 'mixed' && !u.attack.mixedUp && (e === 'L' || e === 'R' || e === 'V') && canShut(e)) {
+    const wrong = ['L', 'R', 'V'].filter(x => x !== e && canShut(x) && !g.doors[x]);
+    if (wrong.length) {
+      u.attack.mixedUp = true;
+      shutDoor(pick(wrong));
+      u.attack.counterAt = G.t + guardReact(g.skill);
+      log('Oops! The guard shut the WRONG door.', 'you');
+      return true;
+    }
+  }
+  if (e === 'O' && d.kind === 'golden') {
     // Withered Golden Freddy on the monitor: put it down and he's gone.
     if (u.attack.onMonitor) { g.focus = 'desk'; bonk(u, 'drop'); return true; }
     // Withered Golden Freddy in the office: the mask works on him.
@@ -526,6 +729,7 @@ const HOW = {
   door: 'the door slammed in their face', vent: 'the vent door slammed shut', flash: 'the flashlight scared them off',
   mask: 'the Freddy mask fooled them', hide: 'the guard hid under the desk', cams: 'the guard flipped the cameras up',
   drop: 'the guard put its monitor down', duck: 'the guard ducked under the desk',
+  code: 'BZZT, wrong number: the lock starts over', cutout: 'that was a cardboard cutout',
 };
 // Stopped! Sent back home and frozen for a few seconds.
 function bonk(u, how) {
@@ -539,6 +743,16 @@ function bonk(u, how) {
     return;
   }
   sfx.knock(entry);
+  // Lefty's Black box: Lefty takes the hit instead, and the one that was stopped stays where it is.
+  const lefty = G.crew.find(o => o.shield && o !== u && !o.gone);
+  if (lefty && u.def.kind === 'walker') {
+    lefty.shield = false;
+    if (!lefty.attack) { lefty.room = lefty.def.home; lefty.stunUntil = G.t + BONK_STUN; lefty.cd = Math.max(lefty.cd, BONK_STUN); }
+    u.cd = Math.max(u.cd, 1);
+    log(`${u.def.name} was stopped (${HOW[how]}), but Lefty took the hit: ${u.def.name} stays put.`, 'you');
+    dirty = true;
+    return;
+  }
   if (u.def.kind === 'foxy') {
     u.stage = 0; u.stageT = 0;
     if (how === 'door' && !g.dead) {
@@ -596,27 +810,30 @@ function observe() {
   if (g.dead) return;
   if (g.focus === 'cam' && camsOk()) seeRoom(g.cam);
   if (g.focus === 'wind' && camsOk()) seeRoom('prize');
-  for (const side of ['L', 'R']) if (g.light[side] > G.t) seeCorner(side);
+  for (const side of ['L', 'R']) if (g.light[side] > G.t && !g.brokenLight[side]) seeCorner(side);
 }
 
 function seeRoom(room) {
   const g = G.guard;
   if (!roomClear(room)) return;
   const here = G.crew.filter(u => u.room === room && showsOnCam(u));
+  // Molten Freddy's decoy looks just like him: the guard believes he's here.
+  const decoys = G.crew.filter(u => u.decoy && G.t < u.decoy.until && u.decoy.room === room);
+  for (const u of decoys) g.memory[u.id] = { room, t: G.t };
   for (const u of here) {
     g.memory[u.id] = { room, t: G.t };
     if (u.def.kind === 'foxy') { g.foxStage = u.attack ? FOXY_STAGES : u.stage; g.foxT = G.t; }
     if (u.attack && !u.attack.noticed && u.attack.knockAt == null) notice(u);
   }
   // Anyone it THOUGHT was here but isn't: forget them.
-  for (const id in g.memory) if (g.memory[id].room === room && !here.some(u => u.id === id)) delete g.memory[id];
-  if (!here.length) g.seenEmpty[room] = G.t;
+  for (const id in g.memory) if (g.memory[id].room === room && !here.some(u => u.id === id) && !decoys.some(u => u.id === id)) delete g.memory[id];
+  if (!here.length && !decoys.length) g.seenEmpty[room] = G.t;
 }
 
 // A door light shows the corner outside that door, and anyone in the doorway. It even shows Ballora.
 function seeCorner(side) {
   const g = G.guard, room = ENTRIES[side];
-  const here = G.crew.filter(u => u.room === room && (u.def.kind === 'walker' || u.def.kind === 'foxy'));
+  const here = G.crew.filter(u => u.room === room && (u.def.kind === 'walker' || u.def.kind === 'foxy') && G.t >= u.trashUntil);
   for (const u of here) {
     g.memory[u.id] = { room, t: G.t };
     if (u.attack && !u.attack.noticed && u.attack.knockAt == null) notice(u);
@@ -629,13 +846,16 @@ function noticeChance(u) {
   const g = G.guard, s = g.skill, e = u.attack.entry;
   if (g.dead || s <= 0 || G.t < g.distractedUntil) return 0;
   if (g.focus === 'stun' || g.focus === 'hide') return 0;
+  // Asleep, out for pizza, or clockwork: it notices nothing at all.
+  if (g.focus === 'sleep' || g.focus === 'away' || gimmick() === 'clock') return 0;
+  if (g.focus === 'walkin' && e === G.gim.side) return 0;            // its hands are full of pizza
   // Golden Freddy is right in front of it (on its monitor, for Withered Golden Freddy).
-  if (e === 'O') {
+  if (e === 'O' && u.def.kind === 'golden') {
     const inFront = u.attack.onMonitor ? monitorUp() : !monitorUp();
     return inFront ? skillOf(s, 0.6, 1) * (g.focus === 'lol' ? LOL_NOTICE : 1) : 0;
   }
   let base;
-  if (g.focus === 'lol') base = noticeDesk(s) * LOL_NOTICE;          // typing L-O-L
+  if (g.focus === 'lol' || g.focus === 'pay') base = noticeDesk(s) * LOL_NOTICE;   // typing L-O-L, or paying
   else if (G.t < g.lockUntil) base = noticeCam(s) * 0.6;             // listening to the kitchen
   else if (g.focus === 'cam') base = noticeCam(s);
   else if (g.focus === 'wind' || g.focus === 'reboot') base = noticeCam(s) * 0.7;
@@ -655,7 +875,9 @@ function notice(u) {
   const g = G.guard, a = u.attack;
   a.noticed = true;
   let delay = guardReact(g.skill);
-  if (g.focus === 'lol') delay += LOL_SLOW;   // it has to stop typing first
+  if (g.focus === 'lol' || g.focus === 'pay') delay += LOL_SLOW;   // it has to stop typing (or paying) first
+  if (a.friendly) delay *= FRIENDLY_SLOW;                          // "Freddy? Is that you?"
+  if (G.t < g.drowsyUntil) delay += NAP_SLOW;                      // nap time
   if (a.entry !== 'O' && monitorUp()) {
     delay += LOWER_CAM + (g.def.slowDown || 0);
     g.focus = 'desk';
@@ -670,8 +892,9 @@ function think() {
   const g = G.guard, s = g.skill, t = G.t;
   if (g.dead) return;
   if (s <= 0) return;                      // a skill-0 guard just sits there
-  if (['stun', 'hide', 'reboot', 'mask', 'lol', 'shoo'].includes(g.focus)) return;
+  if (['stun', 'hide', 'reboot', 'mask', 'lol', 'shoo', 'pay', 'sleep', 'away', 'walkin'].includes(g.focus)) return;
   if (guardHas('lockdown') && t >= g.cd.lockdown) tryLockdown();
+  if (t < g.curtainUntil) return;          // Funtime Foxy's show: it can't look away
   if (G.crew.some(u => u.attack && u.attack.counterAt != null)) return;   // busy reacting
   if (t < g.lockUntil) return;              // Chica's clatter: still listening to the kitchen
 
@@ -779,8 +1002,9 @@ function chooseLook() {
   g.focus = 'desk';
   if (guardHas('lights') && lightsOk() && Math.random() < (g.def.lightLove ?? 0.3)) {
     // Check the side with the newest clue, or a random one.
-    const side = lastClue('L') > lastClue('R') ? 'L' : lastClue('R') > lastClue('L') ? 'R' : pick(['L', 'R']);
-    g.light[side] = G.t + LIGHT_TIME;
+    let side = lastClue('L') > lastClue('R') ? 'L' : lastClue('R') > lastClue('L') ? 'R' : pick(['L', 'R']);
+    if (g.brokenLight[side]) side = side === 'L' ? 'R' : 'L';   // Monty smashed that one
+    if (!g.brokenLight[side]) g.light[side] = G.t + LIGHT_TIME;
   }
 }
 
@@ -788,6 +1012,8 @@ function chooseLook() {
 // around, and the rooms where it last saw someone are the most interesting.
 function pickCam() {
   const g = G.guard, s = g.skill;
+  // The Copycat always looks at the room of whoever moved last.
+  if (gimmick() === 'copy' && G.gim.last && !ROOMS[G.gim.last].audioOnly) return G.gim.last;
   const rooms = ROOM_IDS.filter(r => !ROOMS[r].audioOnly && (!ROOMS[r].vent || G.ventsUsed));
   const weights = rooms.map(r => {
     let w = 1 + (DIST[r] === 1 ? 3 : DIST[r] === 2 ? 1.5 : 0.4) * (0.5 + s / 20);
@@ -822,6 +1048,10 @@ function useAbility() {
 
 function abilityEffect(u) {
   const g = G.guard, t = G.t;
+  // Tricks that grab the guard's attention do nothing to a guard that's asleep or out of the office (and
+  // would otherwise "wake" the Sleepyhead by changing what it's doing).
+  if (['sleep', 'away', 'walkin'].includes(g.focus) && ['lol', 'chi', 'pfx', 'pbb', 'yen', 'rfr', 'ffx'].includes(u.id))
+    return g.focus === 'sleep' ? 'The guard is asleep: that would do nothing.' : 'The guard isn\'t at its desk right now.';
   switch (u.id) {
     case 'fre':
       if (g.dead) return 'The power is already out.';
@@ -988,6 +1218,84 @@ function abilityEffect(u) {
       if (u.attack || (u.room !== 'wcorner' && u.room !== 'ecorner')) return 'Only from the W. Corner or the E. Corner.';
       u.room = u.room === 'wcorner' ? 'ecorner' : 'wcorner';
       log(`Nightmare Fredbear switched to the ${ROOMS[u.room].name}.`, 'you'); return '';
+    case 'nfx': {
+      const entry = u.room === 'wcorner' ? 'L' : u.room === 'ecorner' ? 'R' : null;
+      if (u.attack || !entry) return 'Only from the W. Corner or the E. Corner.';
+      if (u.cd > 0) return `Nightmare Foxy needs ${u.cd.toFixed(1)} s.`;
+      log('Nightmare Foxy slipped into the closet...', 'you');
+      startAttack(u, 'O'); return '';
+    }
+    case 'nmr': {
+      // Everyone who can walk takes one quiet step to a room closer to the office.
+      let moved = 0;
+      for (const o of G.crew) {
+        if (o === u || o.gone || o.def.kind !== 'walker' || o.attack || stunned(o) || plushFrozen(o)) continue;
+        if (o.def.frozenWatched && watching(o.room)) continue;
+        const closer = ROOMS[o.room].to.filter(r => DIST[r] < DIST[o.room] && (!ROOMS[r].vent || o.def.vents));
+        if (closer.length) { o.room = pick(closer); moved++; }
+      }
+      if (!moved) return 'Nobody can be pulled closer right now.';
+      sfx.stat();
+      log(`Nightmarionne pulled ${moved} on its strings, one room closer.`, 'you'); return '';
+    }
+    case 'scb': {
+      if (u.attack) return 'Not while attacking.';
+      if (watching(u.room)) return 'The guard is watching her: she won\'t move.';
+      let steps = 0;
+      for (let i = 0; i < 2; i++) {
+        const closer = ROOMS[u.room].to.filter(r => DIST[r] < DIST[u.room] && (!ROOMS[r].vent || u.def.vents));
+        if (!closer.length) break;
+        u.room = pick(closer); steps++;
+      }
+      if (!steps) return 'She can\'t get any closer.';
+      log(`Scrap Baby crept ${steps === 2 ? 'two rooms' : 'a room'} closer.`, 'you'); return '';
+    }
+    case 'mfr':
+      if (u.attack) return 'Not while attacking.';
+      u.decoy = { room: u.room, until: t + grit(DECOY_TIME) }; sfx.stat();
+      log(`Molten Freddy left a decoy in ${ROOMS[u.room].name}.`, 'you'); return '';
+    case 'rfr':
+      if (['stun', 'hide', 'reboot', 'dead', 'sleep', 'away'].includes(g.focus)) return 'The guard is busy with something else.';
+      g.power -= grit(COINS_POWER); g.focus = 'pay'; g.busyUntil = t + grit(COINS_TIME); sfx.coin();
+      log('"Deposit five coins!" The guard is fumbling for change.', 'you'); return '';
+    case 'mus':
+      g.deafUntil = t + grit(CYMBAL_TIME); sfx.clatter();
+      log('CRASH! Music Man\'s cymbals: the guard can\'t hear a thing.', 'you'); return '';
+    case 'gfr':
+      if (u.friendly) return 'Glamrock Freddy is already ready with a friendly face.';
+      u.friendly = true;
+      log('Glamrock Freddy put on a friendly face for his next attack.', 'you'); return '';
+    case 'rox': {
+      const entry = u.room === 'whall' ? 'L' : u.room === 'ehall' ? 'R' : null;
+      if (u.attack || !entry) return 'Only from the West Hall or the East Hall.';
+      u.room = ENTRIES[entry]; sfx.run();
+      log('Roxy pounced!', 'you');
+      startAttack(u, entry); return '';
+    }
+    case 'mty': {
+      const side = u.room === 'wcorner' ? 'L' : u.room === 'ecorner' ? 'R' : null;
+      if (!side) return 'Only from the W. Corner or the E. Corner.';
+      if (!guardHas('lights')) return 'This guard has no door lights to smash.';
+      if (g.brokenLight[side]) return 'That light is already smashed.';
+      g.brokenLight[side] = true; g.light[side] = 0; sfx.shock();
+      log(`Monty smashed the ${side === 'L' ? 'left' : 'right'} door light!`, 'you'); return '';
+    }
+    case 'ffx':
+      if (!camsOk()) return 'The guard has no working cameras to watch her on.';
+      if (['stun', 'hide', 'reboot', 'dead', 'mask', 'sleep', 'away', 'walkin'].includes(g.focus)) return 'The guard is busy with something else.';
+      if (ROOMS[u.room].audioOnly) return 'No camera can show her in the kitchen.';
+      g.focus = 'cam'; g.cam = u.room; g.curtainUntil = t + grit(CURTAIN_TIME); sfx.cam();
+      log('Curtain call! The guard can\'t take its eyes off Funtime Foxy.', 'you'); return '';
+    case 'lft':
+      if (u.shield) return 'Lefty is already ready to take the next hit.';
+      u.shield = true;
+      log('Lefty is ready to take the next hit for someone.', 'you'); return '';
+    case 'gch':
+      u.trashUntil = t + TRASH_TIME;
+      log('Glamrock Chica dove into the trash: no camera or light shows her.', 'you'); return '';
+    case 'dca':
+      g.drowsyUntil = t + grit(NAP_TIME); sfx.hi();
+      log('"Time for a nap!" The guard is getting drowsy.', 'you'); return '';
   }
   return 'Nothing happens.';
 }
@@ -998,6 +1306,8 @@ function win(u, how) {
   G.over = true;
   G.result = { won: true, by: u, how };
   if (G.setup.night && !beaten.includes(G.setup.night)) { beaten.push(G.setup.night); store.set('beaten', beaten); }
+  const gn = G.setup.gimmick;
+  if (gn && !gimmickBeaten(gn.id)) { gimmicksBeaten.push(gn.id); store.set('gimmicks', gimmicksBeaten); }
   const ch = G.setup.challenge;
   if (ch && !challengeBeaten(ch)) { challengesBeaten.push(challengeKey(ch)); store.set('challenges', challengesBeaten); }
   catches[u.id] = (catches[u.id] || 0) + 1;
@@ -1029,7 +1339,9 @@ function checkAchievements(u, how) {
     allnights: NIGHTS.every((_, i) => nightBeaten(i + 1)),
     bankrupt: g.def.id === 'tendons8' && guardHas('coins') && g.coins === 0,
     maxed: !!G.setup.challenge && G.setup.challenge.id === 'max',
-    hunter: GUARDS.every(x => guardCaught[x.id]),
+    puzzler: GIMMICKS.every(x => gimmickBeaten(x.id)),
+    lucky: !!G.setup.random,
+    hunter: GUARDS.filter(x => !x.gimmick).every(x => guardCaught[x.id]),
     crew: CREW.filter(canCatch).every(c => catches[c.id]),
   };
   const fresh = ACHIEVEMENTS.filter(a => done[a.id] && !achieved.includes(a.id));

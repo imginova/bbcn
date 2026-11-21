@@ -45,7 +45,9 @@ function renderGame(now = performance.now()) {
 function renderHud() {
   const g = G.guard, n = G.setup.night;
   setHtml($('hudNight'), n ? `NIGHT ${n} · ${escText(NIGHTS[n - 1].name.toUpperCase())}`
-    : G.setup.challenge ? escText(G.setup.challenge.name.toUpperCase()) : 'CUSTOM NIGHT');
+    : G.setup.challenge ? escText(G.setup.challenge.name.toUpperCase())
+    : G.setup.gimmick ? `GIMMICK · ${escText(G.setup.gimmick.name.toUpperCase())}`
+    : G.setup.random ? 'RANDOM NIGHT' : 'CUSTOM NIGHT');
   setHtml($('hudClock'), clockLabel());
   setHtml($('hudGuard'), `${escText(g.name)} <span class="dim">skill ${g.skill}</span>`);
   // The guard's power and how much it's using right now (one block per thing switched on).
@@ -84,7 +86,14 @@ function renderMap() {
     if (r.audioOnly) tags.push('<span class="tag dim">AUDIO ONLY</span>');
     G.fx.filter(f => f.room === id).forEach(f => tags.push(`<span class="tag fx">${f.text}</span>`));
     const who = here.map(o => faceHtml(o.id, `${o === u ? ' me' : ''}${stunned(o) ? ' frozen' : ''}${o.attack ? ' attacking' : ''}`)).join(' ');
-    const extra = id === 'cove' && G.crew.some(o => o.id === 'fox') ? `<span class="tag">stage ${G.crew.find(o => o.id === 'fox').stage}</span>` : '';
+    let extra = id === 'cove' && G.crew.some(o => o.id === 'fox') ? `<span class="tag">stage ${G.crew.find(o => o.id === 'fox').stage}</span>` : '';
+    // Molten Freddy's decoy, where the cameras think he is.
+    if (G.crew.some(o => o.decoy && G.t < o.decoy.until && o.decoy.room === id)) extra += '<span class="tag fx">DECOY</span>';
+    // The Locksmith's code: a clue shows in its room once one of your animatronics has been there.
+    if (gimmick() === 'lock') {
+      const k = G.gim.rooms.indexOf(id);
+      if (k >= 0 && G.gim.found[k]) extra += `<span class="tag clue">CLUE ${k + 1}: ${ENTRY_NAME[G.gim.code[k]]}</span>`;
+    }
     setClass(el.btn, ['room', r.vent ? 'vent' : '', canGo ? 'go' : reach ? 'near' : '', u && u.room === id ? 'here' : '', watched || winding ? 'watched' : ''].join(' '));
     setHtml(el.info, extra + tags.join(''));
     setHtml(el.who, who);
@@ -112,10 +121,17 @@ function renderGuardStatus() {
     lol: 'is typing L-O-L to get rid of Lolbit',
     shoo: `is shooing a ${G.pests[0] === 'cupcake' ? 'cupcake' : 'Freddle'} away`,
     dead: 'is sitting in the dark',
+    pay: 'is fumbling for five coins',
+    sleep: 'is ASLEEP. Zzz...',
+    away: 'is OUT, paying for a pizza',
+    walkin: `is walking back in through the ${G.gim.side === 'L' ? 'LEFT' : 'RIGHT'} door with a pizza`,
   }[g.focus];
   let html = `<b>${escText(g.name)}</b> ${doing}.`;
   if (t < g.lockUntil) html += ' <span class="you">(listening to the kitchen)</span>';
   if (t < g.distractedUntil) html += ' <span class="you">(confused)</span>';
+  if (t < g.deafUntil) html += ' <span class="you">(can\'t hear)</span>';
+  if (t < g.drowsyUntil) html += ' <span class="you">(drowsy)</span>';
+  if (t < g.curtainUntil) html += ' <span class="you">(watching the show)</span>';
   // Tool statuses: what's broken, what's on cooldown.
   const tags = [...g.tools].map(tool => {
     let state = '', cls = '';
@@ -123,6 +139,10 @@ function renderGuardStatus() {
     else if (tool === 'cams' && t < g.scrambleUntil) { state = ' static'; cls = 'off'; }
     else if ((tool === 'lights' || tool === 'flash') && g.lightsGone) { state = ' gone'; cls = 'off'; }
     else if ((tool === 'lights' || tool === 'flash') && t < g.lightsOffUntil) { state = ` off ${Math.ceil(g.lightsOffUntil - t)}s`; cls = 'off'; }
+    else if (tool === 'lights' && (g.brokenLight.L || g.brokenLight.R)) {
+      state = g.brokenLight.L && g.brokenLight.R ? ' smashed' : ` ${g.brokenLight.L ? 'L' : 'R'} smashed`;
+      cls = g.brokenLight.L && g.brokenLight.R ? 'off' : 'wait';
+    }
     else if (tool === 'ventdoor' && t < g.jam.V) { state = ` jammed ${Math.ceil(g.jam.V - t)}s`; cls = 'off'; }
     else if (tool === 'doors' && (t < g.jam.L || t < g.jam.R)) { state = ` pried ${Math.ceil(Math.max(g.jam.L, g.jam.R) - t)}s`; cls = 'off'; }
     else if (tool === 'coins') { state = ` x${g.coins}`; cls = g.coins ? '' : 'off'; }
@@ -132,6 +152,13 @@ function renderGuardStatus() {
   });
   // Every guard's last resort (see counter in game.js): show when it can duck again.
   tags.push(g.cd.duck > t ? `<span class="tool wait">Duck ${Math.ceil(g.cd.duck - t)}s</span>` : '<span class="tool">Duck</span>');
+  // The gimmick guard's own state.
+  const s = G.gim;
+  if (gimmick() === 'sleep') tags.push(g.focus === 'sleep' ? `<span class="tool ${s.wake > 70 ? 'off' : 'wait'}">Wake-up meter ${Math.floor(s.wake)}%</span>`
+    : `<span class="tool off">AWAKE ${Math.max(0, Math.ceil(s.awakeUntil - t))}s</span>`);
+  if (gimmick() === 'lock') tags.push(`<span class="tool wait">Code ${'*'.repeat(s.step)}${'-'.repeat(3 - s.step)}</span>`);
+  if (gimmick() === 'pizza' && s.state === 'in') tags.push(`<span class="tool wait">Next pizza ${Math.max(0, Math.ceil(s.next - t))}s</span>`);
+  if (gimmick() === 'pizza' && s.state === 'away') tags.push(`<span class="tool off">Back in ${Math.max(0, Math.ceil(s.at - t))}s</span>`);
   setHtml($('guardSays'), `${html}<div class="tools">${tags.join('')}</div>`);
 }
 
@@ -171,6 +198,10 @@ function renderCrew() {
         if (u.silent) status += ' · <span class="you">SILENT</span>';
         if (plushFrozen(u)) status += ' · <span class="danger">FROZEN (monitor down)</span>';
         if (t < u.facelessUntil) status += ' · <span class="you">FACELESS</span>';
+        if (u.decoy && t < u.decoy.until) status += ' · <span class="you">DECOY UP</span>';
+        if (t < u.trashUntil) status += ' · <span class="you">IN THE TRASH</span>';
+        if (u.friendly) status += ' · <span class="you">FRIENDLY</span>';
+        if (u.shield) status += ' · <span class="you">BLACK BOX</span>';
       }
       fill = d.kind === 'foxy' ? (u.stage + u.stageT / (d.move * u.mult)) / FOXY_STAGES : 1 - Math.max(0, u.cd) / (d.move * u.mult);
     } else if (d.kind === 'puppet') {
@@ -179,8 +210,7 @@ function renderCrew() {
     } else if (d.kind === 'golden') {
       status = u.attack ? `<span class="you">${u.attack.onMonitor ? 'ON THE MONITOR' : 'IN THE OFFICE'}! ${Math.max(0, u.attack.end - t).toFixed(1)}s</span>`
         : u.gold ? 'Waiting for the monitor to drop...' : 'Nowhere (for now)';
-    } else if (d.id === 'yen') status = 'Waiting in the dark';   // Yenndo isn't a ghost, just an endoskeleton
-    else status = 'A ghost in the system';
+    } else status = d.idle || 'A ghost in the system';   // a few (Yenndo...) aren't ghosts: their own line
     const locked = t < G.lockdownUntil;   // the guard's Lockdown: no abilities right now
     const ready = u.acd <= 0 && !locked && !u.gone;
     setHtml(c.status, status);

@@ -23,29 +23,46 @@ function show(name) {
 function renderTitle() {
   $('btnCustom').disabled = !customUnlocked();
   $('btnCustom').textContent = 'Custom Night';
-  $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / ${NIGHTS.length}`;
+  $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / ${NIGHTS.length}` +
+    ` · Gimmick nights: ${GIMMICKS.filter(x => gimmickBeaten(x.id)).length} / ${GIMMICKS.length}`;
   $('btnAch').textContent = `Achievements ${achieved.filter(id => ACHIEVEMENTS.some(a => a.id === id)).length} / ${ACHIEVEMENTS.length}`;
 }
 
 // ---------- the night list ----------
 const nightOpen = () => true;   // every night is open from the start (see customUnlocked in game.js)
 
+// How hard each night is (its `diff` in data.js, measured with the test bot), since every night is open
+// and you can play them in any order.
+const DIFF_NAMES = ['', 'Easy', 'Medium', 'Hard', 'Very hard'];
+const diffTag = night => night.diff ? `<span class="ndiff d${night.diff}">${DIFF_NAMES[night.diff]}</span>` : '';
+
 function renderNights() {
   setHtml($('nightList'), NIGHTS.map((night, i) => {
-    const n = i + 1, open = nightOpen(n);
-    const cls = ['night', open ? '' : 'locked', n === pickedNight ? 'picked' : '', nightBeaten(n) ? 'beaten' : ''].join(' ');
-    return `<button class="${cls}" data-night="${n}" ${open ? '' : 'disabled'}>` +
+    const n = i + 1;
+    const cls = ['night', n === pickedNight ? 'picked' : '', nightBeaten(n) ? 'beaten' : ''].join(' ');
+    return `<button class="${cls}" data-night="${n}">` +
       `<span class="nnum">NIGHT ${n}${nightBeaten(n) ? ' <span class="tick">&#10003;</span>' : ''}</span>` +
-      `<span class="nname">${open ? escText(night.name) : 'LOCKED'}</span>` +
-      `<span class="ncrew">${open ? night.crew.map(id => faceHtml(id)).join(' ') : ''}</span></button>`;
+      `<span class="nname">${escText(night.name)} ${diffTag(night)}</span>` +
+      `<span class="ncrew">${night.crew.map(id => faceHtml(id)).join(' ')}</span></button>`;
+  }).join(''));
+  // The gimmick nights: picked by id ("nap"), where the numbered nights are picked by number.
+  setHtml($('gimmickList'), GIMMICKS.map(gn => {
+    const cls = ['night', 'gimmick', gn.id === pickedNight ? 'picked' : '', gimmickBeaten(gn.id) ? 'beaten' : ''].join(' ');
+    return `<button class="${cls}" data-gimmick="${gn.id}">` +
+      `<span class="nnum">${escText(gn.name)}${gimmickBeaten(gn.id) ? ' <span class="tick">&#10003;</span>' : ''}</span>` +
+      `<span class="nname">${escText(GUARD_BY_ID[gn.guard].name)} <span class="ndiff ${gn.type}">${gn.type === 'puzzle' ? 'Puzzle' : 'Silly'}</span></span>` +
+      `<span class="ncrew">${gn.crew.map(id => faceHtml(id)).join(' ')}</span></button>`;
   }).join(''));
   renderNightInfo();
 }
+// The setup for whatever is picked on the night list.
+const pickedSetup = () => typeof pickedNight === 'number' ? storySetup(pickedNight) : gimmickSetup(pickedNight);
 
 // The details of the selected night: the guard, its tools, your crew and a tip.
 function renderNightInfo() {
-  const night = NIGHTS[pickedNight - 1], g = GUARD_BY_ID[night.guard];
-  $('btnStart').disabled = !nightOpen(pickedNight);
+  const night = typeof pickedNight === 'number' ? NIGHTS[pickedNight - 1] : GIMMICK_BY_ID[pickedNight];
+  const g = GUARD_BY_ID[night.guard];
+  $('btnStart').disabled = false;
   setHtml($('nightInfo'),
     `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${night.skill ?? g.skill}</span>${caughtTag(g.id)}` +
     `<div>${escText(g.desc)}</div><div class="tools">${g.tools.map(t => `<span class="tool" title="${escText(TOOLS[t].desc)}">${TOOLS[t].name}</span>`).join('')}</div></div></div></div>` +
@@ -145,8 +162,7 @@ function showEnd() {
       : `${r.by.def.name} got ${g.name} at ${clockLabel()}.`;
     setHtml($('endArt'), `<span class="big">${iconHtml(r.by.id)}</span>`);
     $('endTitle').textContent = 'GOT HIM!';
-    $('endText').textContent = why + (n === 10 ? ' You beat every night: the Custom Night is open!' : '')
-      + (G.setup.challenge ? ` Challenge complete: ${G.setup.challenge.name}!` : '');
+    $('endText').textContent = why + (G.setup.challenge ? ` Challenge complete: ${G.setup.challenge.name}!` : '');
     // The kill counter, and any achievements this win earned.
     setHtml($('endStats'), `<div class="kills">${escText(r.by.def.name)} has caught a guard ${times(catches[r.by.id])}. ` +
       `${escText(g.name)} has been caught ${times(guardCaught[g.def.id])}.</div>` +
@@ -157,7 +173,9 @@ function showEnd() {
     $('endText').textContent = `${g.name} survived the night with ${pct(g.power)}% power left.`;
     setHtml($('endStats'), guardCaught[g.def.id] ? `<div class="dim">${escText(g.name)} has been caught ${times(guardCaught[g.def.id])} so far.</div>` : '');
   }
-  $('btnNext').hidden = !(r.won && n && n < NIGHTS.length);
+  // "Next night" after a won story night; "Roll again" any time after a Random night.
+  $('btnNext').hidden = !(G.setup.random || (r.won && n && n < NIGHTS.length));
+  $('btnNext').textContent = G.setup.random ? 'Roll again' : 'Next night';
 }
 
 // ---------- achievements ----------
