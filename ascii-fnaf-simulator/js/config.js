@@ -59,6 +59,7 @@ const DISTRACT_TIME = 2.5;    // Balloon Boy's "Hi!": the guard notices nothing 
 const STUN_TIME = 2.5;        // Phantom BB's jumpscare freezes the guard this long
 const SHRUG_TIME = 5;         // Springtrap ignores audio lures this long
 const SHOWTIME_TIME = 10;     // Circus Baby's Showtime: everyone else moves twice as often
+const SHOWTIME_CUT = 0.5;     // ...and every countdown that helps you (cooldowns, freezes, attacks, the music box) keeps only this much of what it has left
 const WALTZ_TIME = 10;        // Ballora's Waltz: everyone else is quieter (not Ballora herself: alone she won too often)
 const WALTZ_STEALTH = 0.2;    // how much quieter (it was 0.3: Ballora alone won too often)
 const LAUGH_POWER = 4;        // Freddy's laugh drains this much % from the guard

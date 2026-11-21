@@ -956,10 +956,29 @@ function abilityEffect(u) {
       if (g.dead) return 'The power is already out.';
       u.gold = { state: 'wait' };
       log('Golden Freddy waits for the guard to put its monitor down...', 'you'); return '';
-    case 'bab':
+    case 'bab': {
       G.showtimeUntil = t + SHOWTIME_TIME;
-      G.crew.forEach(o => { if (o !== u && !stunned(o)) o.cd = 0; });
-      log('Showtime! Everyone moves twice as often.', 'you'); return '';
+      // Every countdown that helps you when it runs out loses part of what it has left (SHOWTIME_CUT).
+      // `cut` is for "until this time" timers, `cutUp` for timers that count up to a goal.
+      const cut = until => until > t ? t + (until - t) * SHOWTIME_CUT : until;
+      const cutUp = (now, goal) => now < goal ? goal - (goal - now) * SHOWTIME_CUT : now;
+      G.crew.forEach(o => {
+        o.stunUntil = cut(o.stunUntil);                          // frozen ones are free sooner
+        if (o !== u) {
+          if (!stunned(o)) o.cd = 0;                             // ready to move right now
+          o.acd *= SHOWTIME_CUT;                                 // abilities ready sooner
+        }
+        if (o.attack && o.attack.knockAt == null) o.attack.end = cut(o.attack.end);   // attacks land sooner
+        if (o.def.kind === 'foxy') o.stageT = cutUp(o.stageT, o.def.move * o.mult);    // Foxy's next stage
+      });
+      const nfr = G.crew.find(o => o.id === 'nfr');
+      if (nfr) G.pestT = cutUp(G.pestT, PEST_EVERY * nfr.mult);  // the next Freddle
+      if (G.puppet && G.puppetOutAt == null) G.box *= SHOWTIME_CUT;   // the music box runs down
+      if (G.puppetOutAt != null) G.puppetOutAt = cut(G.puppetOutAt);
+      if (G.powerOutAt != null) G.powerOutAt = cut(G.powerOutAt);
+      dirty = true;
+      log('Showtime! Everyone moves twice as often, and every countdown on your side is cut in half.', 'you'); return '';
+    }
     case 'bal':
       G.waltzUntil = t + WALTZ_TIME;
       log('Ballora\'s waltz: everyone else is harder to notice.', 'you'); return '';
