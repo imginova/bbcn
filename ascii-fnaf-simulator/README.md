@@ -3,14 +3,16 @@
 FNAF **backwards**: you control the animatronics, and the computer plays the night guard.
 Catch the guard before 6 AM. An unofficial, free fan game, drawn in ASCII art.
 
-- **20 story nights**, each with a guard (with different tools) and a different crew. Every night is open from the start: just pick one.
+- **26 story nights**, each with a guard (with different tools), a different crew and a difficulty tag. Every night is open from the start: just pick one.
+- **7 gimmick nights**, with guards that turn the night into a puzzle or something silly (a sleeping guard, a combination lock, cardboard cutouts...).
+- **Random Night**: a random guard against 2 to 8 random animatronics.
 - **A custom night** (also open from the start) where you choose everything: the guard, how smart it is,
   which tools it has, your crew (up to 6, each with a level), its power, the length of an hour and
   how fast your cooldowns recharge.
-- **32 animatronics** to use, each with its own ability.
-- **Max mode**, a custom night challenge: all 32 animatronics at once against **The Tendons 8**,
+- **45 animatronics** to use, each with its own ability.
+- **Max mode**, a custom night challenge: all 45 animatronics at once against **The Tendons 8**,
   the hardest guard in the game (with 2 death coins and a Lockdown).
-- **Kill counters** for every animatronic and every guard, and **15 achievements**.
+- **Kill counters** for every animatronic and every guard, and **17 achievements**.
 
 ## How to play it
 
@@ -27,7 +29,7 @@ ones before it made:
 | `style.css` | How it looks: the purple screen, colors, layout |
 | `js/helpers.js` | Tiny tools everyone uses: `$`, `store` (saving), `pick`, `rand`, `byLevel` |
 | `js/config.js` | The tuning numbers. **Most balance changes happen here** |
-| `js/data.js` | The building's rooms, every animatronic, every guard, the 20 nights |
+| `js/data.js` | The building's rooms, every animatronic, every guard, the story nights and the gimmick nights |
 | `js/sound.js` | Every sound, made from scratch in code |
 | `js/art.js` | The ASCII faces and the office camera picture |
 | `js/game.js` | The rules: the guard's "brain", moving, attacking, abilities, winning |

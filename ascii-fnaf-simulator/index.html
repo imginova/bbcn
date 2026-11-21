@@ -24,7 +24,7 @@
 
   Screens (only one is visible at a time; the others carry `hidden`):
     #scr-title   title screen
-    #scr-nights  the 20 story nights
+    #scr-nights  the story nights and the gimmick nights
     #scr-custom  the custom night
     #scr-game    the night itself
   plus #end (got him / 6 AM), #pause and #howto, which cover the window.
@@ -50,6 +50,7 @@
       <div class="menu">
         <button id="btnNights" class="big">Nights</button>
         <button id="btnCustom" class="big">Custom Night</button>
+        <button id="btnRandom" class="big">Random Night</button>
         <button id="btnHowto">How to play</button>
         <button id="btnAch">Achievements</button>
       </div>
@@ -57,10 +58,12 @@
       <p class="legal">An unofficial, free fan game. Not affiliated with Scott Cawthon or Five Nights at Freddy's.</p>
     </section>
 
-    <!-- ===== the 20 nights ===== -->
+    <!-- ===== the nights: the numbered story nights, then the gimmick nights ===== -->
     <section id="scr-nights" class="screen" hidden>
       <div class="head"><button data-back>&lt; Back</button><h2>The nights</h2></div>
       <div id="nightList" class="nightlist"></div>
+      <h3>Gimmick nights <span class="dim">· puzzles and silly guards</span></h3>
+      <div id="gimmickList" class="nightlist"></div>
       <div id="nightInfo" class="info"></div>
       <div class="startrow"><button id="btnStart" class="big">Start the night</button></div>
     </section>
@@ -167,6 +170,7 @@
     <p><b>The guard only knows what it sees and hears.</b> The red <b>REC</b> on the map is the camera it's watching: a room it's watching sees you. Every move might be heard. When it notices an attack it needs a moment to react: attack while it's busy on the cameras, winding the music box, rebooting or frozen.</p>
     <p><b>The office cam</b> shows the doors, the vent, the guard's power and what it's doing. A shut door costs it power: keep it scared, and when its power runs out, you win.</p>
     <p><b>Being stopped</b> sends that animatronic home, frozen for a few seconds.</p>
+    <p><b>Every night is open.</b> Each one shows how hard it is. The <b>gimmick nights</b> have guards with a rule of their own: a puzzle to solve or something silly (read the tip). <b>Random Night</b> rolls a random guard and 2 to 8 random animatronics.</p>
     <p class="dim">P or Esc pauses, M mutes. The night pauses by itself if you switch windows.</p>
     <div class="menu"><button id="btnHowtoClose" class="big">Got it</button></div>
   </div>

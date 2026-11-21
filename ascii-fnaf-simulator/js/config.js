@@ -39,7 +39,7 @@ const MASK_HOLD = 1.2;        // how long the guard keeps the mask on once it's 
 const LURE_COOLDOWN = 9;      // seconds between audio lures
 const SHOCK_COOLDOWN = 11;    // seconds between controlled shocks
 const SHOCK_STUN = 6;         // how long a shock freezes everyone in that room
-const HIDE_COOLDOWN = 16;     // seconds between hides (Gregory's trick)
+const HIDE_COOLDOWN = 22;     // seconds between hides (Gregory's trick; was 16, he hid too often)
 const DUCK_COOLDOWN = 40;     // every guard's last resort when nothing else works: a duck under the desk, this rarely
 const SAVE_SKILL = 8;         // guards this sharp or sharper save power when they're running low (savingPower)
 const HIDE_TIME = 2.5;        // how long a hide lasts
@@ -112,3 +112,36 @@ const crewSpeed = level => byLevel(level, 1.4, 0.6);
 // Everyone on your side is this much quicker than the numbers in CREW say: walking, abilities and
 // attacks (0.85 = 15% faster; on request, "make everyone a little faster").
 const CREW_PACE = 0.85;
+
+// ---------- the newer animatronics (FNAF 4, FNAF 6, Security Breach) ----------
+const COINS_POWER = 3;        // Rockstar Freddy: "Deposit five coins!" costs the guard this much power...
+const COINS_TIME = 2.5;       // ...and this many seconds of fumbling for change
+const CYMBAL_TIME = 8;        // Music Man: the guard can't hear your footsteps for this long
+const DECOY_TIME = 10;        // Molten Freddy: his decoy fools the cameras this long
+const FRIENDLY_SLOW = 2;      // Glamrock Freddy: the guard takes this many times longer to react to him
+const CURTAIN_TIME = 3;       // Funtime Foxy: the guard's monitor is stuck on her camera this long
+const TRASH_TIME = 8;         // Glamrock Chica: hidden from cameras and lights, and silent, this long
+const NAP_TIME = 10;          // the Daycare Attendant: the guard is drowsy this long...
+const NAP_SLOW = 1;           // ...and reacts this many seconds slower
+
+// ---------- gimmick guards ----------
+// The Sleepyhead: a wake-up meter from 0 to 100. At 100 he wakes up.
+const SLEEP_STEP = 15;        // one footstep you make (more near the office, less for quiet ones)
+const SLEEP_ATTACK = 35;      // every second someone stands in a doorway
+const SLEEP_DECAY = 2.5;      // the meter falls this much per second while it's quiet
+const SLEEP_AWAKE = 20;       // seconds he stays awake before he nods off again
+// Cardboard cutouts: the real guard swaps places with a cutout this often (the lights flicker first).
+const CUTOUT_SWAP = 25;
+const CUTOUT_DARK = 1.5;      // seconds the office is dark while it swaps
+// The Pizza Guy: a delivery this often, he's away this long, and he walks back in for this long.
+const PIZZA_EVERY = 28;
+const PIZZA_AWAY = 8;
+const PIZZA_BELL = 2.5;       // the doorbell rings on his way back, this long before he walks in
+const PIZZA_WALKIN = 2.5;
+// The Clockwork guard's routine: which way in is open, and for how many seconds. All the others are
+// shut. It's the same every night: that's the puzzle.
+const CLOCK_ROUTINE = [
+  { open: 'L', t: 4.8 }, { open: '', t: 2.5 }, { open: 'R', t: 4.8 }, { open: 'V', t: 4.8 }, { open: '', t: 2.5 },
+  { open: 'R', t: 4.8 }, { open: 'L', t: 4.8 }, { open: '', t: 3 },
+];
+const CLOCK_CYCLE = CLOCK_ROUTINE.reduce((sum, step) => sum + step.t, 0);

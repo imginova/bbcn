@@ -102,6 +102,19 @@ const ICONS = {
   bal: [' ~^~ ', '(- -)', ' )=( '],          // Ballora: blue hair, closed eyes, a dancer's dress
   nfb: [' [_] ', '(O^O)', 'VVVVV'],          // Nightmare Fredbear: purple hat, rows of teeth
   yen: [' .-. ', '(o o)', ' WWW '],          // Yenndo: a bare endoskeleton, round eyes and a row of teeth
+  nfx: ['/\\_/\\', '(O O)', 'JVVV/'],        // Nightmare Foxy: a hook and far too many teeth
+  nmr: ['.---.', '(O O)', '\\VVV/'],         // Nightmarionne: a long white mask with a grin
+  scb: [' ~~~ ', '(o.@)', '/#=#\\'],         // Scrap Baby: red pigtails, one missing eye, scrap metal
+  mfr: [' [_] ', '(@~@)', '~~~~~'],          // Molten Freddy: a face in a tangle of wires
+  rfr: [' [*] ', '(o^o)', ' >=< '],          // Rockstar Freddy: a star on his hat
+  mus: ['\\_O_/', '(o o)', '/VVV\\'],        // Music Man: cymbals held high
+  gfr: [' [*] ', '(=^=)', '/>=<\\'],         // Glamrock Freddy: a star, and a lightning-bolt shine
+  rox: ['/\\ /\\', '(o~o)', ' ^w^ '],        // Roxy: wolf ears and a mane
+  mty: [' VVV ', '(@ @)', '[===]'],          // Monty: spiky hair, shades and a spiked collar
+  ffx: ['/\\_/\\', '(o o)', ' >*< '],        // Funtime Foxy: white and pink, a bow tie
+  lft: ['|\\ /|', '(  o)', ' >=< '],         // Lefty: a black bear with one glowing eye
+  gch: [' \\|/ ', '(o>o)', '[EAT]'],         // Glamrock Chica: big earrings and a bib
+  dca: ['\\\\|//', '(^ ^)', '/(_)\\'],        // the Daycare Attendant: Sun's rays (and Moon on the other side)
   // The guards
   mike:    [' _=_ ', '(o_o)', '/|*|\\'],
   fritz:   [' _=_ ', '(0_0)', '/|*|\\'],
@@ -118,6 +131,14 @@ const ICONS = {
   franchisee: [' ___ ', '(-_-)', '/|$|\\'],   // the Franchisee: a pizzeria on a budget
   cassie:  [' ^ ^ ', '(o_o)', '/|R|\\'],      // Cassie: Roxy's ears on her mask
   tech:    [' _T_ ', '(o_o)', '/[+]\\'],      // the Technician: a hard hat and a toolbox
+  william: [' ___ ', '(o_o)', '/|W|\\'],      // William Afton: the purple guy
+  sleepy:  [' ___ ', '(-_-)', '/|z|\\'],      // gimmick guards from here on
+  locksmith: [' _=_ ', '(o_o)', '/|#|\\'],
+  clockwork: [' -+- ', '[o_o]', '/|@|\\'],    // a wind-up key on top
+  cutout:  [' _=_ ', '|o_o|', '/|*|\\'],      // flat as cardboard
+  mixedup: [' _=_ ', '(o_O)', '/|?|\\'],
+  copycat: ['/\\_/\\', '(o_o)', '/|*|\\'],    // cat ears
+  pizza:   [' _=_ ', '(^_^)', '/[P]\\'],      // a pizza box
 };
 const ICON_ACCENTS = {
   fre: [' xxx', ' b b', ' xxx'],
@@ -156,6 +177,11 @@ const ICON_ACCENTS = {
   vanessa: [' kkk', '', '  k'], mike2: [' bbb', '', '  k'], gregory: ['', '', '  c'],
   tendons8: ['rrrrr', ' r r', '  r'],
   cc: ['', ' b b', '  c'], franchisee: ['', '', '  k'], cassie: [' v v', '', '  v'], tech: [' yyy', '', '  r'],
+  william: [' vvv', '', '  v'], sleepy: ['', '', '  c'], locksmith: ['', '', '  k'], clockwork: [' kkk', '', '  k'],
+  mixedup: ['', '    r', '  r'], copycat: ['', ' g g'], pizza: ['', '', ' rrr'],
+  nfx:['', ' y y', ' www'], nmr: ['', ' w w', ' www'], scb: [' rrr', ' g'], mfr: [' kkk', ' y y', 'GGGGG'],
+  rfr: [' yyy', ' b b', ' kkk'], mus: [' kkk', ' r r'], gfr: ['  y', ' c c', '  y'], rox: ['', ' y y'], mty: [' ppp', ' r r', ' www'],
+  ffx: ['', ' y y', '  p'], lft: ['', '    r', '  r'], gch: ['', ' vov', ' ppp'], dca: ['yyyyy', '', ''],
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>
@@ -181,7 +207,12 @@ function officeGrid() {
   drawDoor(o, 'R', OFFICE_W - 10);
   drawVent(o);
   drawDesk(o);
-  drawGuard(o);
+  if (gimmick() === 'cutout') drawCutouts(o);
+  else drawGuard(o);
+  drawGimmick(o);
+  // Nightmare Foxy in the closet (right of the desk).
+  const closet = G.crew.find(u => u.attack && u.attack.entry === 'O' && u.def.kind === 'walker');
+  if (closet) sprite(o, 5, 32, ICONS[closet.id], `c-${closet.id} o-attack`, ICON_ACCENTS[closet.id]);
   // The flashlight's beam, for a moment, toward the door it was pointed at.
   if (g.flashUntil > t) {
     if (g.flashSide === 'L') write(o, 8, 10, '<=========', 'o-lit');
@@ -208,7 +239,8 @@ function drawDoor(o, side, c) {
   write(o, 12, c, "'------'", wall);
   for (let r = 2; r < 12; r++) { write(o, r, c, '|', wall); write(o, r, c + 7, '|', wall); }
   const isShut = g.doors[side];
-  const lit = g.light[side] > t || (g.flashUntil > t && g.flashSide === side);
+  const lit = (g.light[side] > t && !g.brokenLight[side]) || (g.flashUntil > t && g.flashSide === side);
+  if (g.brokenLight[side]) write(o, 1, c + 2, 'x--x', 'o-alert');   // Monty smashed this light
   for (let r = 2; r < 12; r++) write(o, r, c + 1, isShut ? '######' : lit ? '......' : '      ', isShut ? 'o-door' : lit ? 'o-lit' : '');
   if (isShut) write(o, 6, c + 1, ' SHUT ', 'o-door o-label');
   else {
@@ -246,9 +278,46 @@ function drawDesk(o) {
   G.pests.forEach((p, i) => write(o, 9, [13, 17, 31, 35][i], p === 'cupcake' ? '{^}' : '(oo)', p === 'cupcake' ? 'c-nch' : 'c-nfr'));
 }
 
+// The Cardboard Guard: three figures, one at each way in (LEFT, VENT in the middle, RIGHT). Only one
+// is real: it blinks, and it's the only one that picks up its monitor or does anything at all.
+const CUTOUT_COLS = { L: 12, V: 21, R: 30 };
+function drawCutouts(o) {
+  const g = G.guard, s = G.gim, t = G.t, face = ICONS[g.def.id];
+  if (t < s.darkUntil) { write(o, 6, 17, ' *flicker* ', 'o-dim'); return; }   // the lights are out while they swap
+  for (const k of ['L', 'V', 'R']) {
+    if (k === s.real) drawGuard(o, CUTOUT_COLS[k], t > s.blinkAt - 0.3);
+    else sprite(o, 6, CUTOUT_COLS[k] + 1, face, 'c-guard', ICON_ACCENTS[g.def.id]);
+  }
+}
+
+// Extra bits for the other gimmick guards.
+function drawGimmick(o) {
+  const g = G.guard, s = G.gim, t = G.t;
+  switch (gimmick()) {
+    case 'sleep':
+      if (g.focus === 'sleep') write(o, 4, 27, ['z', 'zZ', 'zZz'][Math.floor(t) % 3], 'o-dim');
+      break;
+    case 'clock':
+      write(o, 4, 27, Math.floor(t) % 2 ? 'tock' : 'tick', 'o-dim');
+      break;
+    case 'lock':
+      write(o, 4, 15, `LOCK [${'*'.repeat(s.step)}${'-'.repeat(3 - s.step)}]`, 'o-coin');
+      break;
+    case 'pizza':
+      if (g.focus === 'away') write(o, 7, 18, '(out for pizza)', 'o-dim');
+      if (g.focus === 'walkin') {
+        const c = s.side === 'L' ? 3 : OFFICE_W - 9;
+        sprite(o, 4, c, ICONS[g.def.id], 'c-guard', ICON_ACCENTS[g.def.id]);
+        write(o, 7, c, '[PIZZA]', 'o-coin');
+      }
+      break;
+  }
+}
+
 // The guard itself, which shows what it's doing right now (the biggest "tell" in the game).
-function drawGuard(o) {
-  const g = G.guard, t = G.t, r = 5, c = 21;
+// `c` is its column (the Cardboard Guard moves around); `blink` closes its eyes for a moment.
+function drawGuard(o, c = 21, blink = false) {
+  const g = G.guard, t = G.t, r = 5;
   const face = ICONS[g.def.id] || ICONS.mike, mask = ICON_ACCENTS[g.def.id] || [];
   const label = text => `|${text.padEnd(6).slice(0, 6)}|`;
   switch (g.focus) {
@@ -283,8 +352,17 @@ function drawGuard(o) {
     case 'dead':
       write(o, r + 2, c + 2, '.  .', 'o-dark');
       break;
-    default:   // at the desk
+    case 'sleep':   // head on the desk
+      sprite(o, r + 2, c + 1, [face[0], '(-_-)'], 'c-guard', mask);
+      break;
+    case 'pay':     // fumbling for five coins
       sprite(o, r + 1, c + 1, face, 'c-guard', mask);
+      write(o, r + 4, c + 1, ' $ $ ', 'o-coin');
+      break;
+    case 'away': case 'walkin':   // out of the office (drawGimmick shows where)
+      break;
+    default:   // at the desk
+      sprite(o, r + 1, c + 1, blink ? [face[0], '(-_-)', face[2]] : face, 'c-guard', mask);
   }
   if (t < g.distractedUntil) write(o, r, c + 7, '?', 'o-alert');
 }

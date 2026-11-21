@@ -32,7 +32,17 @@ $('nightList').addEventListener('click', e => {
   pickedNight = Number(b.dataset.night);
   renderNights();
 });
-$('btnStart').addEventListener('click', () => { if (nightOpen(pickedNight)) startNight(storySetup(pickedNight)); });
+// The gimmick nights: picked by their id instead of a number.
+$('gimmickList').addEventListener('click', e => {
+  const b = e.target.closest('[data-gimmick]');
+  if (!b) return;
+  sfx.select();
+  pickedNight = b.dataset.gimmick;
+  renderNights();
+});
+$('btnStart').addEventListener('click', () => startNight(pickedSetup()));
+// Random mode: a new roll every time.
+$('btnRandom').addEventListener('click', () => { sfx.click(); startNight(randomSetup()); });
 
 // The custom night.
 $('cChallenges').addEventListener('click', e => {
@@ -96,13 +106,16 @@ function attackSelected() {
 
 $('btnPause').addEventListener('click', () => setPaused(true));
 $('btnResume').addEventListener('click', () => setPaused(false));
-$('btnQuit').addEventListener('click', () => { G.over = true; show('nights'); });
+// Where "back" goes after a night: the night list, the custom night, or the title after a Random night.
+const menuFor = setup => setup.night || setup.gimmick ? 'nights' : setup.random ? 'title' : 'custom';
+$('btnQuit').addEventListener('click', () => { G.over = true; show(menuFor(G.setup)); });
 $('btnRetry').addEventListener('click', () => startNight(G.setup));
 $('btnNext').addEventListener('click', () => {
+  if (G.setup.random) return startNight(randomSetup());   // "Roll again"
   pickedNight = Math.min(NIGHTS.length, G.setup.night + 1);
   startNight(storySetup(pickedNight));
 });
-$('btnMenu').addEventListener('click', () => show(G.setup.night ? 'nights' : 'custom'));
+$('btnMenu').addEventListener('click', () => show(menuFor(G.setup)));
 
 // ---------- the keyboard ----------
 document.addEventListener('keydown', e => {

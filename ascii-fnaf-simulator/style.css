@@ -31,6 +31,8 @@
   --c-bab: #ff7a6b; --c-bal: #6fa0ff; --c-nfb: #d9a54a; --c-lol: #ff9f40;
   --c-tfr: #b8723c; --c-sbn: #0a0a0a; --c-nfr: #8a5a2e; --c-nbn: #4a5cc9; --c-nch: #d6c23a;
   --c-ptr: #7fbf5a; --c-ffr: #f0e6f6; --c-enn: #a8b0bc; --c-pfx: #8a6a50; --c-yen: #c8c2b4;
+  --c-nfx: #c8503a; --c-nmr: #d8d4e8; --c-scb: #e0705a; --c-mfr: #c9a060; --c-rfr: #6a7fd8; --c-mus: #6fbf6f;
+  --c-gfr: #c98a50; --c-rox: #b39ae8; --c-mty: #5fcf6a; --c-ffx: #f4d6e8; --c-lft: #5a5a6a; --c-gch: #f2e26a; --c-dca: #ffd86a;
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: dark;
@@ -105,7 +107,9 @@ h3 { font-size: 22px; color: var(--dim); }
 .face-mini { white-space: pre; font-weight: 600; }
 .c-guard, .icon.c-mike, .icon.c-fritz, .icon.c-jeremy, .icon.c-phone, .icon.c-fright, .icon.c-michael,
 .icon.c-gregory, .icon.c-vanessa, .icon.c-henry, .icon.c-mike2,
-.icon.c-cc, .icon.c-franchisee, .icon.c-cassie, .icon.c-tech { color: var(--guard); }
+.icon.c-cc, .icon.c-franchisee, .icon.c-cassie, .icon.c-tech, .icon.c-sleepy, .icon.c-locksmith, .icon.c-clockwork,
+.icon.c-cutout, .icon.c-mixedup, .icon.c-copycat, .icon.c-pizza { color: var(--guard); }
+.icon.c-william { color: #b77bff; }
 .c-fre { color: var(--c-fre); } .c-bon { color: var(--c-bon); } .c-chi { color: var(--c-chi); } .c-fox { color: var(--c-fox); }
 .c-wfr { color: var(--c-wfr); } .c-wbn { color: var(--c-wbn); } .c-wch { color: var(--c-wch); } .c-wgf { color: var(--c-wgf); }
 .c-wfx { color: var(--c-wfx); } .c-tbn { color: var(--c-tbn); } .c-tch { color: var(--c-tch); } .c-mng { color: var(--c-mng); }
@@ -114,6 +118,11 @@ h3 { font-size: 22px; color: var(--dim); }
 .c-nfb { color: var(--c-nfb); } .c-lol { color: var(--c-lol); }
 .c-tfr { color: var(--c-tfr); } .c-nfr { color: var(--c-nfr); } .c-nbn { color: var(--c-nbn); } .c-nch { color: var(--c-nch); }
 .c-ptr { color: var(--c-ptr); } .c-ffr { color: var(--c-ffr); } .c-enn { color: var(--c-enn); } .c-pfx { color: var(--c-pfx); } .c-yen { color: var(--c-yen); }
+.c-nfx { color: var(--c-nfx); } .c-nmr { color: var(--c-nmr); } .c-scb { color: var(--c-scb); } .c-mfr { color: var(--c-mfr); }
+.c-rfr { color: var(--c-rfr); } .c-mus { color: var(--c-mus); } .c-gfr { color: var(--c-gfr); } .c-rox { color: var(--c-rox); }
+.c-mty { color: var(--c-mty); } .c-ffx { color: var(--c-ffx); } .c-gch { color: var(--c-gch); } .c-dca { color: var(--c-dca); }
+/* Lefty is a black bear: like Shadow Bonnie, a thin outline so he shows up. */
+.c-lft { color: var(--c-lft); text-shadow: 0 0 1px #ddd, 0 0 1px #ddd; }
 /* Shadow Bonnie is black, so he gets a thin white outline to show up on the dark screen. */
 .c-sbn { color: var(--c-sbn); text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* Accent colors (eyes, hats, bow ties...): see ACCENT in art.js. */
@@ -131,6 +140,11 @@ h3 { font-size: 22px; color: var(--dim); }
 .night.picked { border-color: var(--you); box-shadow: 0 0 10px rgba(255, 209, 102, .25); }
 .night.beaten .tick { color: #7dff9a; }
 .night .ncrew { font-size: 12px; }
+/* Difficulty tags (measured with the test bot), and the gimmick nights' Puzzle / Silly tags. */
+.ndiff { font-family: var(--font-mono); font-size: 10px; padding: 0 4px; border: 1px solid currentColor; border-radius: 3px; }
+.ndiff.d1 { color: #7dff9a; } .ndiff.d2 { color: #ffd166; } .ndiff.d3 { color: #ff9f40; } .ndiff.d4 { color: var(--danger); }
+.ndiff.puzzle { color: #9fe3ff; } .ndiff.silly { color: #ff8fd0; }
+.night.gimmick { border-style: dashed; }
 .info { border: 1px solid var(--line); border-radius: 4px; padding: 12px; }
 .vs .side { display: flex; gap: 12px; align-items: flex-start; }
 .vs .icon { font-size: 18px; }
@@ -178,6 +192,7 @@ h3 { font-size: 22px; color: var(--dim); }
 .rec { position: absolute; top: 3px; right: 5px; color: var(--danger); font-size: 10px; animation: blink 1s steps(1) infinite; }
 .tag { font-size: 10px; color: var(--you); }
 .tag.fx { color: var(--guard); font-weight: 600; }
+.tag.clue { color: #7dff9a; font-weight: 600; }   /* a Locksmith code clue, once found */
 .face-mini.me { text-decoration: underline; }
 .face-mini.frozen { opacity: .45; }
 .face-mini.attacking { animation: blink .5s steps(1) infinite; }
