@@ -179,7 +179,8 @@ function renderCrew() {
     } else if (d.kind === 'golden') {
       status = u.attack ? `<span class="you">${u.attack.onMonitor ? 'ON THE MONITOR' : 'IN THE OFFICE'}! ${Math.max(0, u.attack.end - t).toFixed(1)}s</span>`
         : u.gold ? 'Waiting for the monitor to drop...' : 'Nowhere (for now)';
-    } else status = 'A ghost in the system';
+    } else if (d.id === 'yen') status = 'Waiting in the dark';   // Yenndo isn't a ghost, just an endoskeleton
+    else status = 'A ghost in the system';
     const locked = t < G.lockdownUntil;   // the guard's Lockdown: no abilities right now
     const ready = u.acd <= 0 && !locked && !u.gone;
     setHtml(c.status, status);

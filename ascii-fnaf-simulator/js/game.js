@@ -90,7 +90,7 @@ function newGame(setup) {
       focus: 'desk',                     // desk, cam, wind, reboot, stun, hide, mask or dead (see the HUD)
       cam: 'stage',                      // which camera it's on when focus is 'cam'
       nextThink: 1.5,
-      busyUntil: 0, stunUntil: 0, hideUntil: 0, maskUntil: 0, lockUntil: 0,
+      busyUntil: 0, stunUntil: 0, stareUntil: 0, hideUntil: 0, maskUntil: 0, lockUntil: 0,
       doors: { L: false, R: false, V: false },
       light: { L: 0, R: 0 },             // the time each door light goes off again
       lightsGone: false, lightsOffUntil: 0,
@@ -934,6 +934,14 @@ function abilityEffect(u) {
       if (monitorUp() || ['stun', 'hide', 'dead'].includes(g.focus)) return 'Only works while the guard\'s monitor is down.';
       g.focus = 'stun'; g.stunUntil = t + grit(LUNGE_TIME); sfx.sting();
       log('Phantom Foxy lunged out of the dark: the guard is frozen!', 'you'); return '';
+    case 'yen': {
+      if (['stun', 'hide', 'reboot', 'dead'].includes(g.focus)) return 'The guard is busy with something else.';
+      // A light finds him quickly in the dark, so a guard that can still use one breaks free sooner.
+      const lit = (guardHas('lights') || guardHas('flash')) && lightsOk();
+      g.focus = 'stun'; g.stunUntil = g.stareUntil = t + grit(lit ? STARE_LIT : STARE_TIME); sfx.sting();
+      log(lit ? 'Yenndo stands beside the desk. The guard shines a light on him and freezes for a moment.'
+              : 'Yenndo stands beside the desk in the dark: the guard is frozen!', 'you'); return '';
+    }
     case 'pfr':
       if (!guardHas('cams')) return 'This guard has no cameras to break.';
       if (g.camsBroken) return 'The cameras are already broken.';
