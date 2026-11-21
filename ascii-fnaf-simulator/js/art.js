@@ -180,7 +180,7 @@ const ICON_ACCENTS = {
   william: [' vvv', '', '  v'], sleepy: ['', '', '  c'], locksmith: ['', '', '  k'], clockwork: [' kkk', '', '  k'],
   mixedup: ['', '    r', '  r'], copycat: ['', ' g g'], pizza: ['', '', ' rrr'],
   nfx:['', ' y y', ' www'], nmr: ['', ' w w', ' www'], scb: [' rrr', ' g'], mfr: [' kkk', ' y y', 'GGGGG'],
-  rfr: [' yyy', ' b b', ' kkk'], mus: [' kkk', ' r r'], gfr: ['  y', ' c c', '  y'], rox: ['', ' y y'], mty: [' ppp', ' r r', ' www'],
+  rfr: [' yyy', ' b b', ' kkk'], mus: ['k k k', ' p p', ' www'], gfr: ['  y', ' c c', '  y'], rox: ['', ' y y'], mty: [' ppp', ' r r', ' www'],
   ffx: ['', ' y y', '  p'], lft: ['', '    r', '  r'], gch: ['', ' vov', ' ppp'], dca: ['yyyyy', '', ''],
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
@@ -295,10 +295,10 @@ function drawGimmick(o) {
   const g = G.guard, s = G.gim, t = G.t;
   switch (gimmick()) {
     case 'sleep':
-      if (g.focus === 'sleep') write(o, 4, 27, ['z', 'zZ', 'zZz'][Math.floor(t) % 3], 'o-dim');
+      if (g.focus === 'sleep') write(o, 4, 27, ['z', 'zZ', 'zZz'][Math.floor(Math.max(0, t)) % 3], 'o-dim');
       break;
     case 'clock':
-      write(o, 4, 27, Math.floor(t) % 2 ? 'tock' : 'tick', 'o-dim');
+      write(o, 4, 27, Math.floor(Math.max(0, t)) % 2 ? 'tock' : 'tick', 'o-dim');
       break;
     case 'lock':
       write(o, 4, 15, `LOCK [${'*'.repeat(s.step)}${'-'.repeat(3 - s.step)}]`, 'o-coin');

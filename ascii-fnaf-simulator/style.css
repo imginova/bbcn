@@ -31,7 +31,7 @@
   --c-bab: #ff7a6b; --c-bal: #6fa0ff; --c-nfb: #d9a54a; --c-lol: #ff9f40;
   --c-tfr: #b8723c; --c-sbn: #0a0a0a; --c-nfr: #8a5a2e; --c-nbn: #4a5cc9; --c-nch: #d6c23a;
   --c-ptr: #7fbf5a; --c-ffr: #f0e6f6; --c-enn: #a8b0bc; --c-pfx: #8a6a50; --c-yen: #c8c2b4;
-  --c-nfx: #c8503a; --c-nmr: #d8d4e8; --c-scb: #e0705a; --c-mfr: #c9a060; --c-rfr: #6a7fd8; --c-mus: #6fbf6f;
+  --c-nfx: #c8503a; --c-nmr: #d8d4e8; --c-scb: #e0705a; --c-mfr: #c9a060; --c-rfr: #6a7fd8; --c-mus: #3a3a48;
   --c-gfr: #c98a50; --c-rox: #b39ae8; --c-mty: #5fcf6a; --c-ffx: #f4d6e8; --c-lft: #5a5a6a; --c-gch: #f2e26a; --c-dca: #ffd86a;
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -119,7 +119,9 @@ h3 { font-size: 22px; color: var(--dim); }
 .c-tfr { color: var(--c-tfr); } .c-nfr { color: var(--c-nfr); } .c-nbn { color: var(--c-nbn); } .c-nch { color: var(--c-nch); }
 .c-ptr { color: var(--c-ptr); } .c-ffr { color: var(--c-ffr); } .c-enn { color: var(--c-enn); } .c-pfx { color: var(--c-pfx); } .c-yen { color: var(--c-yen); }
 .c-nfx { color: var(--c-nfx); } .c-nmr { color: var(--c-nmr); } .c-scb { color: var(--c-scb); } .c-mfr { color: var(--c-mfr); }
-.c-rfr { color: var(--c-rfr); } .c-mus { color: var(--c-mus); } .c-gfr { color: var(--c-gfr); } .c-rox { color: var(--c-rox); }
+.c-rfr { color: var(--c-rfr); }
+/* Music Man is black (with pink eyes and gold cymbals): a thin outline so he shows up, like Lefty. */
+.c-mus { color: var(--c-mus); text-shadow: 0 0 1px #ddd, 0 0 1px #ddd; } .c-gfr { color: var(--c-gfr); } .c-rox { color: var(--c-rox); }
 .c-mty { color: var(--c-mty); } .c-ffx { color: var(--c-ffx); } .c-gch { color: var(--c-gch); } .c-dca { color: var(--c-dca); }
 /* Lefty is a black bear: like Shadow Bonnie, a thin outline so he shows up. */
 .c-lft { color: var(--c-lft); text-shadow: 0 0 1px #ddd, 0 0 1px #ddd; }
