@@ -104,7 +104,8 @@ h3 { font-size: 22px; color: var(--dim); }
 .icon { display: inline-block; white-space: pre; font-family: var(--font-mono); line-height: 1.1; user-select: none; }
 .face-mini { white-space: pre; font-weight: 600; }
 .c-guard, .icon.c-mike, .icon.c-fritz, .icon.c-jeremy, .icon.c-phone, .icon.c-fright, .icon.c-michael,
-.icon.c-gregory, .icon.c-vanessa, .icon.c-henry, .icon.c-mike2 { color: var(--guard); }
+.icon.c-gregory, .icon.c-vanessa, .icon.c-henry, .icon.c-mike2,
+.icon.c-cc, .icon.c-franchisee, .icon.c-cassie, .icon.c-tech { color: var(--guard); }
 .c-fre { color: var(--c-fre); } .c-bon { color: var(--c-bon); } .c-chi { color: var(--c-chi); } .c-fox { color: var(--c-fox); }
 .c-wfr { color: var(--c-wfr); } .c-wbn { color: var(--c-wbn); } .c-wch { color: var(--c-wch); } .c-wgf { color: var(--c-wgf); }
 .c-wfx { color: var(--c-wfx); } .c-tbn { color: var(--c-tbn); } .c-tch { color: var(--c-tch); } .c-mng { color: var(--c-mng); }

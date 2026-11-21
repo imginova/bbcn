@@ -1,6 +1,6 @@
 /* =====================================================================
    data.js: WHO and WHERE. The building, your animatronics, the night
-   guards, and the 10 story nights.
+   guards, and the 20 story nights.
 
    Everything here is plain information (lists and objects). The rules
    that use it are in game.js.
@@ -219,6 +219,15 @@ const GUARDS = [
     desc: 'He built half of you. Lures, shocks, doors and lights.' },
   { id: 'mike2', name: 'Mike Schmidt (veteran)', from: 'FNAF 1', skill: 15, tools: ['cams', 'doors', 'lights', 'ventdoor', 'mask', 'flash', 'lure', 'shock', 'hide'], camLove: 0.5, doorHold: 0.8, lightLove: 0.45,
     desc: 'Back for one more night, with every tool there is.' },
+  // Four more guards for Nights 11-20 (on request: "a few new and a few old").
+  { id: 'cc', name: 'The Crying Child', from: 'FNAF 4', skill: 9, tools: ['doors', 'lights', 'flash'], camLove: 0, doorHold: 1, lightLove: 0.7, hears: 1.8,
+    desc: 'No cameras at all: he listens at the doors and checks them with his light. Hears very well.' },
+  { id: 'franchisee', name: 'The Franchisee', from: 'FNAF 6', skill: 11, tools: ['cams', 'doors', 'lure', 'lights'], camLove: 0.6, doorHold: 1, lightLove: 0.3, thrift: 0.6,
+    desc: 'Runs a pizzeria on a budget: doors, door lights and audio lures, and uses little power.' },
+  { id: 'cassie', name: 'Cassie', from: 'Security Breach: Ruin', skill: 12, tools: ['cams', 'mask', 'flash', 'hide', 'lure'], camLove: 0.45, doorHold: 1, lightLove: 0,
+    desc: 'Sneaks instead of fighting: no doors, but a mask, a flashlight, audio lures and lots of hiding.' },
+  { id: 'tech', name: 'The Technician', from: 'FNAF: Help Wanted', skill: 16, tools: ['cams', 'doors', 'lights', 'flash', 'mask'], camLove: 0.5, doorHold: 0.8, lightLove: 0.5, reboot: 1.2,
+    desc: 'Fixes things for a living: doors, lights, a flashlight and a mask, and reboots broken cameras in no time.' },
   // The hardest guard (on request): the highest skill, every tool, and every other guard's good habit,
   // each at least as strong as on the guard it comes from: Fritz's ears (hears 1.4 -> 1.5), the Fright
   // guard's fast reboots (1.6 -> 1.0 s), Vanessa's light checks (lightLove 0.6) and Henry's careful doors
@@ -230,7 +239,7 @@ const GUARDS = [
 ];
 const GUARD_BY_ID = Object.fromEntries(GUARDS.map(g => [g.id, g]));
 
-// ---------- the 10 story nights ----------
+// ---------- the 20 story nights ----------
 // Each night picks its crew for a kind of play (its "niche"), not just one game's characters, and
 // pairs it with a guard that makes that play interesting.
 const NIGHTS = [
@@ -254,6 +263,29 @@ const NIGHTS = [
     tip: 'Henry has an answer for everything, but not all at once. Bury him in Freddles and cupcakes, make him shut one door, then Switch Fredbear to the other.' },
   { name: 'One more night', guard: 'mike2', crew: ['wgf', 'wfx', 'pup', 'pfr', 'mng', 'sbn'],
     tip: 'Every tool against every trick. Break his cameras and he can\'t wind the box, then let the withereds in.' },
+  // Nights 11-20 (on request: "add a bunch more levels"). A second week: it starts easier than Night 10
+  // and climbs to the hardest story night (ordered by how often the test bot won each one).
+  // `skill` makes a returning guard sharper than its first night.
+  { name: 'Blackout', guard: 'fritz', skill: 14, crew: ['fre', 'fox', 'nch', 'chi', 'ptr'],
+    tip: 'Win by power. Keep Fritz scared so his doors stay shut, bang with Foxy, laugh with Freddy, and let the cupcake eat.' },
+  { name: 'Hide and seek', guard: 'phone', skill: 15, crew: ['fre', 'bal', 'wbn', 'tfr', 'sbn'],
+    tip: 'Phone Guy watches the cameras, so don\'t be on them: Freddy hides off the stage, Ballora never shows, Bonnie goes faceless, and Toy Freddy wipes his memory.' },
+  { name: 'Music box', guard: 'cassie', crew: ['pup', 'pfr', 'tfr', 'lol', 'bb'],
+    tip: 'Make her stop winding. Phantom Freddy breaks her cameras and Lolbit takes her computer. Her mask fools Toy Freddy, so send him in while she\'s busy.' },
+  { name: 'Bedtime', guard: 'cc', crew: ['nbn', 'nch', 'tch', 'bb', 'nfr'],
+    tip: 'No cameras: he only hears you and shines his light. Take the light away (Toy Chica, Balloon Boy) and Nightmare Bonnie\'s held breath does the rest.' },
+  { name: 'Hallucinations', guard: 'tech', crew: ['gol', 'wgf', 'pbb', 'wfr', 'wbn'],
+    tip: 'Freeze him, then appear. Phantom BB while his monitor is up, then Golden Freddy the moment he puts it down. His mask fools Withered Golden Freddy and Withered Freddy, so time them well.' },
+  { name: 'Rush hour', guard: 'gregory', skill: 12, crew: ['bab', 'wfx', 'bon', 'ptr', 'fox'],
+    tip: 'Speed against a hider. Showtime, then send two at once: he can only hide from one of them.' },
+  { name: 'Ventilation', guard: 'franchisee', crew: ['tbn', 'wch', 'mng', 'spr', 'enn'],
+    tip: 'Everyone fits in the vents. Jam the vent door with Withered Chica, pry a door with Ennard, and let Springtrap shrug off his lures. Mangle can\'t be lured at all.' },
+  { name: 'Fake-out', guard: 'vanessa', skill: 16, crew: ['ffr', 'nfb', 'enn', 'wch', 'tbn', 'chi'],
+    tip: 'Three ways in, and she can\'t watch all of them. Bon-Bon one door, Switch Fredbear to the other, and send someone up the vent.' },
+  { name: 'Graveyard shift', guard: 'henry', skill: 18, crew: ['spr', 'wfx', 'mng', 'nbn', 'pfr', 'sbn'],
+    tip: 'Henry is at his sharpest. Break his cameras, let Shadow Bonnie undo his shocks, and let Springtrap shrug off his lures.' },
+  { name: 'Last call', guard: 'mike2', skill: 20, crew: ['bab', 'bal', 'enn', 'gol', 'nfr', 'wfx'],
+    tip: 'The hardest story night. Freddles slow him down, Showtime speeds you up, and Golden Freddy waits for the moment he looks away.' },
 ];
 
 // ---------- custom night challenges ----------
@@ -280,6 +312,8 @@ const ACHIEVEMENTS = [
   { id: 'music',    name: 'Pop goes the box', desc: 'Win with the Puppet.' },
   { id: 'golden',   name: 'It\'s me',         desc: 'Win with Golden Freddy or Withered Golden Freddy.' },
   { id: 'graduate', name: 'Graduation',      desc: 'Beat Night 10.' },
+  { id: 'overtime', name: 'Overtime',        desc: 'Beat Night 20.' },
+  { id: 'allnights', name: 'Employee of the month', desc: 'Beat all 20 story nights.' },
   { id: 'bankrupt', name: 'Out of coins',    desc: 'Catch The Tendons 8 after it spent both death coins.' },
   { id: 'maxed',    name: 'Maxed out',       desc: 'Beat Max mode.' },
   { id: 'hunter',   name: 'Guard hunter',    desc: 'Catch every night guard at least once.' },

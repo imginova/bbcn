@@ -99,7 +99,7 @@ $('btnResume').addEventListener('click', () => setPaused(false));
 $('btnQuit').addEventListener('click', () => { G.over = true; show('nights'); });
 $('btnRetry').addEventListener('click', () => startNight(G.setup));
 $('btnNext').addEventListener('click', () => {
-  pickedNight = Math.min(10, G.setup.night + 1);
+  pickedNight = Math.min(NIGHTS.length, G.setup.night + 1);
   startNight(storySetup(pickedNight));
 });
 $('btnMenu').addEventListener('click', () => show(G.setup.night ? 'nights' : 'custom'));

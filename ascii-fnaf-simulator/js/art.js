@@ -114,6 +114,10 @@ const ICONS = {
   henry:   [' ___ ', '(O-O)', '/|-|\\'],      // glasses
   mike2:   [' _=_ ', '(-_-)', '/|*|\\'],
   tendons8: ['\\|||/', '(@_@)', '/|8|\\'],    // The Tendons 8: a tangle of tendons on top, an 8 on the badge
+  cc:      [' ___ ', '(;_;)', '/|=|\\'],      // the Crying Child: tears and a striped shirt
+  franchisee: [' ___ ', '(-_-)', '/|$|\\'],   // the Franchisee: a pizzeria on a budget
+  cassie:  [' ^ ^ ', '(o_o)', '/|R|\\'],      // Cassie: Roxy's ears on her mask
+  tech:    [' _T_ ', '(o_o)', '/[+]\\'],      // the Technician: a hard hat and a toolbox
 };
 const ICON_ACCENTS = {
   fre: [' xxx', ' b b', ' xxx'],
@@ -151,6 +155,7 @@ const ICON_ACCENTS = {
   mike: [' bbb', '', '  k'], fritz: [' bbb', '', '  k'], jeremy: [' bbb', '', '  k'], fright: [' bbb'],
   vanessa: [' kkk', '', '  k'], mike2: [' bbb', '', '  k'], gregory: ['', '', '  c'],
   tendons8: ['rrrrr', ' r r', '  r'],
+  cc: ['', ' b b', '  c'], franchisee: ['', '', '  k'], cassie: [' v v', '', '  v'], tech: [' yyy', '', '  r'],
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>

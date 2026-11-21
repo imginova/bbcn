@@ -12,7 +12,7 @@
    ===================================================================== */
 
 // ---------- saved progress ----------
-// The story nights you've beaten (1 to 10). New wins are only ever ADDED, never removed.
+// The story nights you've beaten (1 to 20). New wins are only ever ADDED, never removed.
 let beaten = store.get('beaten', []);
 if (!Array.isArray(beaten)) beaten = [];
 // How many times each animatronic has caught a guard: { crew id: count }.
@@ -37,8 +37,9 @@ if (!guardCaught || typeof guardCaught !== 'object') guardCaught = {};
 // The achievements earned so far, by id (ACHIEVEMENTS in data.js). Only ever added to.
 let achieved = store.get('achievements', []);
 if (!Array.isArray(achieved)) achieved = [];
-// The custom night opens once Night 10 is beaten (like the real games' extra night).
-const customUnlocked = () => nightBeaten(10);
+// Every night and the custom night are open from the start (on request: "every level unlocked, I can just
+// pick which one"). Beating nights still saves a ✓ for each.
+const customUnlocked = () => true;
 
 // ---------- the night's state ----------
 // G holds everything about the night being played (null when no night is running).
@@ -49,7 +50,8 @@ let dirty = true;
 // What the night is set up with: the story night number (or null for custom), the guard, and the crew.
 function storySetup(n) {
   const night = NIGHTS[n - 1], def = GUARD_BY_ID[night.guard];
-  return { night: n, guard: def, skill: def.skill, tools: def.tools, crew: night.crew.map(id => ({ id, level: 10 })),
+  // A night can make its guard sharper than usual with its own `skill` (Nights 11-20 reuse some guards).
+  return { night: n, guard: def, skill: night.skill ?? def.skill, tools: def.tools, crew: night.crew.map(id => ({ id, level: 10 })),
     power: 100, hour: HOUR_SECONDS, speed: 100 };
 }
 function customSetup() {
@@ -115,7 +117,7 @@ function newGame(setup) {
 function makeUnit(id, level, speedPct) {
   const def = CREW_BY_ID[id];
   // mult: how long its cooldowns are (its level and the custom night's "cooldown speed").
-  const mult = crewSpeed(level) * 100 / speedPct;
+  const mult = crewSpeed(level) * 100 / speedPct * CREW_PACE;
   return {
     def, id, level, mult,
     room: def.home || null,
@@ -397,7 +399,7 @@ function attackFrom(entry) {
 }
 
 function startAttack(u, entry) {
-  let time = u.def.attack;
+  let time = u.def.attack * CREW_PACE;
   if (u.lurch) { time *= LURCH; u.lurch = false; }   // Withered Freddy's Lurch
   u.attack = { entry, end: G.t + time, noticed: false, counterAt: null, knockAt: null,
     // Withered Golden Freddy shows up ON the guard's monitor when it's up, and in the office when it's down.
@@ -1023,6 +1025,8 @@ function checkAchievements(u, how) {
     music: u.id === 'pup',
     golden: u.def.kind === 'golden',
     graduate: G.setup.night === 10,
+    overtime: G.setup.night === 20,
+    allnights: NIGHTS.every((_, i) => nightBeaten(i + 1)),
     bankrupt: g.def.id === 'tendons8' && guardHas('coins') && g.coins === 0,
     maxed: !!G.setup.challenge && G.setup.challenge.id === 'max',
     hunter: GUARDS.every(x => guardCaught[x.id]),

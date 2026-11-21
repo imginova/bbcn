@@ -109,3 +109,6 @@ const windAt = s => byLevel(Math.max(1, s), 25, 55);
 // ---------- your crew's level (1 to 20, custom night only) ----------
 // Every cooldown is multiplied by this: 1.4 at level 1 (slow), about 1 at level 10, 0.6 at level 20 (fast).
 const crewSpeed = level => byLevel(level, 1.4, 0.6);
+// Everyone on your side is this much quicker than the numbers in CREW say: walking, abilities and
+// attacks (0.85 = 15% faster; on request, "make everyone a little faster").
+const CREW_PACE = 0.85;
