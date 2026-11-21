@@ -22,13 +22,13 @@ function show(name) {
 
 function renderTitle() {
   $('btnCustom').disabled = !customUnlocked();
-  $('btnCustom').textContent = customUnlocked() ? 'Custom Night' : 'Custom Night (beat Night 10)';
-  $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / 10`;
+  $('btnCustom').textContent = 'Custom Night';
+  $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / ${NIGHTS.length}`;
   $('btnAch').textContent = `Achievements ${achieved.filter(id => ACHIEVEMENTS.some(a => a.id === id)).length} / ${ACHIEVEMENTS.length}`;
 }
 
 // ---------- the night list ----------
-const nightOpen = n => n === 1 || nightBeaten(n - 1) || nightBeaten(n);
+const nightOpen = () => true;   // every night is open from the start (see customUnlocked in game.js)
 
 function renderNights() {
   setHtml($('nightList'), NIGHTS.map((night, i) => {
@@ -47,7 +47,7 @@ function renderNightInfo() {
   const night = NIGHTS[pickedNight - 1], g = GUARD_BY_ID[night.guard];
   $('btnStart').disabled = !nightOpen(pickedNight);
   setHtml($('nightInfo'),
-    `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${g.skill}</span>${caughtTag(g.id)}` +
+    `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${night.skill ?? g.skill}</span>${caughtTag(g.id)}` +
     `<div>${escText(g.desc)}</div><div class="tools">${g.tools.map(t => `<span class="tool" title="${escText(TOOLS[t].desc)}">${TOOLS[t].name}</span>`).join('')}</div></div></div></div>` +
     `<div class="crewlist">${night.crew.map(id => crewLine(id)).join('')}</div>` +
     `<p class="tip"><b>Tip:</b> ${escText(night.tip)}</p>`);
@@ -157,7 +157,7 @@ function showEnd() {
     $('endText').textContent = `${g.name} survived the night with ${pct(g.power)}% power left.`;
     setHtml($('endStats'), guardCaught[g.def.id] ? `<div class="dim">${escText(g.name)} has been caught ${times(guardCaught[g.def.id])} so far.</div>` : '');
   }
-  $('btnNext').hidden = !(r.won && n && n < 10);
+  $('btnNext').hidden = !(r.won && n && n < NIGHTS.length);
 }
 
 // ---------- achievements ----------
