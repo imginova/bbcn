@@ -19,6 +19,8 @@ $('btnNights').addEventListener('click', () => { sfx.click(); show('nights'); })
 $('btnCustom').addEventListener('click', () => { sfx.click(); if (customUnlocked()) show('custom'); });
 $('btnHowto').addEventListener('click', () => { sfx.click(); showHowto(true); });
 $('btnHowtoClose').addEventListener('click', () => showHowto(false));
+$('btnAch').addEventListener('click', () => { sfx.click(); showAchievements(true); });
+$('btnAchClose').addEventListener('click', () => showAchievements(false));
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => { sfx.click(); show('title'); }));
 $('btnMute').addEventListener('click', () => { sfx.toggleMute(); renderMute(); });
 
@@ -106,6 +108,7 @@ $('btnMenu').addEventListener('click', () => show(G.setup.night ? 'nights' : 'cu
 document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (!$('howto').hidden) { if (k === 'escape') showHowto(false); return; }
+  if (!$('achievements').hidden) { if (k === 'escape') showAchievements(false); return; }
   if (k === 'm') { sfx.toggleMute(); renderMute(); return; }
   if (currentScreen !== 'game' || !G || G.over) return;
   if (k === 'p' || k === 'escape') { setPaused(!G.paused); e.preventDefault(); return; }

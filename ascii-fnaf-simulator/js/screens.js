@@ -24,6 +24,7 @@ function renderTitle() {
   $('btnCustom').disabled = !customUnlocked();
   $('btnCustom').textContent = customUnlocked() ? 'Custom Night' : 'Custom Night (beat Night 10)';
   $('titleProgress').textContent = `Nights beaten: ${NIGHTS.filter((_, i) => nightBeaten(i + 1)).length} / 10`;
+  $('btnAch').textContent = `Achievements ${achieved.filter(id => ACHIEVEMENTS.some(a => a.id === id)).length} / ${ACHIEVEMENTS.length}`;
 }
 
 // ---------- the night list ----------
@@ -46,16 +47,21 @@ function renderNightInfo() {
   const night = NIGHTS[pickedNight - 1], g = GUARD_BY_ID[night.guard];
   $('btnStart').disabled = !nightOpen(pickedNight);
   setHtml($('nightInfo'),
-    `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${g.skill}</span>` +
+    `<div class="vs"><div class="side">${iconHtml(g.id)}<div><b>${escText(g.name)}</b> <span class="dim">(${g.from}) · skill ${g.skill}</span>${caughtTag(g.id)}` +
     `<div>${escText(g.desc)}</div><div class="tools">${g.tools.map(t => `<span class="tool" title="${escText(TOOLS[t].desc)}">${TOOLS[t].name}</span>`).join('')}</div></div></div></div>` +
     `<div class="crewlist">${night.crew.map(id => crewLine(id)).join('')}</div>` +
     `<p class="tip"><b>Tip:</b> ${escText(night.tip)}</p>`);
 }
+// The kill counter, as a small red tag: how many guards an animatronic has caught, and how many times a
+// guard has been caught. Nothing shows until the count is above 0.
+const times = n => `${n} time${n === 1 ? '' : 's'}`;
+const catchTag = id => catches[id] ? ` <span class="kills" title="Caught a guard ${times(catches[id])}">&#9760;${catches[id]}</span>` : '';
+const caughtTag = id => guardCaught[id] ? ` <span class="kills" title="Caught ${times(guardCaught[id])}">&#9760;${guardCaught[id]}</span>` : '';
+
 // One animatronic: face, name, what it does and its ability.
 function crewLine(id) {
   const c = CREW_BY_ID[id];
-  const count = catches[id] ? ` <span class="dim">· caught the guard ${catches[id]} time${catches[id] === 1 ? '' : 's'}</span>` : '';
-  return `<div class="cline">${iconHtml(id)}<div><b class="c-${id}">${escText(c.name)}</b> <span class="dim">(${c.from})</span>${count}` +
+  return `<div class="cline">${iconHtml(id)}<div><b class="c-${id}">${escText(c.name)}</b> <span class="dim">(${c.from})</span>${catchTag(id)}` +
     `<div>${escText(c.desc)}</div><div><span class="you">Q · ${escText(c.ability.name)}:</span> ${escText(c.ability.desc)}</div></div></div>`;
 }
 
@@ -75,7 +81,7 @@ function renderCustom() {
   }).join(''));
   const g = GUARD_BY_ID[custom.guard] || GUARDS[0];
   setHtml($('cGuards'), GUARDS.map(x =>
-    `<button class="pickg ${x.id === g.id ? 'on' : ''}" data-guard="${x.id}">${iconHtml(x.id)}<span>${escText(x.name)}</span></button>`).join(''));
+    `<button class="pickg ${x.id === g.id ? 'on' : ''}" data-guard="${x.id}">${iconHtml(x.id)}<span>${escText(x.name)}${caughtTag(x.id)}</span></button>`).join(''));
   setHtml($('cGuardInfo'), `<b>${escText(g.name)}</b> <span class="dim">(${g.from})</span>: ${escText(g.desc)}`);
   setHtml($('cTools'), TOOL_IDS.map(t =>
     `<button class="pickt ${custom.tools.includes(t) ? 'on' : ''}" data-tool="${t}" title="${escText(TOOLS[t].desc)}">${custom.tools.includes(t) ? '[x]' : '[ ]'} ${TOOLS[t].name}</button>`).join(''));
@@ -84,7 +90,7 @@ function renderCustom() {
   setHtml($('cCrew'), CREW.map(c => {
     const on = custom.crew[c.id] != null;
     return `<div class="pickc ${on ? 'on' : ''}" data-crew="${c.id}" title="${escText(c.desc)}">${iconHtml(c.id)}` +
-      `<span class="c-${c.id}">${escText(c.name)}</span>` +
+      `<span class="c-${c.id}">${escText(c.name)}</span>${catchTag(c.id)}` +
       (on ? `<span class="lvl"><button data-lvl="-1" data-for="${c.id}">-</button> ${custom.crew[c.id]} <button data-lvl="1" data-for="${c.id}">+</button></span>`
         : '<span class="dim">off</span>') + '</div>';
   }).join(''));
@@ -141,12 +147,27 @@ function showEnd() {
     $('endTitle').textContent = 'GOT HIM!';
     $('endText').textContent = why + (n === 10 ? ' You beat every night: the Custom Night is open!' : '')
       + (G.setup.challenge ? ` Challenge complete: ${G.setup.challenge.name}!` : '');
+    // The kill counter, and any achievements this win earned.
+    setHtml($('endStats'), `<div class="kills">${escText(r.by.def.name)} has caught a guard ${times(catches[r.by.id])}. ` +
+      `${escText(g.name)} has been caught ${times(guardCaught[g.def.id])}.</div>` +
+      (r.unlocked || []).map(a => `<div class="ach-new">Achievement unlocked: <b>${escText(a.name)}</b> <span class="dim">${escText(a.desc)}</span></div>`).join(''));
   } else {
     setHtml($('endArt'), `<span class="big">${iconHtml(g.def.id)}</span>`);
     $('endTitle').textContent = '6 AM';
     $('endText').textContent = `${g.name} survived the night with ${pct(g.power)}% power left.`;
+    setHtml($('endStats'), guardCaught[g.def.id] ? `<div class="dim">${escText(g.name)} has been caught ${times(guardCaught[g.def.id])} so far.</div>` : '');
   }
   $('btnNext').hidden = !(r.won && n && n < 10);
+}
+
+// ---------- achievements ----------
+function showAchievements(on) {
+  $('achievements').hidden = !on;
+  if (!on) return;
+  setHtml($('achList'), ACHIEVEMENTS.map(a => {
+    const got = achieved.includes(a.id);
+    return `<li class="${got ? 'got' : ''}"><span class="mark">${got ? '&#10003;' : '&middot;'}</span><b>${escText(a.name)}</b> <span class="dim">${escText(a.desc)}</span></li>`;
+  }).join(''));
 }
 
 // ---------- how to play, mute ----------

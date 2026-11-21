@@ -30,6 +30,13 @@ const nightBeaten = n => beaten.includes(n);
 let challengesBeaten = store.get('challenges', []);
 if (!Array.isArray(challengesBeaten)) challengesBeaten = [];
 const challengeBeaten = c => challengesBeaten.includes(challengeKey(c));
+// How many times each guard has been caught: { guard id: count } (the other half of the kill counter;
+// `catches` above counts each animatronic's catches).
+let guardCaught = store.get('guardCaught', {});
+if (!guardCaught || typeof guardCaught !== 'object') guardCaught = {};
+// The achievements earned so far, by id (ACHIEVEMENTS in data.js). Only ever added to.
+let achieved = store.get('achievements', []);
+if (!Array.isArray(achieved)) achieved = [];
 // The custom night opens once Night 10 is beaten (like the real games' extra night).
 const customUnlocked = () => nightBeaten(10);
 
@@ -69,6 +76,8 @@ function newGame(setup) {
     log: [],                             // the event messages under the office camera
     staticRooms: {},                     // { room: time its static ends } (Bonnie)
     showtimeUntil: 0, waltzUntil: 0,     // Circus Baby's and Ballora's abilities
+    lockdownUntil: 0,                    // the guard's Lockdown: no abilities until then
+    bonks: 0, abilitiesUsed: 0,          // counted for the achievements
     box: 100,                            // the music box (only matters when the Puppet is on)
     puppetOutAt: null, powerOutAt: null,
     fx: [],                              // short-lived marks on the map: lures and shocks { room, text, until }
@@ -91,8 +100,9 @@ function newGame(setup) {
       heard: {},                         // { room: when it last heard something there }
       seenEmpty: {},                     // { room: when it last saw that room empty }
       foxStage: 0, foxT: -99,            // the Foxy stage it last saw, and when
-      cd: { lure: 0, shock: 0, hide: 0 },// when each tool can be used again
+      cd: { lure: 0, shock: 0, hide: 0, duck: 0, lockdown: 0 },// when each tool can be used again
       flashUntil: 0, flashSide: 'L',
+      coins: setup.tools.includes('coins') ? DEATH_COINS : 0,   // death coins left
       dead: false,
     },
   };
@@ -145,9 +155,9 @@ function showsOnCam(u) {
   if (u.def.hidden === 'offstage') return u.room === 'stage';
   return true;
 }
-// How quiet it is right now (Ballora's Waltz makes everyone quieter; Nightmare Bonnie can hold his breath).
+// How quiet it is right now (Ballora's Waltz makes everyone else quieter; Nightmare Bonnie can hold his breath).
 const stealthOf = u => u.attack && u.attack.silent ? SILENT_STEALTH
-  : clamp((u.def.stealth || 0) + (G.t < G.waltzUntil ? WALTZ_STEALTH : 0), -0.5, 0.9);
+  : clamp((u.def.stealth || 0) + (G.t < G.waltzUntil && u.id !== 'bal' ? WALTZ_STEALTH : 0), -0.5, 0.9);
 // Plushtrap only moves while the guard is looking at its monitor (or during his Freeze tag).
 const plushFrozen = u => u.def.onlyMonitorUp && !monitorUp() && G.t >= u.freeUntil;
 
@@ -236,11 +246,40 @@ function powerOut() {
 }
 // Who walks in after a power out: Freddy if he's here (like the real game), or else the first walker.
 function powerOutWinner() {
-  return G.crew.find(u => u.id === 'fre') || G.crew.find(u => u.def.kind === 'walker' && !u.def.cantKill) || G.crew[0];
+  const here = G.crew.filter(u => !u.gone);
+  return here.find(u => u.id === 'fre') || here.find(u => u.def.kind === 'walker' && !u.def.cantKill) || here[0] || G.crew[0];
+}
+
+// ---------- death coins and Lockdown (guard tools, The Tendons 8 has both) ----------
+// A death coin removes one of your animatronics for the rest of the night (like Ultimate Custom Night's).
+// The guard spends one "whenever" it would otherwise be caught: an attack it noticed but couldn't stop,
+// Golden Freddy it can't flip the monitor up for, or a music box running out.
+function deathCoin(u) {
+  const g = G.guard;
+  g.coins--;
+  u.gone = true;
+  u.attack = null; u.gold = null; u.room = null;
+  if (u === G.puppet) { G.puppet = null; G.puppetOutAt = null; }
+  sfx.coin();
+  log(`DEATH COIN! ${g.name} removed ${u.def.name} for the rest of the night (${g.coins} left).`, 'g');
+  dirty = true;
+}
+// Lockdown: when an attack is on, or it knows someone is right outside, it shuts off every animatronic
+// ability for LOCKDOWN_TIME seconds, so you can't stack tricks on top of an attack.
+function tryLockdown() {
+  const g = G.guard, fresh = memTime(g.skill);
+  const near = G.crew.some(u => u.attack && u.attack.noticed) ||
+    Object.values(g.memory).some(m => G.t - m.t < fresh && DIST[m.room] === 1);
+  if (!near) return;
+  G.lockdownUntil = G.t + LOCKDOWN_TIME;
+  g.cd.lockdown = G.t + LOCKDOWN_COOLDOWN;
+  sfx.lockdown();
+  log(`LOCKDOWN! Every animatronic ability is off for ${LOCKDOWN_TIME} s.`, 'g');
 }
 
 // ---------- your animatronics ----------
 function updateUnit(u, dt) {
+  if (u.gone) return;   // removed by a death coin
   const speedUp = G.t < G.showtimeUntil && u.id !== 'bab' ? 2 : 1;   // Circus Baby's Showtime
   if (u.cd > 0) u.cd -= dt * speedUp;
   if (u.acd > 0) u.acd -= dt;
@@ -279,6 +318,7 @@ function updateBox(dt) {
     G.box += WIND_RATE * dt;
     if (G.box >= 100) { G.box = 100; g.focus = 'desk'; }
   }
+  if (G.box <= 0 && guardHas('coins') && g.coins > 0 && !g.dead) { deathCoin(G.puppet); return; }
   if (G.box <= 0) {
     G.box = 0;
     G.puppetOutAt = G.t;
@@ -289,7 +329,7 @@ function updateBox(dt) {
 
 // Freddles: Nightmare Freddy's little bears climb into the office by themselves now and then.
 function updatePests(dt) {
-  const nfr = G.crew.find(u => u.id === 'nfr');
+  const nfr = G.crew.find(u => u.id === 'nfr' && !u.gone);
   if (!nfr || G.guard.dead) return;
   G.pestT += dt;
   if (G.pestT >= PEST_EVERY * nfr.mult) {
@@ -304,6 +344,7 @@ function addPests(kind, n) {
 
 // Can the selected animatronic walk into `room` right now? Returns '' if yes, or the reason why not.
 function whyCantMove(u, room) {
+  if (u && u.gone) return `${u.def.name} was removed by a death coin.`;
   if (!u || u.def.kind !== 'walker') return `${u ? u.def.name : 'Nobody'} doesn't walk.`;
   if (u.attack) return `${u.def.name} is attacking.`;
   if (stunned(u)) return `${u.def.name} is frozen.`;
@@ -345,6 +386,7 @@ function moveUnit(u, room) {
 function attackFrom(entry) {
   const u = selected();
   if (!u || u.def.kind !== 'walker') { sfx.deny(); flashHint('Pick a walking animatronic first.'); return; }
+  if (u.gone) { sfx.deny(); flashHint(`${u.def.name} was removed by a death coin.`); return; }
   if (u.attack) { sfx.deny(); flashHint(`${u.def.name} is already attacking.`); return; }
   if (stunned(u)) { sfx.deny(); flashHint(`${u.def.name} is frozen.`); return; }
   if (u.room !== ENTRIES[entry]) { sfx.deny(); flashHint(`Get to ${ROOMS[ENTRIES[entry]].name} first.`); return; }
@@ -405,7 +447,11 @@ function updateAttack(u, dt) {
   }
   // The guard shut that door for some other reason (or hid, or put the mask on) in the meantime.
   if (blockedNow(u, a.entry)) { a.knockAt = G.t + KNOCK_TIME / 2; return; }
-  if (G.t >= a.end) success(u);
+  if (G.t >= a.end) {
+    // About to be caught by an attack it saw coming: spend a death coin if it has one.
+    if (a.noticed && guardHas('coins') && g.coins > 0 && !g.dead && g.focus !== 'stun' && !u.def.cantKill) deathCoin(u);
+    else success(u);
+  }
 }
 const blockHow = (u, entry) => u.def.kind === 'golden' ? (u.attack && u.attack.onMonitor ? 'drop' : monitorUp() ? 'cams' : 'mask')
   : G.guard.focus === 'hide' ? 'hide' : G.guard.focus === 'mask' && u.def.maskable && !G.guard.doors[entry] ? 'mask' : 'door';
@@ -430,7 +476,7 @@ function counter(u) {
     return false;
   }
   if ((e === 'L' || e === 'R') && guardHas('doors') && G.t >= g.jam[e]) { shutDoor(e); bonk(u, 'door'); return true; }
-  if (e === 'V' && guardHas('ventdoor') && G.t >= g.jam.V) { shutDoor('V'); bonk(u, 'vent'); return true; }
+  if (e === 'V' && canShut('V') && G.t >= g.jam.V) { shutDoor('V'); bonk(u, 'vent'); return true; }
   if (d.flashable && guardHas('flash') && lightsOk()) {
     g.power -= FLASH_COST * (g.def.thrift ?? 1); g.flashUntil = G.t + 0.5; g.flashSide = e; sfx.flash();
     bonk(u, 'flash'); return true;
@@ -446,8 +492,19 @@ function counter(u) {
     g.focus = 'hide'; g.hideUntil = G.t + HIDE_TIME; g.cd.hide = G.t + HIDE_COOLDOWN;
     bonk(u, 'hide'); return true;
   }
+  // The last resort every guard has: duck under the desk. It only works every DUCK_COOLDOWN seconds
+  // (Gregory's Hide is the same move, but much more often). Without it, an animatronic the guard had no
+  // tool against won every single time, even all on its own.
+  if (G.t >= g.cd.duck) {
+    g.focus = 'hide'; g.hideUntil = G.t + HIDE_TIME;
+    g.cd.duck = G.t + (guardHas('doors') ? DUCK_COOLDOWN : DUCK_COOLDOWN / 3);   // no doors: it ducks three times as often
+    bonk(u, 'duck'); return true;
+  }
   return false;
 }
+// Can the guard shut this way in? The doors include the vent door; a guard without doors may still have
+// just a vent door (the Fright guard).
+const canShut = side => side === 'V' ? guardHas('doors') || guardHas('ventdoor') : guardHas('doors');
 
 function shutDoor(side) {
   const g = G.guard;
@@ -466,12 +523,13 @@ function openDoor(side) {
 const HOW = {
   door: 'the door slammed in their face', vent: 'the vent door slammed shut', flash: 'the flashlight scared them off',
   mask: 'the Freddy mask fooled them', hide: 'the guard hid under the desk', cams: 'the guard flipped the cameras up',
-  drop: 'the guard put its monitor down',
+  drop: 'the guard put its monitor down', duck: 'the guard ducked under the desk',
 };
 // Stopped! Sent back home and frozen for a few seconds.
 function bonk(u, how) {
   const g = G.guard, entry = u.attack ? u.attack.entry : 'L';
   u.attack = null;
+  G.bonks++;   // for the "Flawless" achievement
   if (u.def.kind === 'golden') {
     u.gold = null;
     log(`${u.def.name} vanished: ${HOW[how]}.`, 'g');
@@ -611,6 +669,7 @@ function think() {
   if (g.dead) return;
   if (s <= 0) return;                      // a skill-0 guard just sits there
   if (['stun', 'hide', 'reboot', 'mask', 'lol', 'shoo'].includes(g.focus)) return;
+  if (guardHas('lockdown') && t >= g.cd.lockdown) tryLockdown();
   if (G.crew.some(u => u.attack && u.attack.counterAt != null)) return;   // busy reacting
   if (t < g.lockUntil) return;              // Chica's clatter: still listening to the kitchen
 
@@ -640,7 +699,7 @@ function think() {
   // 4. Doors, 5. lures, 6. shocks, 7. where to look next.
   manageDoors();
   if (guardHas('lure') && t >= g.cd.lure) tryLure();
-  if (guardHas('shock') && t >= g.cd.shock && g.focus === 'cam') tryShock();
+  if (guardHas('shock') && t >= g.cd.shock && g.focus === 'cam' && !savingPower()) tryShock();
   chooseLook();
   dirty = true;
 }
@@ -658,14 +717,26 @@ function lastClue(side) {
 
 // Shut a door when it believes someone is right outside; open it again when it stops believing that.
 function manageDoors() {
-  const g = G.guard;
+  const g = G.guard, saving = savingPower();
   for (const side of ['L', 'R', 'V']) {
-    if (!guardHas(side === 'V' ? 'ventdoor' : 'doors')) continue;
+    if (!canShut(side)) continue;
     if (G.t < g.jam[side] || (side === 'V' && !G.ventsUsed)) continue;
-    const threat = lastClue(side) > -99;
+    // While saving power it doesn't keep doors shut just because someone is outside: it waits for the
+    // attack itself and slams the door then (in counter).
+    const threat = lastClue(side) > -99 && !saving;
     if (threat && !g.doors[side] && g.power > 1) shutDoor(side);
     else if (!threat && g.doors[side]) openDoor(side);
   }
+}
+
+// A sharp guard (skill SAVE_SKILL or more) keeps an eye on its power: when it has less left than its
+// share of the night (with a little spare), it saves power. Without this, one animatronic parked
+// outside a door kept the door shut, and the guard shocking it, until the power ran out: a free win.
+function savingPower() {
+  const g = G.guard;
+  if (g.skill < SAVE_SKILL) return false;   // dull guards (Mike on night 1, Fritz) waste power, on purpose
+  const share = G.setup.power * (1 - G.t / G.nightLen);   // what a steady use would leave by now
+  return g.power < share * 0.9 + 5;
 }
 
 // Lure away the closest animatronic it knows about, if one is close.
@@ -735,12 +806,15 @@ function useAbility() {
   const u = selected();
   if (!u) return;
   const g = G.guard, t = G.t, name = u.def.name, ab = u.def.ability;
+  if (u.gone) { sfx.deny(); flashHint(`${u.def.name} was removed by a death coin.`); return; }
+  if (G.t < G.lockdownUntil) { sfx.deny(); flashHint(`LOCKDOWN: abilities are off for ${Math.ceil(G.lockdownUntil - G.t)} s.`); return; }
   if (u.acd > 0) { sfx.deny(); flashHint(`${ab.name} is ready in ${u.acd.toFixed(1)} s.`); return; }
   if (stunned(u)) { sfx.deny(); flashHint(`${name} is frozen.`); return; }
   // Each ability returns '' when it worked, or the reason it can't be used (then there's no cooldown).
   const no = abilityEffect(u);
   if (no) { sfx.deny(); flashHint(no); return; }
   u.acd = ab.cd * u.mult;
+  G.abilitiesUsed++;   // for the "No tricks" achievement
   dirty = true;
 }
 
@@ -783,7 +857,7 @@ function abilityEffect(u) {
       u.facelessUntil = t + FACELESS_TIME;
       log('Withered Bonnie went faceless: no camera shows him.', 'you'); return '';
     case 'wch':
-      if (!guardHas('ventdoor')) return 'This guard has no vent door to jam.';
+      if (!canShut('V')) return 'This guard has no vent door to jam.';
       g.jam.V = t + grit(JAM_TIME); openDoor('V'); sfx.vent();
       log('Withered Chica jammed the vent door open!', 'you'); return '';
     case 'wgf':
@@ -880,7 +954,7 @@ function abilityEffect(u) {
       log('Showtime! Everyone moves twice as often.', 'you'); return '';
     case 'bal':
       G.waltzUntil = t + WALTZ_TIME;
-      log('Ballora\'s waltz: everyone is harder to notice.', 'you'); return '';
+      log('Ballora\'s waltz: everyone else is harder to notice.', 'you'); return '';
     case 'nfb':
       if (u.attack || (u.room !== 'wcorner' && u.room !== 'ecorner')) return 'Only from the W. Corner or the E. Corner.';
       u.room = u.room === 'wcorner' ? 'ecorner' : 'wcorner';
@@ -899,9 +973,37 @@ function win(u, how) {
   if (ch && !challengeBeaten(ch)) { challengesBeaten.push(challengeKey(ch)); store.set('challenges', challengesBeaten); }
   catches[u.id] = (catches[u.id] || 0) + 1;
   store.set('catches', catches);
+  const gid = G.guard.def.id;
+  guardCaught[gid] = (guardCaught[gid] || 0) + 1;
+  store.set('guardCaught', guardCaught);
+  G.result.unlocked = checkAchievements(u, how);
   sfx.humOff();
   sfx.caught();
   showEnd();
+}
+
+// Which achievements this win earned (only the new ones). They're saved straight away.
+function checkAchievements(u, how) {
+  const g = G.guard, hour = G.t / G.hourLen;
+  const canCatch = c => c.kind !== 'phantom' && !c.cantKill;
+  const done = {
+    first: true,
+    speed: hour < 1,
+    close: hour >= 5,
+    clean: G.bonks === 0,
+    hands: G.abilitiesUsed === 0,
+    blackout: how === 'power',
+    music: u.id === 'pup',
+    golden: u.def.kind === 'golden',
+    graduate: G.setup.night === 10,
+    bankrupt: g.def.id === 'tendons8' && guardHas('coins') && g.coins === 0,
+    maxed: !!G.setup.challenge && G.setup.challenge.id === 'max',
+    hunter: GUARDS.every(x => guardCaught[x.id]),
+    crew: CREW.filter(canCatch).every(c => catches[c.id]),
+  };
+  const fresh = ACHIEVEMENTS.filter(a => done[a.id] && !achieved.includes(a.id));
+  if (fresh.length) { fresh.forEach(a => achieved.push(a.id)); store.set('achievements', achieved); }
+  return fresh;
 }
 function guardSurvives() {
   if (G.over) return;

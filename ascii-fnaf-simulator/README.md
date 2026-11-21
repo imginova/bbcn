@@ -9,7 +9,8 @@ Catch the guard before 6 AM. An unofficial, free fan game, drawn in ASCII art.
   how fast your cooldowns recharge.
 - **31 animatronics** to use, each with its own ability.
 - **Max mode**, a custom night challenge: all 31 animatronics at once against **The Tendons 8**,
-  the hardest guard in the game.
+  the hardest guard in the game (with 2 death coins and a Lockdown).
+- **Kill counters** for every animatronic and every guard, and **13 achievements**.
 
 ## How to play it
 

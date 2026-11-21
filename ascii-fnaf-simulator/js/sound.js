@@ -187,6 +187,17 @@ const sfx = (() => {
     lure() { tone(520, 0.12, { type: 'square', vol: 0.06 }); tone(420, 0.12, { type: 'square', vol: 0.06, delay: 0.14 }); },
     mask() { noise(0.12, { vol: 0.2, freq: 300 }); },
     reboot() { [400, 600, 800].forEach((f, i) => tone(f, 0.08, { type: 'square', vol: 0.05, delay: i * 0.1 })); },
+    // A death coin: a bright coin "ching", then a low falling note as the animatronic is taken away.
+    coin() {
+      tone(1320, 0.12, { type: 'square', vol: 0.08 });
+      tone(1760, 0.3, { type: 'triangle', vol: 0.1, delay: 0.1 });
+      tone(220, 0.8, { type: 'sawtooth', vol: 0.12, slide: -160, delay: 0.3 });
+    },
+    // Lockdown: a heavy electric buzz.
+    lockdown() {
+      tone(70, 0.7, { type: 'square', vol: 0.12 });
+      noise(0.7, { vol: 0.1, freq: 900 });
+    },
 
     // ----- big moments -----
     powerDown() { tone(440, 1.8, { type: 'sawtooth', vol: 0.14, slide: -400 }); },

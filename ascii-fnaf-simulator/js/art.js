@@ -185,6 +185,9 @@ function officeGrid() {
   const gold = G.crew.find(u => u.def.kind === 'golden' && u.attack && !u.attack.onMonitor);
   if (gold) sprite(o, 10, 22, ICONS[gold.id], `c-${gold.id}`, ICON_ACCENTS[gold.id]);
   if (g.dead) write(o, 3, 19, ' POWER OUT ', 'o-alert');
+  else if (t < G.lockdownUntil) write(o, 4, 20, ' LOCKDOWN ', 'o-alert');
+  // Death coins the guard still has, on the desk: (8) for each.
+  if (g.coins > 0) write(o, 12, 15, `${'(8)'.repeat(g.coins)}`, 'o-coin');
   return o;
 }
 

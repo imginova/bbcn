@@ -51,6 +51,7 @@
         <button id="btnNights" class="big">Nights</button>
         <button id="btnCustom" class="big">Custom Night</button>
         <button id="btnHowto">How to play</button>
+        <button id="btnAch">Achievements</button>
       </div>
       <p id="titleProgress" class="dim"></p>
       <p class="legal">An unofficial, free fan game. Not affiliated with Scott Cawthon or Five Nights at Freddy's.</p>
@@ -125,6 +126,7 @@
     <div id="endArt"></div>
     <h2 id="endTitle"></h2>
     <p id="endText"></p>
+    <div id="endStats" class="endstats"></div>
     <div class="menu">
       <button id="btnNext" class="big">Next night</button>
       <button id="btnRetry">Try again</button>
@@ -139,6 +141,15 @@
     <h2 class="center">PAUSED</h2>
     <div class="menu"><button id="btnResume" class="big">Resume</button><button id="btnQuit">Quit the night</button></div>
     <div id="pauseInfo"></div>
+  </div>
+</div>
+
+<!-- ===== achievements ===== -->
+<div id="achievements" class="overlay" hidden>
+  <div class="panel">
+    <h2>Achievements</h2>
+    <ul id="achList" class="achlist"></ul>
+    <div class="menu"><button id="btnAchClose" class="big">Close</button></div>
   </div>
 </div>
 
