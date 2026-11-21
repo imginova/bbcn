@@ -101,6 +101,7 @@ const ICONS = {
   bab: [' ~~~ ', '(o.o)', '/\\=/\\'],        // Circus Baby: red pigtails, green eyes, a frilly top
   bal: [' ~^~ ', '(- -)', ' )=( '],          // Ballora: blue hair, closed eyes, a dancer's dress
   nfb: [' [_] ', '(O^O)', 'VVVVV'],          // Nightmare Fredbear: purple hat, rows of teeth
+  yen: [' .-. ', '(o o)', ' WWW '],          // Yenndo: a bare endoskeleton, round eyes and a row of teeth
   // The guards
   mike:    [' _=_ ', '(o_o)', '/|*|\\'],
   fritz:   [' _=_ ', '(0_0)', '/|*|\\'],
@@ -146,6 +147,7 @@ const ICON_ACCENTS = {
   bab: [' rrr', ' g g', '  r'],
   bal: [' bbb', '', '  p'],
   nfb: [' vvv', ' r r', 'wwwww'],
+  yen: ['', ' w w'],
   mike: [' bbb', '', '  k'], fritz: [' bbb', '', '  k'], jeremy: [' bbb', '', '  k'], fright: [' bbb'],
   vanessa: [' kkk', '', '  k'], mike2: [' bbb', '', '  k'], gregory: ['', '', '  c'],
   tendons8: ['rrrrr', ' r r', '  r'],
@@ -184,6 +186,8 @@ function officeGrid() {
   // Golden Freddy (or Withered Golden Freddy), slumped in front of the desk.
   const gold = G.crew.find(u => u.def.kind === 'golden' && u.attack && !u.attack.onMonitor);
   if (gold) sprite(o, 10, 22, ICONS[gold.id], `c-${gold.id}`, ICON_ACCENTS[gold.id]);
+  // Yenndo, standing beside the desk in the dark while the guard stares at him.
+  if (g.focus === 'stun' && t < g.stareUntil) sprite(o, 6, 14, ICONS.yen, 'c-yen', ICON_ACCENTS.yen);
   if (g.dead) write(o, 3, 19, ' POWER OUT ', 'o-alert');
   else if (t < G.lockdownUntil) write(o, 4, 20, ' LOCKDOWN ', 'o-alert');
   // Death coins the guard still has, on the desk: (8) for each.

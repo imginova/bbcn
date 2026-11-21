@@ -30,7 +30,7 @@
   --c-spr: #8f9a4e; --c-pfr: #7d8f5a; --c-pbb: #8a9a6a; --c-gol: #ffd84a;
   --c-bab: #ff7a6b; --c-bal: #6fa0ff; --c-nfb: #d9a54a; --c-lol: #ff9f40;
   --c-tfr: #b8723c; --c-sbn: #0a0a0a; --c-nfr: #8a5a2e; --c-nbn: #4a5cc9; --c-nch: #d6c23a;
-  --c-ptr: #7fbf5a; --c-ffr: #f0e6f6; --c-enn: #a8b0bc; --c-pfx: #8a6a50;
+  --c-ptr: #7fbf5a; --c-ffr: #f0e6f6; --c-enn: #a8b0bc; --c-pfx: #8a6a50; --c-yen: #c8c2b4;
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: dark;
@@ -112,7 +112,7 @@ h3 { font-size: 22px; color: var(--dim); }
 .c-pbb { color: var(--c-pbb); } .c-gol { color: var(--c-gol); } .c-bab { color: var(--c-bab); } .c-bal { color: var(--c-bal); }
 .c-nfb { color: var(--c-nfb); } .c-lol { color: var(--c-lol); }
 .c-tfr { color: var(--c-tfr); } .c-nfr { color: var(--c-nfr); } .c-nbn { color: var(--c-nbn); } .c-nch { color: var(--c-nch); }
-.c-ptr { color: var(--c-ptr); } .c-ffr { color: var(--c-ffr); } .c-enn { color: var(--c-enn); } .c-pfx { color: var(--c-pfx); }
+.c-ptr { color: var(--c-ptr); } .c-ffr { color: var(--c-ffr); } .c-enn { color: var(--c-enn); } .c-pfx { color: var(--c-pfx); } .c-yen { color: var(--c-yen); }
 /* Shadow Bonnie is black, so he gets a thin white outline to show up on the dark screen. */
 .c-sbn { color: var(--c-sbn); text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* Accent colors (eyes, hats, bow ties...): see ACCENT in art.js. */

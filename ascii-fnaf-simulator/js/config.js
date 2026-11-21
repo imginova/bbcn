@@ -77,6 +77,8 @@ const LOCKDOWN_COOLDOWN = 40; // seconds between Lockdowns
 const PRY_TIME = 4;           // Ennard: a pried door can't be shut again for this long
 const FREEZE_TAG_TIME = 6;    // Plushtrap moves even with the monitor down for this long
 const LUNGE_TIME = 1.5;       // Phantom Foxy freezes the guard this long
+const STARE_TIME = 2;         // Yenndo: the guard freezes this long staring at him in the dark
+const STARE_LIT = 1;          // ...but a guard with a working light (door lights or flashlight) spots him and is free after this long
 const SILENT_STEALTH = 0.45;  // Nightmare Bonnie holding his breath: how hard his next attack is to notice (was 0.85, then 0.6)
 // Pests in the office: Freddles (Nightmare Freddy) and the cupcake (Nightmare Chica).
 const PEST_MAX = 4;           // the most at once

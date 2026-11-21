@@ -69,7 +69,7 @@ const TOOL_IDS = Object.keys(TOOLS);
 //   'foxy'    Foxy: stays in Pirate Cove getting ready, then sprints to the left door
 //   'puppet'  never moves: the guard has to keep winding the music box or it gets out
 //   'golden'  Golden Freddy (and Withered Golden Freddy): not in any room; appears with his ability
-//   'phantom' never attacks (the phantoms, Lolbit): only has an ability that messes with the guard
+//   'phantom' never attacks (the phantoms, Lolbit, Yenndo): only has an ability that messes with the guard
 // move:      seconds between moves (or Foxy's stages)
 // attack:    seconds from entering the doorway until the guard is caught, if nothing stops you
 // stealth:   0 = normal, higher = harder for the guard to notice, below 0 = noisy
@@ -184,6 +184,9 @@ const CREW = [
   { id: 'pfx', name: 'Phantom Foxy', from: 'FNAF 3', kind: 'phantom',
     ability: { name: 'Lunge', cd: 22, desc: 'Only while the guard\'s monitor is DOWN: it freezes for 1.5 s.' },
     desc: 'A ghost: never attacks. The partner of Phantom BB, who only works while the monitor is up.' },
+  { id: 'yen', name: 'Yenndo', from: 'Sister Location', kind: 'phantom',
+    ability: { name: 'Stare', cd: 26, desc: 'Stands beside the guard\'s desk in the dark: it freezes for 2 s, monitor up or down. A guard with a working light spots him and is free after 1 s.' },
+    desc: 'A bare endoskeleton: never attacks. Stalls the guard any time, best against guards with no lights (like Michael).' },
 ];
 const CREW_BY_ID = Object.fromEntries(CREW.map(c => [c.id, c]));
 const MAX_CREW = 6;   // the most animatronics in one night (keys 1 to 6)
@@ -241,8 +244,8 @@ const NIGHTS = [
     tip: 'Phone Guy lives on the cameras. Keep him busy: Lolbit takes over his computer, Chica clatters, and Balloon Boy can steal his lights.' },
   { name: 'Fazbear\'s Fright', guard: 'fright', crew: ['spr', 'pfr', 'pbb', 'pfx'],
     tip: 'Only Springtrap can catch him. Use Shrug off so his lures fail, and frighten him with the phantoms: BB while the monitor is up, Foxy while it\'s down.' },
-  { name: 'Circus Gallery', guard: 'michael', crew: ['bab', 'bal', 'ffr', 'enn'],
-    tip: 'Michael shocks whatever he sees, but he can\'t see Ballora. Bon-Bon fakes one door, Ennard pries the other open.' },
+  { name: 'Circus Gallery', guard: 'michael', crew: ['bab', 'bal', 'ffr', 'enn', 'yen'],
+    tip: 'Michael shocks whatever he sees, but he can\'t see Ballora, and with no lights he can\'t shake off Yenndo\'s stare. Bon-Bon fakes one door, Ennard pries the other open.' },
   { name: 'Golden hour', guard: 'gregory', crew: ['gol', 'fre', 'bon', 'tch', 'pup'],
     tip: 'Gregory hides once, then waits a long time. Make him hide, then hit him again straight away.' },
   { name: 'Parts & Service', guard: 'vanessa', crew: ['wfr', 'wbn', 'wch', 'wfx'],

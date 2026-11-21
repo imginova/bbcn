@@ -7,8 +7,8 @@ Catch the guard before 6 AM. An unofficial, free fan game, drawn in ASCII art.
 - **A custom night** (opens after Night 10) where you choose everything: the guard, how smart it is,
   which tools it has, your crew (up to 6, each with a level), its power, the length of an hour and
   how fast your cooldowns recharge.
-- **31 animatronics** to use, each with its own ability.
-- **Max mode**, a custom night challenge: all 31 animatronics at once against **The Tendons 8**,
+- **32 animatronics** to use, each with its own ability.
+- **Max mode**, a custom night challenge: all 32 animatronics at once against **The Tendons 8**,
   the hardest guard in the game (with 2 death coins and a Lockdown).
 - **Kill counters** for every animatronic and every guard, and **13 achievements**.
 
