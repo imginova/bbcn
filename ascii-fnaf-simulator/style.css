@@ -198,6 +198,18 @@ h3 { font-size: 22px; color: var(--dim); }
 .o-mon { color: var(--guard); }
 .o-alert { color: var(--danger); }
 .o-attack { animation: blink .5s steps(1) infinite; }
+.o-coin { color: #ffc94a; }
+
+/* Kill counters (a red ☠ and a number) and achievements. */
+.kills { color: var(--danger); }
+.endstats { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.ach-new { color: var(--you); }
+.achlist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.achlist li { display: flex; gap: 8px; align-items: baseline; color: var(--dim); }
+.achlist li.got { color: var(--fg); }
+.achlist li.got b { color: var(--you); }
+.achlist .mark { width: 1.2em; text-align: center; color: #7dff9a; flex: none; }
+.card.gone { opacity: .35; }
 .says { margin-top: 6px; }
 .says b { color: var(--guard); }
 .log { list-style: none; padding: 0; margin: 8px 0 0; font-size: 12px; max-height: 9.5em; overflow: hidden; }

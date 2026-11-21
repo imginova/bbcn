@@ -50,14 +50,16 @@ const DIST = {};
 // The custom night can switch each one on or off. `power` says whether using it costs power.
 const TOOLS = {
   cams:     { name: 'Cameras',     desc: 'Watches one room at a time. Needed to wind the music box and to chase off Golden Freddy.' },
-  doors:    { name: 'Doors',       desc: 'Shuts the left or right door. Stops anyone coming through it, but drains power.' },
+  doors:    { name: 'Doors',       desc: 'Shuts the left door, the right door or the vent. Stops anyone coming through, but drains power.' },
   lights:   { name: 'Door lights', desc: 'Peeks into the corners outside the doors. Sees Ballora too.' },
-  ventdoor: { name: 'Vent door',   desc: 'Shuts the vent into the office. Drains power while shut.' },
-  mask:     { name: 'Freddy mask', desc: 'Fools the toys and the withereds (not Withered Foxy) once they are inside.' },
+  ventdoor: { name: 'Vent door',   desc: 'Only the vent door, for a guard without the other doors. Drains power while shut.' },
+  mask:     { name: 'Freddy mask', desc: 'Fools Freddy, Bonnie, Chica, the toys and the withereds (not the foxes) once they are inside.' },
   flash:    { name: 'Flashlight',  desc: 'Scares off Withered Foxy and Mangle at a door.' },
   lure:     { name: 'Audio lure',  desc: 'Plays a noise that pulls an animatronic back two rooms. Works on most of them.' },
   shock:    { name: 'Shock',       desc: 'Zaps everyone in the room it is watching: they freeze for a few seconds.' },
-  hide:     { name: 'Hide',        desc: 'Ducks under the desk: any attack just then fails. Long cooldown.' },
+  hide:     { name: 'Hide',        desc: 'Ducks under the desk: any attack just then fails. Every guard can duck now and then; this one does it far more often.' },
+  lockdown: { name: 'Lockdown',    desc: 'Switches off every animatronic ability for 5 s when an attack is coming. Long cooldown.' },
+  coins:    { name: 'Death coins', desc: 'Two coins. Each one removes an animatronic for the rest of the night, used when the guard would otherwise be caught.' },
 };
 const TOOL_IDS = Object.keys(TOOLS);
 
@@ -77,15 +79,15 @@ const TOOL_IDS = Object.keys(TOOLS);
 // hidden:    'offstage' = only shows on camera on the Show Stage (Freddy); 'always' = never shows (Ballora)
 // ability:   the button you press (Q). cd = seconds between uses
 const CREW = [
-  { id: 'fre', name: 'Freddy', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 4.5, attack: 4.6, stealth: 0.3,
+  { id: 'fre', name: 'Freddy', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 4.5, attack: 4.6, stealth: 0.3, maskable: true,
     lurable: true, hidden: 'offstage', frozenWatched: true,
     ability: { name: 'Laugh', cd: 25, desc: 'A laugh in the dark: the guard loses 4% power.' },
     desc: 'Slow, and he can\'t move while the guard watches his room. Off the stage he hides in the dark: cameras never show him.' },
-  { id: 'bon', name: 'Bonnie', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 2.6, attack: 4.2, stealth: 0.1, lurable: true,
+  { id: 'bon', name: 'Bonnie', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 2.6, attack: 4.2, stealth: 0.1, maskable: true, lurable: true,
     ability: { name: 'Static', cd: 18, desc: 'His camera turns to static for 8 s, so the guard can\'t see that room.' },
     desc: 'The fastest walker. Good at sneaking up the west side.' },
-  { id: 'chi', name: 'Chica', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 3.2, attack: 4.4, stealth: 0.15, lurable: true,
-    ability: { name: 'Clatter', cd: 20, desc: 'Pots and pans in the kitchen: the guard listens to CAM 6 for 5 s instead of watching anything else.' },
+  { id: 'chi', name: 'Chica', from: 'FNAF 1', kind: 'walker', home: 'stage', move: 3.2, attack: 4.4, stealth: 0.15, maskable: true, lurable: true,
+    ability: { name: 'Clatter', cd: 20, desc: 'Pots and pans in the kitchen: the guard listens to CAM 6 for 3 s instead of watching anything else.' },
     desc: 'A distraction expert. Clatter, then send someone else in.' },
   { id: 'fox', name: 'Foxy', from: 'FNAF 1', kind: 'foxy', home: 'cove', move: 5, attack: 3.0, stealth: -0.3,
     ability: { name: 'Sprint', cd: 4, desc: 'Only at stage 3: dash to the LEFT door. Very fast, but loud.' },
@@ -104,7 +106,7 @@ const CREW = [
     desc: 'Quick to arrive and quick to attack. A flashlight scares him off.' },
   { id: 'wfr', name: 'Withered Freddy', from: 'FNAF 2', kind: 'walker', home: 'backstage', move: 4.2, attack: 5.0, stealth: 0.15,
     maskable: true, lurable: true,
-    ability: { name: 'Lurch', cd: 20, desc: 'His next attack lands twice as fast.' },
+    ability: { name: 'Lurch', cd: 30, desc: 'His next attack lands much faster.' },
     desc: 'Slow and heavy, but one lurch and he\'s through the door before the guard can blink. The Freddy mask fools him.' },
   { id: 'wbn', name: 'Withered Bonnie', from: 'FNAF 2', kind: 'walker', home: 'backstage', move: 2.8, attack: 4.4, stealth: 0.25,
     maskable: true, lurable: true,
@@ -120,7 +122,7 @@ const CREW = [
   { id: 'lol', name: 'Lolbit', from: 'Sister Location', kind: 'phantom',
     ability: { name: 'Please stand by', cd: 24, desc: 'Takes over the guard\'s computer: it has to type L-O-L for 3 s, and notices much less meanwhile.' },
     desc: 'Never attacks. Works whatever the guard is doing (unlike Phantom BB), but the guard can still react, just slower.' },
-  { id: 'mng', name: 'Mangle', from: 'FNAF 2', kind: 'walker', home: 'kitchen', move: 3.0, attack: 4.2, stealth: 0.25,
+  { id: 'mng', name: 'Mangle', from: 'FNAF 2', kind: 'walker', home: 'kitchen', move: 3.0, attack: 4.2, stealth: 0.15,
     vents: true, flashable: true,
     ability: { name: 'Radio static', cd: 25, desc: 'Every camera shows only static for 6 s.' },
     desc: 'Crawls anywhere, vents included. A flashlight scares them off.' },
@@ -131,7 +133,7 @@ const CREW = [
   { id: 'pup', name: 'The Puppet', from: 'FNAF 2', kind: 'puppet', home: 'prize',
     ability: { name: 'Unwind', cd: 25, desc: 'The music box loses 30%.' },
     desc: 'Waits in the music box. The guard has to keep winding it on the cameras. If it runs out, nothing can stop the Puppet.' },
-  { id: 'spr', name: 'Springtrap', from: 'FNAF 3', kind: 'walker', home: 'backstage', move: 3.6, attack: 4.6, stealth: 0.3,
+  { id: 'spr', name: 'Springtrap', from: 'FNAF 3', kind: 'walker', home: 'backstage', move: 3.6, attack: 4.6, stealth: 0.2,
     vents: true, lurable: true,
     ability: { name: 'Shrug off', cd: 30, desc: 'Ignores audio lures for 5 s. Time it for his attack.' },
     desc: 'Quiet, and fits in the vents. Audio lures are his weakness.' },
@@ -147,9 +149,9 @@ const CREW = [
   { id: 'bab', name: 'Circus Baby', from: 'Sister Location', kind: 'walker', home: 'backstage', move: 4.0, attack: 4.6, stealth: 0.2, lurable: true,
     ability: { name: 'Showtime', cd: 40, desc: 'Everyone else is ready to move, and moves twice as often, for 10 s.' },
     desc: 'The leader. Slow herself, but Showtime makes a rush possible.' },
-  { id: 'bal', name: 'Ballora', from: 'Sister Location', kind: 'walker', home: 'dining', move: 3.4, attack: 4.6, stealth: 0.4,
+  { id: 'bal', name: 'Ballora', from: 'Sister Location', kind: 'walker', home: 'dining', move: 3.8, attack: 4.6, stealth: 0.25,
     hidden: 'always',
-    ability: { name: 'Waltz', cd: 30, desc: 'Everyone is harder to notice for 10 s.' },
+    ability: { name: 'Waltz', cd: 30, desc: 'Everyone else is harder to notice for 10 s.' },
     desc: 'Never shows on camera, only in a door light. The guard has to listen for her.' },
   { id: 'nfb', name: 'Nightmare Fredbear', from: 'FNAF 4', kind: 'walker', home: 'stage', move: 3.4, attack: 4.4, stealth: 0.15, lurable: true,
     ability: { name: 'Switch', cd: 15, desc: 'From one corner, jump straight to the other corner.' },
@@ -165,12 +167,12 @@ const CREW = [
     ability: { name: 'Freddles', cd: 25, desc: 'Two Freddles climb into the office.' },
     desc: 'Never attacks. Freddles pile up in the office by themselves too (up to 4). Each one makes the guard notice less, and it wastes time shooing them.' },
   { id: 'nbn', name: 'Nightmare Bonnie', from: 'FNAF 4', kind: 'walker', home: 'stage', move: 3.0, attack: 4.6, stealth: 0.15, lurable: true,
-    ability: { name: 'Hold breath', cd: 22, desc: 'His next attack makes no sound: only a camera or a door light can find him.' },
+    ability: { name: 'Hold breath', cd: 30, desc: 'His next attack is very hard to hear: a camera or a door light finds him best.' },
     desc: 'Silent at the door when he holds his breath. Strong against guards without lights.' },
   { id: 'nch', name: 'Nightmare Chica', from: 'FNAF 4', kind: 'walker', home: 'stage', move: 3.2, attack: 4.6, stealth: 0.15, lurable: true,
     ability: { name: 'Cupcake', cd: 20, desc: 'Her cupcake gets into the office: it eats power and distracts the guard until it\'s shooed away.' },
     desc: 'Sends her cupcake ahead of her.' },
-  { id: 'ptr', name: 'Plushtrap', from: 'FNAF 4', kind: 'walker', home: 'supply', move: 1.8, attack: 4.0, stealth: 0.3, onlyMonitorUp: true,
+  { id: 'ptr', name: 'Plushtrap', from: 'FNAF 4', kind: 'walker', home: 'supply', move: 2.4, attack: 4.0, stealth: 0.2, onlyMonitorUp: true, lurable: true,
     ability: { name: 'Freeze tag', cd: 30, desc: 'Moves and attacks even while the guard isn\'t on its monitor, for 6 s.' },
     desc: 'Very fast, but he only moves (and attacks) while the guard is looking at its monitor.' },
   { id: 'ffr', name: 'Funtime Freddy', from: 'Sister Location', kind: 'walker', home: 'stage', move: 3.2, attack: 4.4, stealth: 0.1, lurable: true,
@@ -194,7 +196,7 @@ const MAX_CREW = 6;   // the most animatronics in one night (keys 1 to 6)
 // lightLove: how often it checks a door light when sitting at its desk
 // reboot:  seconds to reboot broken cameras (REBOOT_TIME if missing)
 const GUARDS = [
-  { id: 'mike', name: 'Mike Schmidt', from: 'FNAF 1', skill: 3, tools: ['cams', 'doors', 'lights'], camLove: 0.45, doorHold: 1, lightLove: 0.35,
+  { id: 'mike', name: 'Mike Schmidt', from: 'FNAF 1', skill: 2, tools: ['cams', 'doors', 'lights'], camLove: 0.45, doorHold: 1, lightLove: 0.35,
     desc: 'On his first week. Checks the cameras, shuts the doors, peeks with the lights.' },
   { id: 'fritz', name: 'Fritz Smith', from: 'FNAF 2', skill: 4, tools: ['cams', 'doors'], camLove: 0.35, doorHold: 2.2, lightLove: 0, hears: 1.4,
     desc: 'Jumpy. Slams a door at the smallest noise and keeps it shut far too long: great for draining his power.' },
@@ -202,22 +204,26 @@ const GUARDS = [
     desc: 'No doors at all. A Freddy mask for the toys and a flashlight for Foxy.' },
   { id: 'phone', name: 'Phone Guy', from: 'FNAF 1', skill: 9, tools: ['cams', 'doors', 'lights'], camLove: 0.8, doorHold: 1, lightLove: 0.25, slowDown: 0.3,
     desc: 'Glued to the cameras. Sees a lot, but is slow to look up from them.' },
-  { id: 'fright', name: 'Fazbear\'s Fright guard', from: 'FNAF 3', skill: 11, tools: ['cams', 'lure', 'ventdoor'], camLove: 0.65, doorHold: 1, lightLove: 0, reboot: 1.6,
+  { id: 'fright', name: 'Fazbear\'s Fright guard', from: 'FNAF 3', skill: 7, tools: ['cams', 'lure', 'ventdoor'], camLove: 0.65, doorHold: 1, lightLove: 0, reboot: 1.6,
     desc: 'No doors: keeps you away with audio lures, and seals the vent. Reboots systems very fast.' },
-  { id: 'michael', name: 'Michael Afton', from: 'Sister Location', skill: 12, tools: ['cams', 'doors', 'shock'], camLove: 0.55, doorHold: 1, lightLove: 0,
+  { id: 'michael', name: 'Michael Afton', from: 'Sister Location', skill: 8, tools: ['cams', 'doors', 'shock'], camLove: 0.55, doorHold: 1, lightLove: 0,
     desc: 'Shocks whoever he catches on camera. No door lights.' },
-  { id: 'gregory', name: 'Gregory', from: 'Security Breach', skill: 9, tools: ['cams', 'doors', 'hide'], camLove: 0.5, doorHold: 1, lightLove: 0,
+  { id: 'gregory', name: 'Gregory', from: 'Security Breach', skill: 10, tools: ['cams', 'doors', 'hide'], camLove: 0.5, doorHold: 1, lightLove: 0,
     desc: 'Small and sneaky: when he can\'t stop an attack, he hides. One hide, then a long wait.' },
-  { id: 'vanessa', name: 'Vanessa', from: 'Security Breach', skill: 12, tools: ['cams', 'doors', 'lights', 'flash', 'ventdoor'], camLove: 0.5, doorHold: 0.8, lightLove: 0.6,
+  { id: 'vanessa', name: 'Vanessa', from: 'Security Breach', skill: 8, tools: ['cams', 'doors', 'lights', 'flash', 'ventdoor'], camLove: 0.5, doorHold: 0.8, lightLove: 0.6,
     desc: 'Careful. Checks the lights all the time and wastes little power.' },
-  { id: 'henry', name: 'Henry Emily', from: 'FNAF 6', skill: 17, tools: ['cams', 'doors', 'lights', 'lure', 'shock'], camLove: 0.55, doorHold: 0.6, lightLove: 0.4,
+  { id: 'henry', name: 'Henry Emily', from: 'FNAF 6', skill: 12, tools: ['cams', 'doors', 'lights', 'lure', 'shock'], camLove: 0.55, doorHold: 0.6, lightLove: 0.4,
     desc: 'He built half of you. Lures, shocks, doors and lights.' },
-  { id: 'mike2', name: 'Mike Schmidt (veteran)', from: 'FNAF 1', skill: 18, tools: TOOL_IDS.slice(), camLove: 0.5, doorHold: 0.8, lightLove: 0.45,
+  { id: 'mike2', name: 'Mike Schmidt (veteran)', from: 'FNAF 1', skill: 15, tools: ['cams', 'doors', 'lights', 'ventdoor', 'mask', 'flash', 'lure', 'shock', 'hide'], camLove: 0.5, doorHold: 0.8, lightLove: 0.45,
     desc: 'Back for one more night, with every tool there is.' },
-  // The hardest guard (on request): the highest skill, every tool, and better at all of it than anyone else.
+  // The hardest guard (on request): the highest skill, every tool, and every other guard's good habit,
+  // each at least as strong as on the guard it comes from: Fritz's ears (hears 1.4 -> 1.5), the Fright
+  // guard's fast reboots (1.6 -> 1.0 s), Vanessa's light checks (lightLove 0.6) and Henry's careful doors
+  // (doorHold 0.6). Phone Guy's camera habit (camLove 0.8) is left out on purpose: the bot showed it makes
+  // a guard weaker (it notices less while staring at the cameras). Plus two of its own: grit and thrift.
   { id: 'tendons8', name: 'The Tendons 8', from: 'ASCII FNAF Simulator', skill: 20, tools: TOOL_IDS.slice(), camLove: 0.5, doorHold: 0.6, lightLove: 0.6,
-    hears: 1.5, reboot: 1.0, slowDown: -0.15, grit: 0.35, thrift: 0.35,
-    desc: 'The hardest guard there is. Every tool, the sharpest eyes and ears, the fastest hands, and your tricks only work half as well on it.' },
+    hears: 1.5, reboot: 1.0, slowDown: -0.15, grit: 0.5, thrift: 0.35,
+    desc: 'The hardest guard there is. Every tool, including two of its own: 2 death coins (each removes an animatronic for the night) and Lockdown (switches your abilities off for a while). Plus every other guard\'s best habit: Fritz\'s ears, the Fright guard\'s fast reboots, Vanessa\'s light checks and Henry\'s careful doors, and faster hands than anyone. Your tricks work about a third as well on it, and it uses about a third of the power.' },
 ];
 const GUARD_BY_ID = Object.fromEntries(GUARDS.map(g => [g.id, g]));
 
@@ -252,8 +258,27 @@ const NIGHTS = [
 // ("Max mode v1"): if a change ever makes a challenge harder, raise its `v` so the old ✓ no longer counts.
 // crew: 'all' means every animatronic in the game at once.
 const CHALLENGES = [
-  { id: 'max', name: 'Max mode', v: 1, guard: 'tendons8', skill: 20, tools: TOOL_IDS.slice(), crew: 'all', level: 10,
+  { id: 'max', name: 'Max mode', v: 2, guard: 'tendons8', skill: 20, tools: TOOL_IDS.slice(), crew: 'all', level: 15,
     power: 100, hour: HOUR_SECONDS, speed: 100,
     desc: 'Every animatronic in the game at once, against The Tendons 8: skill 20 and every tool.' },
 ];
 const challengeKey = c => `${c.name} v${c.v}`;
+
+// ---------- achievements ----------
+// Checked at the end of every night you win (checkAchievements in game.js). Once earned, an achievement
+// is saved by its id and never taken away.
+const ACHIEVEMENTS = [
+  { id: 'first',    name: 'First catch',     desc: 'Catch a night guard.' },
+  { id: 'speed',    name: 'Speedrun',        desc: 'Catch the guard before 1 AM.' },
+  { id: 'close',    name: 'Just in time',    desc: 'Catch the guard at 5 AM or later.' },
+  { id: 'clean',    name: 'Flawless',        desc: 'Win a night without anyone being sent back.' },
+  { id: 'hands',    name: 'No tricks',       desc: 'Win a night without using a single ability.' },
+  { id: 'blackout', name: 'Lights out',      desc: 'Win by running the guard\'s power out.' },
+  { id: 'music',    name: 'Pop goes the box', desc: 'Win with the Puppet.' },
+  { id: 'golden',   name: 'It\'s me',         desc: 'Win with Golden Freddy or Withered Golden Freddy.' },
+  { id: 'graduate', name: 'Graduation',      desc: 'Beat Night 10.' },
+  { id: 'bankrupt', name: 'Out of coins',    desc: 'Catch The Tendons 8 after it spent both death coins.' },
+  { id: 'maxed',    name: 'Maxed out',       desc: 'Beat Max mode.' },
+  { id: 'hunter',   name: 'Guard hunter',    desc: 'Catch every night guard at least once.' },
+  { id: 'crew',     name: 'Whole crew',      desc: 'Catch a guard at least once with every animatronic that can.' },
+];

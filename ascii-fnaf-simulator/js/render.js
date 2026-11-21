@@ -95,7 +95,7 @@ function renderMap() {
     const label = e === 'L' ? '&lt; LEFT' : e === 'R' ? 'RIGHT &gt;' : '^ VENT';
     return `<button class="attack ${ready ? 'ready' : ''} ${g.doors[e] ? 'shut' : ''}" data-attack="${e}">${label}${g.doors[e] ? '<br><span class="dim">shut</span>' : ''}</button>`;
   };
-  setHtml(map._ways, `${way('L')}${G.ventsUsed || guardHas('ventdoor') ? way('V') : ''}${way('R')}`);
+  setHtml(map._ways, `${way('L')}${G.ventsUsed || canShut('V') ? way('V') : ''}${way('R')}`);
 }
 
 // ---------- what the guard is doing ----------
@@ -125,9 +125,13 @@ function renderGuardStatus() {
     else if ((tool === 'lights' || tool === 'flash') && t < g.lightsOffUntil) { state = ` off ${Math.ceil(g.lightsOffUntil - t)}s`; cls = 'off'; }
     else if (tool === 'ventdoor' && t < g.jam.V) { state = ` jammed ${Math.ceil(g.jam.V - t)}s`; cls = 'off'; }
     else if (tool === 'doors' && (t < g.jam.L || t < g.jam.R)) { state = ` pried ${Math.ceil(Math.max(g.jam.L, g.jam.R) - t)}s`; cls = 'off'; }
+    else if (tool === 'coins') { state = ` x${g.coins}`; cls = g.coins ? '' : 'off'; }
+    else if (tool === 'lockdown' && t < G.lockdownUntil) { state = ` ON ${Math.ceil(G.lockdownUntil - t)}s`; cls = 'off'; }
     else if (g.cd[tool] > t) { state = ` ${Math.ceil(g.cd[tool] - t)}s`; cls = 'wait'; }
     return `<span class="tool ${cls}">${TOOLS[tool].name}${state}</span>`;
   });
+  // Every guard's last resort (see counter in game.js): show when it can duck again.
+  tags.push(g.cd.duck > t ? `<span class="tool wait">Duck ${Math.ceil(g.cd.duck - t)}s</span>` : '<span class="tool">Duck</span>');
   setHtml($('guardSays'), `${html}<div class="tools">${tags.join('')}</div>`);
 }
 
@@ -154,7 +158,8 @@ function renderCrew() {
   G.crew.forEach((u, i) => {
     const d = u.def, ab = d.ability, c = box._cards[i];
     let status, fill = 1;
-    if (d.kind === 'walker' || d.kind === 'foxy') {
+    if (u.gone) { status = '<span class="danger">REMOVED (death coin)</span>'; fill = 0; }
+    else if (d.kind === 'walker' || d.kind === 'foxy') {
       if (u.attack) status = `<span class="you">ATTACKING ${ENTRY_NAME[u.attack.entry]} ${Math.max(0, u.attack.end - t).toFixed(1)}s</span>`;
       else if (stunned(u)) status = `<span class="danger">FROZEN ${Math.ceil(u.stunUntil - t)}s</span> · ${ROOMS[u.room].name}`;
       else if (d.kind === 'foxy') status = `Pirate Cove · stage ${u.stage}/${FOXY_STAGES}${watching('cove') ? ' · <span class="danger">WATCHED</span>' : ''}`;
@@ -175,12 +180,13 @@ function renderCrew() {
       status = u.attack ? `<span class="you">${u.attack.onMonitor ? 'ON THE MONITOR' : 'IN THE OFFICE'}! ${Math.max(0, u.attack.end - t).toFixed(1)}s</span>`
         : u.gold ? 'Waiting for the monitor to drop...' : 'Nowhere (for now)';
     } else status = 'A ghost in the system';
-    const ready = u.acd <= 0;
+    const locked = t < G.lockdownUntil;   // the guard's Lockdown: no abilities right now
+    const ready = u.acd <= 0 && !locked && !u.gone;
     setHtml(c.status, status);
     setHtml(c.bar, `[${bar(fill)}]`);
-    setHtml(c.ab, `Q · ${escText(ab.name)} ${ready ? '' : `<span class="dim">${Math.ceil(u.acd)}s</span>`}`);
+    setHtml(c.ab, `Q · ${escText(ab.name)} ${locked ? '<span class="danger">LOCKED</span>' : u.acd > 0 ? `<span class="dim">${Math.ceil(u.acd)}s</span>` : ''}`);
     setClass(c.ab, `ab${ready ? ' ready' : ''}`);
-    setClass(c.card, ['card', i === G.sel ? 'sel' : '', stunned(u) ? 'frozen' : '', u.attack ? 'attacking' : ''].join(' '));
+    setClass(c.card, ['card', i === G.sel ? 'sel' : '', stunned(u) ? 'frozen' : '', u.attack ? 'attacking' : '', u.gone ? 'gone' : ''].join(' '));
   });
 }
 // Like setHtml, but for an element's class list: only touch the page when it actually changed.
