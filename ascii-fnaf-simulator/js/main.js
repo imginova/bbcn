@@ -20,8 +20,9 @@ let looping = false;   // is the loop running right now? (see wakeLoop below)
 
 function loop(now) {
   // Seconds since the last frame. Capped at 0.1 so that if the computer stalls, the night doesn't
-  // jump ahead by a huge amount in one go.
-  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  // jump ahead by a huge amount in one go. Never below 0: the browser's frame time can be a hair
+  // EARLIER than the moment the night started, and a clock going backwards froze the Sleepyhead's night.
+  const dt = Math.max(0, Math.min(0.1, (now - lastTime) / 1000));
   lastTime = now;
 
   if (currentScreen === 'game' && G && !G.over) {
