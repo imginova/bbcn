@@ -1,0 +1,276 @@
+/* =====================================================================
+   input.js: mouse and keyboard CONTROLS.
+
+   Nothing here decides what happens in the game. It only listens for
+   clicks, key presses and mouse movement, and calls the right function
+   from game.js, run.js or screens.js.
+
+   addEventListener('click', fn) means "whenever this is clicked, run fn".
+   ===================================================================== */
+
+// ---------- buttons ----------
+// onClick(id, fn): run fn when the button with that id is clicked.
+// The blur() at the end takes keyboard focus off a button you CLICKED, so pressing
+// Space afterwards raises the monitor instead of clicking that button again.
+// (e.detail counts mouse clicks; it is 0 when the "click" came from the keyboard.)
+const onClick = (id, fn) => $(id).addEventListener('click', e => {
+  sfx.init();
+  fn(e);
+  if (e.detail) e.currentTarget.blur();
+});
+
+onClick('btnMute', toggleMute);
+onClick('btnContinue', continueRun);
+onClick('btnNewRun', pressNewRun);
+onClick('btnHowTitle', openHowto);
+onClick('btnHowPick', openHowto);
+onClick('btnHowPause', openHowto);
+onClick('btnHowClose', closeHowto);
+onClick('btnBegin', beginNight);
+onClick('btnTitle', () => show('title'));
+onClick('btnL', () => toggleDoor('L'));
+onClick('btnR', () => toggleDoor('R'));
+onClick('btnCam', toggleCam);
+onClick('btnMask', toggleMask);
+onClick('btnFan', toggleFan);
+onClick('btnShock', shock);
+onClick('btnWind', windBox);
+onClick('btnResume', () => setPaused(false));
+onClick('btnQuit', quitNight);
+onClick('btnNext', showPick);
+onClick('btnNewRunWin', newRun);
+onClick('btnTitleWin', () => show('title'));
+onClick('btnRetry', startNight);
+onClick('btnNewRunLose', () => { hideScare(); newRun(); });
+onClick('btnTitleLose', () => { hideScare(); show('title'); });
+
+// "Continue run": back to the pick screen if the cards are still to be picked, or straight into the
+// night if they were (the night starts again from 12 AM).
+function continueRun() {
+  if (!run) return;
+  if (run.offer.length) showPick();
+  else startNight();
+}
+
+// Clicking the doors themselves works too.
+$('doorL').addEventListener('click', () => toggleDoor('L'));
+$('doorR').addEventListener('click', () => toggleDoor('R'));
+
+// One listener for the whole camera map. closest() finds which camera button was clicked;
+// its data-room="..." attribute (in index.html) says which room it is.
+$('map').addEventListener('click', e => {
+  const b = e.target.closest('button[data-room]');
+  if (!b) return;
+  setCam(b.dataset.room);
+  if (e.detail) b.blur();
+});
+
+// The CAMS / VENTS tabs at the top of the monitor.
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  setTab(b.dataset.tab);
+  if (e.detail) b.blur();
+});
+
+// The vent map. The vent buttons are redrawn whenever someone moves, so we react the moment the
+// button goes DOWN (a "click" only counts if it goes down and up on the same element).
+$('ventMap').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-vent]');
+  if (!b || e.button !== 0) return;
+  sfx.init();
+  playLure(Number(b.dataset.vent));
+  e.preventDefault();
+});
+
+// Lolbit's letter buttons (for phones, where there's no keyboard).
+$('lolKeys').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-letter]');
+  if (!b) return;
+  sfx.init();
+  typeLol(b.dataset.letter);
+  e.preventDefault();
+});
+
+// ---------- the pick screen ----------
+// Clicking a card takes it or puts it back. data-id="fre" says which character it is.
+$('offer').addEventListener('click', e => {
+  const b = e.target.closest('[data-id]');
+  if (!b) return;
+  sfx.init();
+  togglePick(b.dataset.id);
+  if (e.detail) b.blur();
+});
+// Pointing at a card (on the offer or in the lineup) shows how that character works in the info box.
+// "pointerover" fires each time the pointer moves onto a new element.
+for (const id of ['offer', 'lineup']) {
+  $(id).addEventListener('pointerover', e => {
+    const card = e.target.closest('[data-id]');
+    const who = card ? card.dataset.id : null;
+    if (who !== hoverCard) { hoverCard = who; renderWho(); }
+  });
+  $(id).addEventListener('pointerleave', () => { hoverCard = null; renderWho(); });
+}
+// The same on the pause panel's cards.
+$('pauseRoster').addEventListener('pointerover', e => {
+  const card = e.target.closest('[data-id]');
+  if (card) $('pauseInfo').innerHTML = whoHtml(byId(card.dataset.id));
+});
+
+// Clicking the dark area around the How to play panel closes it.
+$('howto').addEventListener('click', e => { if (e.target.id === 'howto') closeHowto(); });
+
+// ---------- aiming the flashlight (and clicking things in the office) ----------
+// Whenever the pointer moves over the view, work out what it's pointing at: the office picture, the
+// camera picture or a doorway, and which row and column of characters in it.
+// getBoundingClientRect() gives an element's position and size on the screen in pixels.
+const view = $('viewport');
+const AIM_AREAS = [['office', 'officeArt', OFFICE_W, OFFICE_H], ['feed', 'feed', 40, 11],   // [name, element id, columns, rows]
+  ['doorL', 'doorL', 12, 16], ['doorR', 'doorR', 12, 16]];                               // the doorways (doorLit in game.js)
+function updateAim(e) {
+  const box = view.getBoundingClientRect();
+  aim.x = e.clientX - box.left;
+  aim.y = e.clientY - box.top;
+  aim.where = null;
+  for (const [where, id, cols, rows] of AIM_AREAS) {
+    const r = $(id).getBoundingClientRect();
+    if (!r.width) continue;   // a hidden picture has no size
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) continue;
+    aim.where = where;
+    // How far across and down the picture the pointer is (0 to 1), times its size in characters.
+    // The - 0.5 makes "column 3" mean the middle of the 4th character, like the cells it's compared with.
+    aim.c = (e.clientX - r.left) / r.width * cols - 0.5;
+    aim.r = (e.clientY - r.top) / r.height * rows - 0.5;
+  }
+  // The light still shows over the rest of the view (the map, the buttons), it just doesn't hit anything.
+  if (!aim.where && e.clientX >= box.left && e.clientX <= box.right) aim.where = 'view';
+}
+view.addEventListener('pointermove', updateAim);
+view.addEventListener('pointerleave', () => { aim.where = null; });
+
+// A press over the view: work out where it is first (on a phone there's no "move" before a tap), then
+// if it's the main button over the office picture, see whether it hit Bonnet's nose or one of Chica's
+// cupcakes; over the camera picture, Nightmare Chica's hidden cupcake. We use the moment the button
+// goes DOWN, because the pictures are redrawn many times a second.
+view.addEventListener('pointerdown', e => {
+  updateAim(e);
+  if (e.button !== 0) return;
+  sfx.init();
+  if (aim.where === 'office') clickOffice(aim.r, aim.c);
+  else if (aim.where === 'feed') clickFeed(aim.r, aim.c);
+});
+
+// The flashlight shines while the RIGHT mouse button is held down over the view (or F, or the
+// Flashlight button). We use mousedown/mouseup here, not pointer events: a second mouse button pressed
+// while one is already down doesn't send a new "pointerdown", and you need the left button free for
+// clicking cupcakes while the light is on.
+view.addEventListener('mousedown', e => { if (e.button === 2) { sfx.init(); flashMouse = true; e.preventDefault(); } });
+window.addEventListener('mouseup', e => { if (e.button === 2) flashMouse = false; });
+view.addEventListener('contextmenu', e => e.preventDefault());   // no right-click menu over the game
+
+// The Flashlight button shines only while it is HELD. "pointer" events cover mouse, touch and pen alike.
+const btnFlash = $('btnFlash');
+btnFlash.addEventListener('pointerdown', e => {
+  sfx.init();
+  flashButton = true;
+  btnFlash.setPointerCapture?.(e.pointerId);   // keep getting events even if the pointer slides off
+  e.preventDefault();
+});
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) btnFlash.addEventListener(ev, () => { flashButton = false; });
+btnFlash.addEventListener('contextmenu', e => e.preventDefault());
+
+// ---------- keyboard ----------
+// One listener for every key press. What a key does depends on which screen is showing.
+// e.key is the key's name: 'a', 'Enter', ' ' (Space), 'ArrowUp', ...
+// e.preventDefault() stops the browser's own reaction (like Space scrolling the page).
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;   // leave shortcuts like Ctrl+R alone
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;   // 'A' and 'a' do the same thing
+  // Let a focused button handle its own Space/Enter.
+  if ((k === ' ' || k === 'Enter') && e.target instanceof HTMLButtonElement) return;
+  sfx.init();
+
+  // Lolbit's LOL screen is up: L and O type into it (and do nothing else). Checked before M, so
+  // nothing else gets in the way of typing.
+  if (currentScreen === 'game' && G && G.lol.active && !G.paused && (k === 'l' || k === 'o')) { typeLol(k); return; }
+  if (k === 'm') { toggleMute(); return; }
+
+  // The How to play panel is open: only Esc / Enter (close it) do anything.
+  if (!$('howto').hidden) {
+    if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeHowto(); }
+    return;
+  }
+
+  // Game over is showing (but not during the jumpscare itself).
+  if (!$('scare').hidden) {
+    if ($('scareMsg').hidden) return;
+    if (k === 'Enter') { e.preventDefault(); $(run ? 'btnRetry' : 'btnNewRunLose').click(); }
+    else if (k === 'Escape') { hideScare(); show('title'); }
+    return;
+  }
+
+  if (currentScreen === 'title') {
+    if (k === 'Enter') { e.preventDefault(); run ? continueRun() : newRun(); }
+    else if (k === 'n') pressNewRun();
+    else if (k === 'h') openHowto();
+
+  } else if (currentScreen === 'pick') {
+    // 1 to 5 take or put back the card with that number.
+    if (/^[1-5]$/.test(k) && run && run.offer[Number(k) - 1]) togglePick(run.offer[Number(k) - 1]);
+    else if (k === 'Enter') { e.preventDefault(); beginNight(); }
+    else if (k === 'Escape') show('title');
+    else if (k === 'h') openHowto();
+
+  } else if (currentScreen === 'game' && G && !G.over) {
+    if (k === 'p' || k === 'Escape') { setPaused(!G.paused); return; }
+    if (G.paused) return;
+    // e.repeat is true for the extra presses a held-down key sends; most keys ignore those, so
+    // holding A doesn't slam the door open and shut over and over.
+    if (k === 'f') { flashKey = true; return; }          // held: released in keyup below
+    if (e.repeat) { if (k === ' ') e.preventDefault(); return; }
+    if (k === 'a') toggleDoor('L');
+    else if (k === 'd') toggleDoor('R');
+    else if (k === 'e') toggleFan();
+    else if (k === 'x') shock();
+    else if (k === ' ' || k === 's') { e.preventDefault(); toggleCam(); }
+    else if (k === 'c') setTab('cams');
+    else if (k === 'v') setTab('vents');
+    // W does two jobs: on the monitor it winds the music box (on CAM 6); in the office it puts the
+    // mask on or takes it off. That works because the mask can't be worn with the monitor up.
+    else if (k === 'w') { if (G.cam) windBox(); else toggleMask(); }
+    // On the VENTS tab the arrow keys move a highlight around the map and Enter plays a lure in that
+    // vent. The number keys do nothing there.
+    else if (G.cam && G.tab === 'vents' && k in VENT_ARROWS) { e.preventDefault(); moveVentSel(...VENT_ARROWS[k]); }
+    else if (G.cam && G.tab === 'vents' && k === 'Enter') { e.preventDefault(); playLure(G.ventSel); }
+    // Anywhere else, 1 to 8 pick a camera. /^[1-8]$/ means "exactly one digit from 1 to 8".
+    else if (/^[1-8]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
+    else if (k === 'h') openHowto();
+
+  } else if (currentScreen === 'win') {
+    if (k === 'Enter') { e.preventDefault(); lastWin && lastWin.result === 'won' ? newRun() : showPick(); }
+    else if (k === 'Escape') show('title');
+  }
+});
+
+// Letting go of F switches the flashlight off.
+document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'f') flashKey = false; });
+
+// If the window loses focus (you clicked another window or alt-tabbed away), pause the night so
+// nothing gets you while you're not looking. Also, a key held down at that moment would never be
+// seen being released, so let go of the flashlight.
+window.addEventListener('blur', () => {
+  flashKey = flashMouse = flashButton = false;
+  if (currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+});
+
+// Switching to another tab pauses the game and puts the sound engine to sleep, so a copy of the
+// game left open in the background uses (almost) no computer power. Coming back wakes the sound;
+// the game itself stays paused until you unpause it.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);
+    sfx.sleep();
+  } else {
+    sfx.wake();
+  }
+});
