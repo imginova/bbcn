@@ -582,8 +582,42 @@ const CUPCAKE_SPOTS = [[5, 10], [7, 40], [7, 12], [9, 34], [11, 5], [11, 37], [1
 const FAN_ART = [' .-.', '(-+-)', ' /_\\'];
 const FAN_SPIN = ['(-+-)', '(\\|/)'];
 
-// The office for this moment, as a grid (without the visitors: render.js adds those).
-function officeGrid(fanOn, now) {
+// ---------- the office, painted by your lineup ----------
+// The office starts out plain grey. Every character you take paints one more of these parts in the
+// color of its rarity (on request: "the more characters added the more the office would be colored by
+// the rarity of the character"), in this order. Each part is a list of rectangles in the office picture,
+// [first row, last row, first column, last column], or `door` for the frame of a door.
+const OFFICE_PARTS = [
+  { name: 'poster', rects: [[1, 4, 10, 19]] },
+  { name: 'monitor', rects: [[6, 9, 15, 29]] },
+  { name: 'left door', door: 'L' },
+  { name: 'right door', door: 'R' },
+  { name: 'vent', rects: [[1, 4, 23, 32]] },
+  { name: 'front of the desk', rects: [[11, 12, 0, 43]] },
+  { name: 'left window', rects: [[1, 5, 0, 7]] },
+  { name: 'right window', rects: [[1, 5, 36, 43]] },
+  { name: 'floor', rects: [[14, 15, 0, 43]] },
+  { name: 'desk top and legs', rects: [[10, 10, 0, 43], [13, 13, 0, 43]] },
+  { name: 'ceiling', rects: [[0, 0, 0, 43]] },
+];
+// Paint the parts of grid g that `paints` gives a color: paints[i] is the rarity class (like 'r-epic')
+// for OFFICE_PARTS[i], or nothing. Only the lines of the drawing are painted: not the spaces, the window
+// glass, the vent's grate (they stay dim, set back) or the fan.
+function paintOffice(g, paints) {
+  OFFICE_PARTS.forEach((part, i) => {
+    if (!paints[i] || !part.rects) return;
+    for (const [r1, r2, c1, c2] of part.rects) {
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
+        const cell = g[r][c];
+        if (cell.ch !== ' ' && !cell.cls) cell.cls = paints[i] + ' paint';
+      }
+    }
+  });
+}
+
+// The office for this moment, as a grid (without the visitors: render.js adds those). `paints` says
+// which parts your lineup has painted (see paintOffice above).
+function officeGrid(fanOn, now, paints = []) {
   const g = grid(OFFICE_ART, OFFICE_W);
   // The vent's grate and the window glass in a dim color, so they look set back into the wall.
   for (let r = VENT_SPOT[0] + 1; r <= VENT_SPOT[0] + 2; r++) {
@@ -595,6 +629,7 @@ function officeGrid(fanOn, now) {
   const fan = FAN_ART.slice();
   if (fanOn) fan[1] = FAN_SPIN[Math.floor(now / 120) % 2];
   sprite(g, FAN_SPOT[0], FAN_SPOT[1], fan, fanOn ? 'fan on' : 'fan');
+  paintOffice(g, paints);
   return g;
 }
 
