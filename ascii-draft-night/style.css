@@ -1,0 +1,420 @@
+/* =====================================================================
+   style.css: how everything LOOKS (colors, fonts, sizes, layout).
+
+   CSS never changes what the game DOES; it only styles the HTML in
+   index.html. Each rule is "selector { property: value; }":
+     .monitor   means "every element with class="monitor""
+     #scare     means "the element with id="scare""
+     button     means "every <button>"
+
+   The look (the owner's choice, "mixed by rarity"): a plain grey office
+   and screens, so the color comes from the characters themselves and
+   from the RARITY colors of their cards: grey common, green uncommon,
+   blue rare, purple epic, gold legendary.
+   The look is deliberately dark only (an old security monitor).
+   ===================================================================== */
+
+/* ---------- design tokens ----------
+   "--name: value" defines a CSS variable; var(--name) uses it.
+   Change a color here and it changes everywhere it is used. */
+:root {
+  --bg: #08090a;
+  --panel: #101113;
+  --line: #2a2d32;
+  --fg: #d4d7dc;      /* the light grey of the screen */
+  --dim: #7c818a;
+  --faint: #33363c;
+  --danger: #ff5546;
+  /* The rarities: every card, label and lineup chip uses these. */
+  --r-common: #b4bac4;
+  --r-uncommon: #5fd16a;
+  --r-rare: #4ea3ff;
+  --r-epic: #b56bff;
+  --r-legendary: #ffc23d;
+  /* One color per character (the c- classes below use them). Freddy, Bonnie, Chica, Toy Bonnie,
+     Toy Chica and the Puppet have the same colors as in ASCII FNAF: Line 1. */
+  --c-fre: #c98a4b;   /* Freddy: brown bear */
+  --c-bon: #8f86ff;   /* Bonnie: blue-purple */
+  --c-chi: #f2ee6b;   /* Chica: lemon yellow */
+  --c-tbn: #5aa8ff;   /* Toy Bonnie: bright blue */
+  --c-tch: #ffc94a;   /* Toy Chica: warm yellow */
+  --c-pup: #f2f2f2;   /* the Puppet: white mask */
+  --c-nfr: #b35c3a;   /* Nightmare Freddy: dark, rotten brown */
+  --c-trs: #a8a070;   /* the Trash gang: dusty junk khaki */
+  --c-lol: #ffb36b;   /* Lolbit: light orange */
+  --c-fox: #e2483a;   /* Foxy: red */
+  --c-gol: #ffd84a;   /* Golden Freddy: gold */
+  --c-tfr: #b8723c;   /* Toy Freddy: shiny brown */
+  --c-nbn: #5a5cd0;   /* Nightmare Bonnie: deep indigo blue */
+  --c-bnt: #ff8fd0;   /* Bonnet: pink */
+  --c-wbn: #7d93c9;   /* Withered Bonnie: faded blue */
+  --c-wfx: #b8604e;   /* Withered Foxy: faded red */
+  --c-spr: #8f9a4e;   /* Springtrap: rotten olive green */
+  --c-nch: #d9b928;   /* Nightmare Chica: dirty dark yellow */
+  --c-bab: #f3dccf;   /* Circus Baby: her pale face (red-orange pigtails, green eyes) */
+  --c-sbn: #0a0a0a;   /* Shadow Bonnie: black (outlined in white so it shows) */
+  --c-plu: #a3a34a;   /* Plushtrap: a brown-green plush */
+  --c-ffr: #f4eef8;   /* Funtime Freddy: white (magenta hat and bow tie, Bon-Bon in blue) */
+  --c-wfr: #9a6a3c;   /* Withered Freddy: a faded, dusty brown */
+  --c-ffx: #f7eef3;   /* Funtime Foxy: white (pink snout and ears, yellow eyes) */
+  --c-nfb: #d6a630;   /* Nightmare Fredbear: gold (purple hat and bow tie) */
+  --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* The size of the ASCII pictures: the office row is 68 characters wide (two 12-wide doors and the
+     44-wide office), so on a narrow screen the letters shrink to fit. */
+  --art: min(15px, calc((100vw - 60px) / 69));
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  overflow-x: hidden;
+}
+* { box-sizing: border-box; }
+
+/* The game hides screens with the HTML `hidden` attribute. Browsers hide those by default,
+   but any rule that sets `display` (like `#scare { display: flex }`) would win and show
+   them anyway. !important makes `hidden` always win. */
+[hidden] { display: none !important; }
+
+.app { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.topbar .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar button { white-space: nowrap; flex: none; }
+
+.monitor {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 0 80px rgba(0,0,0,.65);
+}
+/* The faint horizontal "scanlines" of an old monitor: a see-through stripe pattern laid on top. */
+.monitor::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
+}
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+button:hover { border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+button.primary:hover { background: transparent; color: var(--fg); }
+kbd { font: inherit; font-size: 11px; color: var(--dim); border: 1px solid var(--faint); padding: 0 5px; margin-left: 6px; }
+button.primary kbd { color: inherit; border-color: currentColor; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 1; text-wrap: balance; }
+/* clamp(smallest, preferred, largest): 14vw is 14% of the window width, so the title shrinks on phones. */
+h1 { font-size: clamp(40px, 14vw, 120px); letter-spacing: .04em; }
+h2 { font-size: clamp(38px, 8vw, 56px); letter-spacing: .04em; }
+p { margin: 0; }
+.eyebrow { color: var(--dim); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.lab { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.keys { color: var(--dim); font-size: 12px; }
+.dim { color: var(--dim); }
+.kills { color: var(--danger); }
+
+/* ---------- rarity colors ---------- */
+.r-common { color: var(--r-common); --rc: var(--r-common); }
+.r-uncommon { color: var(--r-uncommon); --rc: var(--r-uncommon); }
+.r-rare { color: var(--r-rare); --rc: var(--r-rare); }
+.r-epic { color: var(--r-epic); --rc: var(--r-epic); }
+.r-legendary { color: var(--r-legendary); --rc: var(--r-legendary); }
+/* Lives: red hearts. */
+.hearts { color: var(--danger); letter-spacing: .1em; font-family: var(--font-mono); }
+
+/* ---------- ASCII art ----------
+   Every drawing lives in a <pre> ("preformatted") block, which keeps spaces and line breaks
+   exactly as written. A monospace font makes every character the same width, so columns line up. */
+pre.art { font-family: var(--font-mono); font-size: var(--art); line-height: 1.18; margin: 0; white-space: pre; }
+/* Clicking (or double-clicking) the game shouldn't highlight the ASCII pictures as text:
+   user-select: none switches text selection off for these. */
+pre.art, .viewport, .hud, .controls, .map, .feed-head, .wind, .icon, .cards, .lvrow .ctrl, #scare pre {
+  user-select: none; -webkit-user-select: none;
+}
+/* Each character's color. b.c-bon makes "Bonnie" in a sentence bold in his color too. */
+.c-fre { color: var(--c-fre); } .c-bon { color: var(--c-bon); } .c-chi { color: var(--c-chi); }
+.c-tbn { color: var(--c-tbn); } .c-tch { color: var(--c-tch); } .c-pup { color: var(--c-pup); }
+.c-nfr { color: var(--c-nfr); } .c-trs { color: var(--c-trs); } .c-lol { color: var(--c-lol); }
+.c-fox { color: var(--c-fox); } .c-gol { color: var(--c-gol); } .c-tfr { color: var(--c-tfr); }
+.c-nbn { color: var(--c-nbn); } .c-bnt { color: var(--c-bnt); } .c-wbn { color: var(--c-wbn); }
+.c-wfx { color: var(--c-wfx); } .c-spr { color: var(--c-spr); } .c-nch { color: var(--c-nch); }
+.c-bab { color: var(--c-bab); } .c-sbn { color: var(--c-sbn); } .c-plu { color: var(--c-plu); }
+.c-ffr { color: var(--c-ffr); } .c-wfr { color: var(--c-wfr); } .c-ffx { color: var(--c-ffx); }
+.c-nfb { color: var(--c-nfb); }
+/* Shadow Bonnie is black: a thin white glow outlines each character, or he'd vanish on the dark screen. */
+.c-sbn { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
+/* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
+pre [class*="c-"] { font-weight: 600; }
+/* Accent colors: a second color on parts of the drawings (the masks in art.js). They come after the
+   character colors above, so on a cell with both classes the accent wins. */
+.acc-red { color: #ff4a4a; } .acc-orange { color: #ffa21f; } .acc-yellow { color: #f2ee6b; }
+.acc-green { color: #8fe39a; } .acc-blue { color: #6fb7ff; } .acc-violet { color: #b04dff; }
+.acc-pink { color: #ff4fa3; } .acc-gold { color: #ffc94a; } .acc-sky { color: #9fe3ff; }
+.acc-white { color: #ffffff; text-shadow: 0 0 4px #fff; } .acc-grey { color: #b9c2cc; }
+/* Black parts (hats, bow ties). Black alone would vanish on the dark background, so a thin white glow
+   (text-shadow) outlines each character. */
+.acc-black { color: #0a0a0a; text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff, 0 0 3px rgba(255,255,255,.5); }
+/* A character's tiny 3-line face (ICONS in art.js). white-space: pre keeps its lines and spaces
+   exactly as drawn; the mono font keeps its columns lined up. */
+.icon { display: inline-block; white-space: pre; font-family: var(--font-mono); font-weight: 600; font-size: 13px; line-height: 1.05; }
+.icon.big { font-size: 16px; }
+.face-mini { white-space: pre; font-family: var(--font-mono); font-weight: 600; }
+.blink { animation: blink 0.8s steps(2) infinite; }
+.door { color: var(--dim); }
+/* Something in the flashlight's beam (a Freddle): it glows. */
+.shone { text-shadow: 0 0 8px #fff; color: #fffbe8; }
+/* Bonnie's and Chica's eyes in a dark doorway: a soft glow in their own color (currentColor). */
+.door-eyes { font-weight: 600; text-shadow: 0 0 6px currentColor, 0 0 2px currentColor; }
+/* The office windows' glass, and the desk fan (bright and glowing while it's on). */
+.glass { color: #3d4a57; background: rgba(60,80,100,.12); }
+.fan { color: var(--dim); }
+.fan.on { color: #cfe8ff; text-shadow: 0 0 4px #9fd0ff; }
+/* Chica's cupcakes: small, so they glow and blink a little to be findable. */
+.cupcake { text-shadow: 0 0 6px currentColor; animation: blink 1.2s steps(2) infinite; cursor: pointer; }
+/* Nightmare Chica's hidden cupcake: dim, no glow, so it blends into the room. */
+.hidden-cup { opacity: .55; font-weight: 400 !important; }
+/* Funtime Foxy's show sign on CAM 1, lit up. */
+.showsign { color: #fff3c4; font-weight: 600; text-shadow: 0 0 8px var(--c-ffx), 0 0 2px #fff; }
+/* The controlled shock: the camera picture flashes white-blue for a moment. */
+#feed.zap { color: #cfe8ff; text-shadow: 0 0 6px #9fd0ff; background: rgba(160,210,255,.12); }
+/* Funtime Freddy's subtitles: one line in a strip above the view. */
+.subtitle { min-height: 1.6em; margin-top: 8px; text-align: center; font-size: 14px; letter-spacing: .04em; }
+/* Shadow Bonnie's darkness: almost black, except a hole where the flashlight shines (--x, --y and --r,
+   the hole's size, are set by render.js; --r is 0 when the flashlight is off). */
+.dark-shade { position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: radial-gradient(circle var(--r, 0px) at var(--x, 50%) var(--y, 50%), transparent 0 55%, rgba(3,3,4,.97) 100%); }
+.wind { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.wind .bars { white-space: pre; font-variant-numeric: tabular-nums; }
+.warn { color: var(--c-pup); font-weight: 600; animation: blink 0.8s steps(2) infinite; }
+
+/* ---------- title ---------- */
+.title { display: flex; flex-direction: column; gap: 18px; padding-block: 24px; }
+.title .tag-line { font-size: 16px; max-width: 52ch; }
+/* "DRAFT NIGHT" under the big title, in the display font. */
+.title .line-tag { font-family: var(--font-display); font-size: 34px; letter-spacing: .3em; color: var(--dim); margin-top: -18px; }
+.rarity-key { font-size: 13px; letter-spacing: .06em; font-weight: 600; }
+.menu { display: flex; flex-wrap: wrap; gap: 10px; }
+.best { color: var(--dim); }
+.best b { color: var(--fg); font-weight: 600; }
+
+/* ---------- the pick screen ---------- */
+.pick { display: flex; flex-direction: column; gap: 16px; }
+.run-status { font-size: 15px; }
+.run-status b { font-weight: 600; }
+/* The five cards. repeat(auto-fit, minmax(140px, 1fr)) fits as many 140px-or-wider columns as the
+   screen has room for (5 on a computer, 2 on a phone) and shares out the space left over. */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+/* A card: a border in its rarity's color (--rc, set by the r- classes above). Its text stays light
+   grey; only the rarity label is colored. */
+.card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px 10px;
+  border: 1px solid var(--rc);
+  color: var(--fg);
+  text-transform: none;
+  box-shadow: inset 0 0 0 1px transparent;
+}
+.card:hover { box-shadow: inset 0 0 0 1px var(--rc), 0 0 14px -4px var(--rc); }
+.card .rar { color: var(--rc); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; }
+.card .name { font-weight: 600; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; line-height: 1.2; min-height: 2.4em; display: grid; place-items: center; text-align: center; }
+.card .where { color: var(--dim); font-size: 10px; letter-spacing: .12em; }
+.card .key { position: absolute; top: 4px; left: 7px; color: var(--dim); font-size: 11px; }
+.card .kills { position: absolute; top: 4px; right: 7px; font-size: 11px; }
+.card .taken-tag { font-size: 11px; letter-spacing: .14em; color: var(--dim); border: 1px solid var(--faint); padding: 1px 8px; }
+/* A taken card: filled with a wash of its rarity color, with a ✓ TAKEN tag. */
+.card.taken { background: color-mix(in srgb, var(--rc) 16%, transparent); box-shadow: inset 0 0 0 1px var(--rc); }
+.card.taken .taken-tag { color: var(--bg); background: var(--rc); border-color: var(--rc); font-weight: 600; }
+/* The info box under the cards (and on the pause panel): how the pointed-at character works. */
+.who-box { border: 1px solid var(--line); padding: 10px 12px; min-height: 6.2em; color: var(--fg); font-size: 13px; line-height: 1.45; text-align: left; }
+.who-box b { font-weight: 600; letter-spacing: .06em; }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.score b { font-weight: 600; }
+
+/* Small cards for a lineup or roster: they wrap onto more lines when needed. */
+.mini-roster { display: flex; flex-wrap: wrap; gap: 6px; }
+.mini-card { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 84px; padding: 6px 2px; border: 1px solid var(--rc, var(--line)); color: var(--fg); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; text-align: center; }
+.mini-card .icon { font-size: 11px; }
+.mini-card b { font-weight: 600; line-height: 1.2; }
+.mini-card .pts { color: var(--rc); }
+/* A card just taken on this pick screen (it joins the lineup when the night starts). */
+.mini-card.new { border-style: dashed; }
+
+/* ---------- game ---------- */
+.hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+.meter { display: flex; align-items: baseline; gap: 8px; font-size: 13px; letter-spacing: .06em; }
+.meter .lab { font-size: 11px; }
+.meter b { font-family: var(--font-display); font-size: 30px; font-weight: 400; min-width: 4ch; text-align: right; }
+.meter .bars { white-space: pre; }
+.low { color: var(--danger); }
+.viewport { position: relative; display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
+.office { display: flex; justify-content: center; transition: color .3s; }
+.office pre[data-door] { cursor: pointer; }
+/* The flashlight shining into a doorway: it glows. */
+.office pre.lit { background: rgba(255,250,220,.12); box-shadow: 0 0 18px rgba(255,250,220,.18); }
+/* After a power-out everything goes dark. */
+.office.dark { color: var(--faint); }
+.office.dark .door, .office.dark .dim, .office.dark .fan, .office.dark .glass { color: #16181b; }
+
+/* The flashlight: a soft circle of light centred on the pointer (--x and --y, set by render.js).
+   radial-gradient draws a circle that's bright in the middle and fades out to nothing.
+   pointer-events: none lets clicks pass straight through it. */
+.beam { position: absolute; inset: 0; pointer-events: none; z-index: 1; mix-blend-mode: screen;
+  background: radial-gradient(circle 70px at var(--x) var(--y), rgba(255,248,215,.32), rgba(255,248,215,.12) 60%, transparent 100%); }
+/* The heat: a red glow rising from the bottom of the view. render.js sets its opacity (0 = invisible). */
+.heat-glow { position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255,74,36,.55), rgba(255,74,36,.15) 60%, transparent 90%); }
+/* Wearing the mask: a dark mask covers the whole view, and you only see (and can only click)
+   through its two eye holes. The holes let clicks through; the mask itself blocks them. */
+.mask-view { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.mask-view svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.mask-view path { fill: #0b0c0e; stroke: var(--dim); stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: visiblePainted; }
+/* Lolbit's LOL screen: covers the view and catches every click under it (pointer-events: auto), so
+   nothing under it can be clicked until L O L is typed. */
+.lolbit { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; background: rgba(20,10,4,.94); border: 2px solid var(--c-lol); color: var(--c-lol); pointer-events: auto; text-align: center; }
+.lolbit pre { font-size: var(--art); text-shadow: 0 0 8px currentColor; }
+.lol-word { font-family: var(--font-display); font-size: clamp(30px, 8vw, 60px); line-height: 1; letter-spacing: .2em; text-shadow: 0 0 12px currentColor; }
+.lol-keys { display: flex; gap: 10px; }
+.lol-keys button { color: var(--c-lol); border-color: var(--c-lol); font-size: 20px; min-width: 48px; padding: 4px 12px; touch-action: none; }
+.lol-keys button.done { background: var(--c-lol); color: var(--bg); }
+.lol-hint { color: var(--dim); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+/* On a phone the view is short: show just the LOL and its letters, without Lolbit's face. */
+@media (max-width: 600px) { .lolbit pre { display: none; } }
+
+/* The raised monitor: tabs on top, then the camera feed and its map (or the vent map). */
+.cams { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.cam-pane { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: flex-start; }
+.cam-pane pre.art { font-size: min(15px, calc((100vw - 60px) / 41)); }
+.tabs { display: flex; gap: 8px; }
+.tabs button { padding: 5px 14px; font-size: 12px; }
+.tabs button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button[aria-current="true"] kbd { color: inherit; border-color: currentColor; }
+/* The vent map: 3 rows of 5 vents, with "your office" after V15. grid-template-areas draws the layout
+   with names; each vent button says which name it goes in (style="grid-area:v1" and so on). */
+.vent-pane { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.vent-map { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-areas: "v1 v2 v3 v4 v5 ." "v6 v7 v8 v9 v10 ." "v11 v12 v13 v14 v15 you";
+  gap: 6px; width: min(560px, 100%); }
+.vent { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; text-transform: none; min-height: 64px; min-width: 0; touch-action: none; }
+/* The vent the arrow keys have picked (Enter plays a lure there): a dashed outline. */
+.vent.picked { outline: 1px dashed var(--fg); outline-offset: 2px; }
+.vent .vn { color: var(--dim); font-size: 11px; letter-spacing: .1em; }
+.vent .occ { font-family: var(--font-mono); font-size: 14px; }
+.vent .mark { font-size: 10px; color: var(--dim); }
+.vent.lured { border-color: var(--fg); background: rgba(212,215,220,.12); }
+.vent.lured .mark { color: var(--fg); }
+.vent-office { grid-area: you; display: grid; place-items: center; text-align: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); }
+.feed { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feed-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .12em; }
+.rec { color: var(--danger); }
+.rec::before { content: "\25CF  "; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: "prize stage parts" "cove dining audit" "whall you ehall";
+  gap: 6px;
+  width: min(270px, 100%);
+  align-self: center;
+}
+.map button { padding: 7px 4px; font-size: 11px; line-height: 1.3; letter-spacing: .04em; text-transform: none; }
+.map button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.map .mw { font-weight: 600; }
+.map .you { grid-area: you; display: grid; place-items: center; font-size: 11px; color: var(--dim); border: 1px dashed var(--faint); padding: 7px 4px; }
+
+/* Six or seven buttons: 4 across on a computer (3 on a phone, see the end of the file). */
+.controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.controls button { padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.controls button .state { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+.controls button.on { border-color: var(--fg); background: rgba(212,215,220,.12); }
+.controls button.on .state { color: var(--fg); }
+.controls button:disabled { opacity: .35; cursor: not-allowed; }
+.controls button.hold { touch-action: none; user-select: none; -webkit-user-select: none; }
+.hint { margin-top: 10px; text-align: center; }
+
+.overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(8,9,10,.93);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 20px; text-align: center;
+  overflow-y: auto;   /* a long roster can scroll */
+}
+/* "safe center" centres the pause panel, but starts at the top if it's taller than the screen. */
+#pause { justify-content: safe center; gap: 12px; }
+/* flex-shrink: 0 stops the panel squashing its parts to fit; it scrolls instead. */
+#pause > * { flex-shrink: 0; }
+#pause .who-box { width: min(560px, 100%); min-height: 4.6em; }
+#pause .mini-roster { justify-content: center; max-width: 640px; }
+
+/* ---------- end screens ---------- */
+.endcard { display: flex; flex-direction: column; gap: 16px; padding-block: 20px; }
+.endcard .big { font-family: var(--font-display); font-size: clamp(72px, 18vw, 140px); line-height: .9; }
+
+#scare {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center;
+  overflow-y: auto;
+}
+/* The jumpscare drawings are small, so they're shown big: about 2.2 times the usual size. */
+#scareArt { font-size: min(5.4vw, 6.4vh); line-height: 1.1; text-shadow: 0 0 10px currentColor; }
+#scareMsg { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 60ch; }
+#scareMsg h2 { color: var(--danger); }
+.big-hearts { font-size: 28px; }
+.shake { animation: shake .07s linear infinite; }
+@keyframes shake { 0% { transform: translate(0,0) } 25% { transform: translate(-7px,4px) } 50% { transform: translate(6px,-5px) } 75% { transform: translate(-4px,-4px) } }
+
+/* ---------- help ---------- */
+#howto { position: fixed; inset: 0; z-index: 40; background: rgba(8,9,10,.95); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.howto-card { max-width: 660px; width: 100%; border: 1px solid var(--line); background: var(--panel); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.howto-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.howto-card table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.howto-card td { border-top: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
+.howto-card td:first-child { color: var(--dim); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- small screens ----------
+   @media rules only apply when their condition is true. This one kicks in on phones (560px wide or less). */
+@media (max-width: 560px) {
+  .monitor { padding: 12px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .icon.big { font-size: 13px; }
+  .mini-card { width: 66px; font-size: 9px; }
+  .mini-card .icon { font-size: 10px; }
+  .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .controls button { font-size: 11px; }
+  .controls kbd { display: none; }
+  .meter b { font-size: 24px; }
+  .clock { font-size: 36px; }
+}
+/* Some players turn on "reduce motion" in their system settings; respect it by switching off shaking and blinking. */
+@media (prefers-reduced-motion: reduce) {
+  .shake, .rec::before, .blink, .warn, .cupcake { animation: none; }
+}
