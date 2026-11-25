@@ -70,7 +70,7 @@ No levels: each character always plays the same; its numbers are in its own bloc
 | Rare | Withered Bonnie | Timer never stops, but at 0 he waits for the monitor to go down; mask held 2.5 s |
 | Rare | Withered Foxy | Owner's routine: run (steps, seen on CAM 4) → door must be shut → wait → STOMP → open → flash 0.5 s → shut again → leaves. Opening before the stomp puts him in the doorway (shut in time) |
 | Rare | Springtrap | Route parts → dining → east hall → office (`SPRING.route`). Shock his camera: back one room. From the last room he climbs in (after `LAST_ROOM_WAIT` 3 s) |
-| Rare | Nightmare Chica | Strange noise; her cupcake `{,}` is hidden (dim) at one of `NCHICA_SPOTS` on a random camera; click it within 20 s |
+| Rare | Nightmare Chica | Strange noise, and she stands in the office (`NCHICA_OFFICE_SPOT`, blinking in her last 5 s; on request) while her cupcake `{,}` is hidden (dim) at one of `NCHICA_SPOTS` on a random camera; click it within 20 s |
 | Rare | Circus Baby | Route auditorium → dining → west hall → office, faster; a shock sends her back to the start |
 | Epic | Shadow Bonnie | Line 1's: dark office, find his eyes, 0.8 s of light |
 | Epic | Plushtrap | Hides at a `PLUSH_SPOTS` spot with a giggle; any light = gone; 2.5 s |

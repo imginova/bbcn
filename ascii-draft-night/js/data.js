@@ -157,7 +157,7 @@ const SPRING = {
 };
 const NCHICA = {
   id: 'nch', name: 'Nightmare Chica', rarity: 'rare', where: 'CAMERAS',
-  desc: 'A strange noise means she has HIDDEN her cupcake on one of the cameras. It\'s small and tucked into the room: find it and click it before time runs out.',
+  desc: 'A strange noise, and she\'s standing in your office: she has HIDDEN her cupcake on one of the cameras. It\'s small and tucked into the room: find it and click it before time runs out. She blinks when time is nearly up.',
   how: 'wanted her cupcake back',
 };
 const BABY = {
