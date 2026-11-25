@@ -60,7 +60,7 @@ No levels: each character always plays the same; its numbers are in its own bloc
 | Common | Toy Bonnie / Toy Chica | Line 1's vent crawlers; lure chance 0.85 / 0.45; mask `VENT_HOLD` 3 s |
 | Common | The Puppet | Music box on CAM 6, one click of Wind fills it, ♪! warning |
 | Common | Nightmare Freddy | Freddles (`FREDDLE_SPOTS`, 3) climb on the desk every 12–22 s; 0.5 s of light each sends one off; all 3 up for `NFR_ARRIVE` (4 s, growl warning) = death |
-| Common | Trash gang | Piles in front of a random camera (`SPRITES.trs.pile`) for 10–16 s, hiding it. Never attacks (my reading of "obscure vision on cams") |
+| Common | Trash and the Gang | Was "Trash gang". On request (2026-11-25) made accurate to FNAF 6's Trash and the Gang, **minus Mr. Hugs** (the owner has plans for him): each visit one of Bucket Bob, Mr. Can-Do, No. 1 Crate or Pan Stan (`TRASH_MEMBERS`, `SPRITES.trs.bob/can/crate/pan`, colored with `tintBox`, looks from the FNAF wiki) stands in front of a random camera for 10–16 s, filling most of it (`TRASH_SPOT`). Never attacks (my reading of "obscure vision on cams"). The id stays `trs` |
 | Common | Lolbit | ASCII Nights' LOL screen; type L O L. Never attacks |
 | Uncommon | Foxy | Line 1's Pirate Cove stages; light on the cove pushes him back; run → left door shut costs 6% power |
 | Uncommon | Golden Freddy | On monitor down (`lookedBack`), `GOLDEN_CHANCE` 0.3; mask within 1.8 s |

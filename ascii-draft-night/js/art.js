@@ -83,7 +83,7 @@ const ICONS = {
   tch: [' \\|/ ', '(^>^)', '|PTY|'],         // Toy Chica: blue eyes, orange beak, "let's party" bib
   pup: ['.---.', '(o o)', '(@v@)'],          // the Puppet: white mask, red cheeks and lips
   nfr: ['@   @', '(0^0)', '|vVv|'],          // Nightmare Freddy: Freddles, orange eyes, sharp teeth
-  trs: [' .-. ', '(o_O)', '[###]'],          // the Trash gang: a pile of junk with eyes
+  trs: ['[___]', '\\@~@/', 'm=+=m'],         // Trash and the Gang: Bucket Bob's bucket head and oven mitts
   lol: ['/\\_/\\', '(o o)', ' LOL '],         // Lolbit
   fox: ['/\\_/\\', '(o o)', 'J\\vv/'],       // Foxy: red, yellow eyes, gold teeth, hook on his right hand
   gol: [' [_] ', '(.^.)', ' >=< '],          // Golden Freddy: Freddy in gold, empty eyes with tiny pupils
@@ -115,7 +115,7 @@ const ICON_ACCENTS = {
   tch: ['', ' bob'],                      // Toy Chica: blue eyes, orange beak
   pup: ['', '', ' rrr'],                  // the Puppet: red cheeks and lips
   nfr: ['', ' o o'],                      // Nightmare Freddy: orange eyes
-  trs: ['', ' y y'],                      // the Trash gang: yellow eyes
+  trs: ['GGGGG', ' xxx', 'r   r'],        // Trash and the Gang: a silver bucket, a scribbled face, red mitts
   lol: ['', '', ' vvv'],                  // Lolbit: a purple LOL
   fox: ['', ' y y', '  kk'],              // Foxy: yellow eyes, gold teeth
   gol: [' xxx', '', ' xxx'],              // Golden Freddy: black hat and bow tie
@@ -238,8 +238,8 @@ for (const room in ROOM_ART) ROOM_ART[room] = ROOM_ART[room].split('\n').slice(1
 const FREDDY_SLOTS = { stage: [3, 17], dining: [7, 30], whall: [5, 21], ehall: [5, 22] };
 const BONNIE_SLOTS = { stage: [3, 10], dining: [3, 14], parts: [5, 15], whall: [5, 16] };
 const CHICA_SLOTS = { stage: [3, 24], dining: [3, 19], ehall: [5, 28] };
-// Where the Trash gang's pile goes: over most of the picture, the same on every camera.
-const TRASH_SPOT = [3, 4];
+// Where the one of Trash and the Gang who is out stands: filling most of the picture, the same on every camera.
+const TRASH_SPOT = [1, 1];
 
 // ---------- the characters' drawings ----------
 // Each one is a list of lines. `cam` is the small camera version, `door` fits a doorway,
@@ -397,15 +397,54 @@ const SPRITES = {
        \___________/
          (oo)   (oo)`),
   },
-  // The Trash gang: a pile of junk with eyes, piled in front of a camera.
+  // Trash and the Gang (on request, "accurate to Trash and the Gang", minus Mr. Hugs, whom the owner has
+  // plans for): four junk "animatronics" made of everyday things. One at a time stands right in front
+  // of a camera, filling most of the picture. Their colors are added below the SPRITES list.
   trs: {
-    pile: art(String.raw`
-   .-.      ___      .--.      _
-  (o o)    [o_o]    (O.o)    (x_x)
- _|=#=|____|###|____/|##|\___|##|_
-|  junk   ~ trash ~   scraps   &  |
-|#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#|
-'---------------------------------'`),
+    // Bucket Bob: a silver bucket for a head with a scribbled face, a broomstick body, oven mitts.
+    bob: art(String.raw`
+         ___________
+        |___________|
+         \  @    @  /
+          \  ~~~~  /
+           \______/
+               |
+   [mm]========+========[mm]
+               |
+              / \ `),
+    // Mr. Can-Do: a pinkish-red balloon with a smiley face, on a silver trash can, held up by two wooden bars.
+    can: art(String.raw`
+            .------.
+           /  ^  ^  \
+          |  \____/  |
+           \        /
+            '-.__.-'
+    ||         )         ||
+    ||  .=============.  ||
+    ||==|  |  |  |  | |==||
+        '-------------'`),
+    // No. 1 Crate: a blue crate with big googly eyes, red foam hands, and a "#1" sign on wooden sticks.
+    crate: art(String.raw`
+                 .----.
+                 | #1 |
+                 '-||-'
+       .-----------||---------.
+  (\   |    (O)          (O)   |   /)
+   \\  |                       |  //
+    \\=|                       |=//
+       |                       |
+       '-----------------------'`),
+    // Pan Stan: an iron skillet with a face drawn on it, broomsticks, ropes and two big nails (the x's).
+    pan: art(String.raw`
+          _________
+         /  o   o  \____________
+        |     __    |___________)
+         \_________/
+              |\
+              | \
+        --x---+---x--
+              |
+             / \ `),
   },
   lol: {
     face: art(String.raw`
@@ -540,7 +579,33 @@ SPRITES.nfr.scare.accent = art(String.raw`
          o       o`);
 SPRITES.nfr.freddle.accent = ['  x', ' w w'];
 // The Trash gang: yellow eyes.
-SPRITES.trs.pile.accent = ['', '   y y    y y    y y      y y'];
+// Trash and the Gang. Their main color is the brown of the wooden sticks; tintBox (below) adds the rest.
+tintBox(SPRITES.trs.bob, 0, 4, 0, 99, 'G');                  // Bucket Bob's silver bucket...
+tintBox(SPRITES.trs.bob, 0, 4, 0, 99, 'x', '@~');            // ...with a scribbled black face
+tintBox(SPRITES.trs.bob, 6, 6, 0, 99, 'r', 'm[]');           // red oven mitts
+tintBox(SPRITES.trs.can, 0, 4, 0, 99, 'r');                  // Mr. Can-Do's pinkish-red balloon...
+tintBox(SPRITES.trs.can, 1, 2, 0, 99, 'x', '^\\_/');         // ...with a smiley face drawn on it
+tintBox(SPRITES.trs.can, 6, 8, 8, 22, 'G');                  // the silver trash can
+tintBox(SPRITES.trs.crate, 3, 8, 7, 31, 'b');                // No. 1 Crate's blue crate...
+tintBox(SPRITES.trs.crate, 4, 4, 0, 99, 'w', 'O');           // ...big googly eyes...
+tintBox(SPRITES.trs.crate, 4, 6, 0, 6, 'r');                 // ...red foam hands
+tintBox(SPRITES.trs.crate, 4, 6, 32, 99, 'r');
+tintBox(SPRITES.trs.crate, 0, 2, 17, 22, 'y');               // the #1 sign
+tintBox(SPRITES.trs.pan, 0, 3, 8, 19, 'G');                  // Pan Stan's iron skillet...
+tintBox(SPRITES.trs.pan, 1, 2, 8, 19, 'w', 'o_');            // ...with a face drawn on it
+tintBox(SPRITES.trs.pan, 6, 6, 0, 99, 'G', 'x');             // the nails
+// tintBox(drawing, r1, r2, c1, c2, color, only): color the characters in rows r1 to r2 and columns c1 to
+// c2 of a drawing with the ACCENT color `color` (only the characters in `only`, if given), on top of the
+// accent mask it already has. Spaces are never colored. (A "function" like this one can be used above
+// the line where it's written: the browser reads all of them before running the file.)
+function tintBox(lines, r1, r2, c1, c2, color, only = null) {
+  const mask = lines.accent || [];
+  lines.accent = lines.map((line, r) => Array.from(line).map((ch, c) => {
+    const hit = r >= r1 && r <= r2 && c >= c1 && c <= c2 && ch !== ' ' && (!only || only.includes(ch));
+    return hit ? color : ((mask[r] || '')[c] || ' ');
+  }).join(''));
+  return lines;
+}
 
 // ---------- the office ----------
 // The middle of the office: 44 wide and 16 tall. A window on each side (next to each door), a poster

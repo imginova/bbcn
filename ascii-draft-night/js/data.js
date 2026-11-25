@@ -105,8 +105,9 @@ const NFREDDY = {
   how: 'came for his Freddles',
 };
 const TRASH = {
-  id: 'trs', name: 'Trash gang', rarity: 'common', where: 'CAMERAS',
-  desc: 'Every so often they pile up in front of a camera and hide most of the picture for a while. They never attack.',
+  // The id stays 'trs' (from when it was "Trash gang"), so kill tallies and saved lineups still match.
+  id: 'trs', name: 'Trash and the Gang', rarity: 'common', where: 'CAMERAS',
+  desc: 'Bucket Bob, Mr. Can-Do, No. 1 Crate and Pan Stan take turns standing right in front of a camera and hiding most of the picture for a while. They never attack.',
 };
 const LOLBIT = {
   id: 'lol', name: 'Lolbit', rarity: 'common', where: 'SCREEN',
