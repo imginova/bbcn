@@ -119,8 +119,8 @@ const FREDDLE_WAIT = [12, 22];
 const FREDDLE_SHINE = 0.5;
 const NFR_ARRIVE = 4;
 
-// ---------- the Trash gang (common) ----------
-// Every so often they pile up in front of one camera and hide most of its picture for a while. They
+// ---------- Trash and the Gang (common) ----------
+// Every so often one of them stands in front of a camera and hides most of its picture for a while. They
 // never attack.
 const TRASH_WAIT = [18, 32];
 const TRASH_STAY = [10, 16];

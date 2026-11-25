@@ -275,9 +275,13 @@ function renderFeed(now) {
       else if (G.pup.wind < BOX_LOW) write(g, 7, 18, '(_LOW!_)', 'c-pup blink');
       else write(g, 7, 18, '(______)', 'dim');
     }
-    // The Trash gang, piled up in front of this camera, hiding most of it. Drawn last, so they cover
-    // whoever is behind them.
-    if (G.trs.room === room) sprite(g, ...TRASH_SPOT, SPRITES.trs.pile, 'c-trs');
+    // One of Trash and the Gang, standing right in front of this camera and hiding most of it. Drawn
+    // last, so they cover whoever is behind them.
+    // They're right up against the lens, so everything behind them (most of the room) is blacked out.
+    if (G.trs.room === room) {
+      for (let r = 1; r <= 9; r++) write(g, r, 4, ' '.repeat(32));
+      sprite(g, ...TRASH_SPOT, SPRITES.trs[G.trs.member], 'c-trs');
+    }
   }
   setHtml($('feed'), toHtml(g));
   // The shock's flash over the picture, for a moment after each zap.

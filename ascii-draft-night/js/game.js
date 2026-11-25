@@ -119,8 +119,9 @@ function newGame() {
     // Nightmare Freddy: which of the 3 desk spots have a Freddle, how long the light has been on each,
     // the timer for the next Freddle, and how long all three have been up.
     nfr: { on: isOn(NFREDDY), freddles: [false, false, false], shine: [0, 0, 0], timer: waitFrom(FREDDLE_WAIT), fullT: 0 },
-    // The Trash gang: the camera they're piled in front of (null: none) and their timer.
-    trs: { on: isOn(TRASH), room: null, timer: waitFrom(TRASH_WAIT) },
+    // Trash and the Gang: which of them is out, the camera they're standing in front of (null: none)
+    // and their timer.
+    trs: { on: isOn(TRASH), member: 'bob', room: null, timer: waitFrom(TRASH_WAIT) },
     // Lolbit: whether the LOL screen is up, and how many of its letters (L, O, L) you've typed so far.
     lol: { on: isOn(LOLBIT), active: false, typed: 0, timer: waitFrom(LOL_WAIT) },
 
@@ -516,9 +517,11 @@ function updateNightmare(dt) {
   }
 }
 
-// ---------- the Trash gang ----------
-// They pile up in front of a random camera (never the one you're looking at) for a while, then wander
-// off. They never attack; they just get in the way of your view.
+// ---------- Trash and the Gang ----------
+// One of them at a time (Bucket Bob, Mr. Can-Do, No. 1 Crate or Pan Stan: TRASH_MEMBERS) stands right in
+// front of a random camera (never the one you're looking at) for a while, then wanders off. They never
+// attack; they just get in the way of your view.
+const TRASH_MEMBERS = ['bob', 'can', 'crate', 'pan'];   // their drawings in SPRITES.trs (art.js)
 function updateTrash(dt) {
   const T = G.trs;
   if (!T.on) return;
@@ -528,6 +531,7 @@ function updateTrash(dt) {
     T.room = null;
     T.timer = waitFrom(TRASH_WAIT);
   } else {
+    T.member = pick(TRASH_MEMBERS);
     T.room = pick(CAM_ORDER.filter(r => !onCam(r)));
     T.timer = waitFrom(TRASH_STAY);
     sfx.trash();

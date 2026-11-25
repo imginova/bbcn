@@ -235,8 +235,8 @@ const sfx = (() => {
     // All three are up: a low, rising growl as a warning that he's coming.
     nightmareNear() { tone(45, 1.4, { type: 'sawtooth', vol: 0.3, slide: 30 }); noise(1.2, { vol: 0.25, freq: 200 }); },
 
-    // ----- the Trash gang -----
-    // Piling up in front of a camera: a rustle and a clatter of junk.
+    // ----- Trash and the Gang -----
+    // One of them stepping in front of a camera: a rustle and a clatter of junk.
     trash() {
       noise(0.5, { vol: 0.15, freq: 1800, type: 'highpass' });
       for (let i = 0; i < 3; i++) tone(300 + Math.random() * 400, 0.06, { type: 'square', vol: 0.06, delay: 0.1 + i * 0.12 });
