@@ -885,6 +885,16 @@ SPRITES.spr.scare.accent = ['', '', '', '', '        w', '              w'];
 SPRITES.nch = {
   // Her cupcake, hidden on a camera. It's small and dim on purpose: you have to look for it.
   cupcake: '{,}',
+  // Standing in your office, waiting, while you search the cameras for her cupcake (on request).
+  office: eyes(art(String.raw`
+  \ | /
+ .-----.
+/ @   @ \
+| /VVV\ |
+| \AAA/ |
+ \_____/
+|LET'S  |
+| EAT!! |`), 'r'),
   scare: eyes(art(String.raw`
              \  |  /
            .---------.
@@ -1085,6 +1095,7 @@ const NCHICA_SPOTS = {
 const GOLDEN_SPOT = [3, 15];       // Golden Freddy, slumped in front of the monitor (exactly as wide as it)
 const TFREDDY_SPOT = [2, 15];      // Toy Freddy, leaning over the desk
 const WBONNIE_SPOT = [6, 1];       // Withered Bonnie, on the left of the desk
+const NCHICA_OFFICE_SPOT = [6, 33]; // Nightmare Chica, on the right of the desk, while you search
 const NFB_OFFICE_SPOT = [3, 16];   // Nightmare Fredbear, over the desk
 const BONNET_ROWS = [12.5, 14];    // Bonnet runs along the floor, between these rows
 // Where Plushtrap (and Fredbear's little plush) can hide (4 wide, 2 tall).

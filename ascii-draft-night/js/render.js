@@ -156,6 +156,9 @@ function drawVisitors(g, now) {
   if (G.tfr.present) sprite(g, ...TFREDDY_SPOT, SPRITES.tfr.office, 'c-tfr');
   if (G.gol.present) sprite(g, ...GOLDEN_SPOT, SPRITES.gol.office, 'c-gol');
   if (G.nfb.mode === 'toy') sprite(g, ...NFB_OFFICE_SPOT, SPRITES.nfb.office, 'c-nfb');
+  // Nightmare Chica, standing in your office the whole time her cupcake is hidden: the sign to go and
+  // search the cameras. In her last 5 seconds she blinks.
+  if (G.nch.room) sprite(g, ...NCHICA_OFFICE_SPOT, SPRITES.nch.office, 'c-nch' + (G.nch.deadline - G.t < 5 ? ' blink' : ''));
   // Plushtrap and Fredbear's little plush, hiding.
   if (G.plu.spot) sprite(g, ...G.plu.spot, SPRITES.plu.office, 'c-plu');
   if (G.nfb.mode === 'plush') sprite(g, ...G.nfb.spot, SPRITES.nfb.plush, 'c-nfb');
