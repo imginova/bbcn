@@ -21,13 +21,15 @@ const GOAL_POINTS = 150;  // survive a night whose lineup is worth at least this
 const OFFER_SIZE = 5;     // characters shown on the pick screen (you take as many as you want)
 
 // ---------- the clock ----------
-const HOUR_SECONDS = 30;   // real seconds per in-game hour (a whole night lasts 3 minutes)
+// It was 30 seconds (3-minute nights) until the owner asked for shorter nights. Power drain and heat were
+// sped up to match (times 1.5), so they still last the same share of the night.
+const HOUR_SECONDS = 20;   // real seconds per in-game hour (a whole night lasts 2 minutes)
 const NIGHT_HOURS = 6;     // 12 AM to 6 AM
 
 // ---------- power ----------
 // The monitor, each closed door, the flashlight and the fan each cost this much per second while
 // in use. The mask and the audio lures are free. (The monitor alone, all night, costs 54%.)
-const UNIT_DRAIN = 0.3;
+const UNIT_DRAIN = 0.45;
 const POWER_OUT_WAIT = [5, 13];   // seconds of darkness after a power-out before Freddy gets you
 
 // ---------- the office heat ----------
@@ -36,7 +38,7 @@ const POWER_OUT_WAIT = [5, 13];   // seconds of darkness after a power-out befor
 // At 100% you pass out (it costs a life, like being caught). HOT_WARN: a heavy breath plays when the
 // heat passes each of these, as a warning.
 const HEAT_START = 10;
-const HEAT_RISE = 0.75;
+const HEAT_RISE = 1.1;
 const FAN_COOL = 5;
 const HOT_WARN = [70, 85];
 
