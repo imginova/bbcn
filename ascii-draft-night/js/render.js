@@ -108,13 +108,23 @@ function renderGame(now) {
 }
 
 // ---------- the office ----------
+// Which rarity color paints each part of the office (OFFICE_PARTS in art.js): the characters in your
+// lineup, in the order you took them, each paint the next part. With more characters than parts it goes
+// round again, so later picks paint over earlier ones. An empty lineup leaves the office all grey.
+function officePaints() {
+  const paints = [];
+  if (run) charsOf(run.lineup).forEach((c, i) => { paints[i % OFFICE_PARTS.length] = RARITIES[c.rarity].cls; });
+  return paints;
+}
+
 function renderOffice(now) {
   $('office').classList.toggle('dark', G.powerOut);
+  const paints = officePaints();
   for (const side of ['L', 'R']) {
-    setHtml($('door' + side), toHtml(doorGrid(side)));
+    setHtml($('door' + side), toHtml(doorGrid(side, paints)));
     $('door' + side).classList.toggle('lit', doorLit(side) && !G.doors[side]);   // the doorway glows in the light
   }
-  const g = officeGrid(G.fan, now);
+  const g = officeGrid(G.fan, now, paints);
   if (!G.powerOut) drawVisitors(g, now);
   setHtml($('officeArt'), toHtml(g));
 }
@@ -159,7 +169,8 @@ function drawVisitors(g, now) {
 
 // One door of the office as a grid: 12 wide (10 inside the frame) and 16 tall.
 // Shut: a steel shutter. Open: a dark doorway with a dotted floor, plus whoever is standing there.
-function doorGrid(side) {
+// Its frame takes the color your lineup painted it (`paints`, see officePaints above).
+function doorGrid(side, paints = []) {
   const W = 10, H = 14;
   const shut = G.doors[side];
   const lines = ['+' + '-'.repeat(W) + '+'];
@@ -173,6 +184,13 @@ function doorGrid(side) {
   lines.push('+' + '='.repeat(W) + '+');
   const g = grid(lines, W + 2);
   for (let r = 1; r <= H; r++) for (let c = 1; c <= W; c++) g[r][c].cls = shut ? 'door' : 'dim';
+  // The frame: every cell on the edge of the grid.
+  const paint = paints[OFFICE_PARTS.findIndex(p => p.door === side)];
+  if (paint) {
+    g.forEach((row, r) => row.forEach((cell, c) => {
+      if (r === 0 || r === g.length - 1 || c === 0 || c === W + 1) cell.cls = paint + ' paint';
+    }));
+  }
   if (shut || G.powerOut) return g;
   // Bonnie in the left doorway, Chica in the right one.
   if (side === 'L' && G.bon.on && atDoor(G.bon, BONNIE)) inDoorway(g, side, 4, 1, SPRITES.bon.door, 'c-bon');

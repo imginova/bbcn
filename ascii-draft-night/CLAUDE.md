@@ -34,6 +34,7 @@ The owner's request: "a fnaf rouge-lite-ish where you survive through nights whi
 - **Caught** (`nightLost`): one life gone; the scare screen says CAUGHT and offers "Retry night N". At 0 lives: RUN OVER, `run = null`, "New run".
 - **Quitting mid-night** (pause → Quit to title) keeps the run; that night starts again from 12 AM (no life lost). Closing the page does the same.
 - All 25 characters are worth 450 points in total.
+- **The painted office** (on request, 2026-11-25: "the more characters added the more the office would be colored by the rarity of the character"; the owner chose "piece by piece"): the office starts dim grey; each character in `run.lineup`, in pick order, paints the next part of `OFFICE_PARTS` (`art.js`: poster, monitor, left and right door frames, vent, desk front, windows, floor, desk top and legs, ceiling) in its rarity class (`officePaints` in `render.js`, `paintOffice`, the door frames in `doorGrid`). With more characters than parts (11) it wraps round, so later picks paint over earlier ones. Painted cells get `.paint` (bold, soft glow).
 
 ## The office
 

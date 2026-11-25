@@ -271,13 +271,16 @@ pre [class*="c-"] { font-weight: 600; }
 .meter .bars { white-space: pre; }
 .low { color: var(--danger); }
 .viewport { position: relative; display: flex; justify-content: center; margin-top: 14px; min-height: calc(var(--art) * 1.18 * 16); }
-.office { display: flex; justify-content: center; transition: color .3s; }
+/* The office starts plain, dim grey. Each character in your lineup paints one part of it in its rarity
+   color (render.js, officePaints): those cells get the r- class plus .paint, which adds a soft glow. */
+.office { display: flex; justify-content: center; transition: color .3s; color: var(--dim); }
+.paint { font-weight: 600; text-shadow: 0 0 5px color-mix(in srgb, currentColor 45%, transparent); }
 .office pre[data-door] { cursor: pointer; }
 /* The flashlight shining into a doorway: it glows. */
 .office pre.lit { background: rgba(255,250,220,.12); box-shadow: 0 0 18px rgba(255,250,220,.18); }
 /* After a power-out everything goes dark. */
 .office.dark { color: var(--faint); }
-.office.dark .door, .office.dark .dim, .office.dark .fan, .office.dark .glass { color: #16181b; }
+.office.dark .door, .office.dark .dim, .office.dark .fan, .office.dark .glass, .office.dark .paint { color: #16181b; text-shadow: none; }
 
 /* The flashlight: a soft circle of light centred on the pointer (--x and --y, set by render.js).
    radial-gradient draws a circle that's bright in the middle and fades out to nothing.
