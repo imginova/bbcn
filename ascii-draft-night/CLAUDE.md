@@ -37,9 +37,9 @@ The owner's request: "a fnaf rouge-lite-ish where you survive through nights whi
 
 ## The office
 
-- **The night:** 12 AM to 6 AM, 30 real seconds per hour (`clockLabel` shows the minute).
-- **Power:** starts at 100%. The monitor, each closed door, the flashlight and the fan drain `UNIT_DRAIN` (0.3%/s); each shock costs `SHOCK_COST` (1%); Foxy's bang `FOXY_COST` (6%). Mask and lures are free. At 0%: everything shuts off and **Freddy** gets you 5–13 s later (even if he isn't in the lineup).
-- **Heat:** starts at `HEAT_START` (10%), rises `HEAT_RISE` (0.75%/s) unless the fan is on (`FAN_COOL` 5%/s down). A breath at 70% and 85% (`HOT_WARN`), a red glow from 70%. At 100%: `passOut()`, a game over that costs a life (kill tally key `heat`). Bonnie moves faster in the heat (`bonnieSpeed`: up to 3× at 100%).
+- **The night:** 12 AM to 6 AM, `HOUR_SECONDS` (20) real seconds per hour, so 2 minutes (`clockLabel` shows the minute). It was 30 (3 minutes) until the owner asked for shorter nights; `UNIT_DRAIN` (0.3 → 0.45) and `HEAT_RISE` (0.75 → 1.1) went up 1.5× so power and heat still last the same share of the night. Characters act on real seconds, so a night now has about a third fewer visits.
+- **Power:** starts at 100%. The monitor, each closed door, the flashlight and the fan drain `UNIT_DRAIN` (0.45%/s); each shock costs `SHOCK_COST` (1%); Foxy's bang `FOXY_COST` (6%). Mask and lures are free. At 0%: everything shuts off and **Freddy** gets you 5–13 s later (even if he isn't in the lineup).
+- **Heat:** starts at `HEAT_START` (10%), rises `HEAT_RISE` (1.1%/s) unless the fan is on (`FAN_COOL` 5%/s down). A breath at 70% and 85% (`HOT_WARN`), a red glow from 70%. At 100%: `passOut()`, a game over that costs a life (kill tally key `heat`). Bonnie moves faster in the heat (`bonnieSpeed`: up to 3× at 100%).
 - **Layout:** left door (12 wide) + office (44 × 16, `OFFICE_ART`) + right door. The office has a **window** at each end (`WINDOWS`, inside 6 × 3), the poster, the vent, the monitor, the **fan** on the desk (spins when on, `FAN_SPIN`).
 - **Flashlight:** hold F / right mouse / the button. `beamOn` (office), `beamOnFeed` (cameras), `doorLit(side)` (a doorway, **only while that door is open**: a shut door blocks the light).
 - **Mask:** W in the office. Not with the monitor up; the monitor can't go up with it on.

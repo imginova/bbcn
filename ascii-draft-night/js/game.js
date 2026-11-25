@@ -65,10 +65,10 @@ const ventsOn = () => CRAWLERS.some(isOn);
 // Can you see the office right now? (Not with the monitor up or the mask over your eyes.)
 const seeingOffice = () => !G.cam && !G.mask;
 
-// Turn seconds into the clock: with 30-second hours, 0-29s is 12 AM, 30-59s is 1 AM, and so on.
+// Turn seconds into the clock: with 20-second hours, 0-19s is 12 AM, 20-39s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
-// The clock to the minute, like "2:07 AM". With 30-second hours, an in-game minute is half a real
-// second. padStart(2, '0') turns 7 into "07".
+// The clock to the minute, like "2:07 AM". With 20-second hours, an in-game minute is a third of a
+// real second. padStart(2, '0') turns 7 into "07".
 function clockLabel(t) {
   const minutes = Math.min(NIGHT_HOURS * 60, Math.floor(t / HOUR_SECONDS * 60));
   const h = Math.floor(minutes / 60), m = minutes % 60;
@@ -173,8 +173,8 @@ function newGame() {
     shockReady: 0, zapUntil: 0,
   };
 }
-// Showtimes land on a round time: a multiple of 10 in-game minutes (5 real seconds).
-const roundShow = t => Math.ceil(t / 5) * 5;
+// Showtimes land on a round time: a multiple of 10 in-game minutes (a sixth of an hour).
+const roundShow = t => Math.ceil(t / (HOUR_SECONDS / 6)) * (HOUR_SECONDS / 6);
 const NIGHT_END = HOUR_SECONDS * NIGHT_HOURS;
 const otherSide = side => side === 'L' ? 'R' : 'L';
 
