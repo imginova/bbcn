@@ -94,6 +94,14 @@ $('lolKeys').addEventListener('pointerdown', e => {
 
 // ---------- the pick screen ----------
 // Clicking a card takes it or puts it back. data-id="fre" says which character it is.
+// The difficulty buttons on the title screen (data-diff says which one).
+$('diffs').addEventListener('click', e => {
+  const b = e.target.closest('[data-diff]');
+  if (!b) return;
+  sfx.init();
+  setDifficulty(b.dataset.diff);
+});
+
 $('offer').addEventListener('click', e => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
@@ -216,6 +224,8 @@ document.addEventListener('keydown', e => {
     if (k === 'Enter') { e.preventDefault(); run ? continueRun() : newRun(); }
     else if (k === 'n') pressNewRun();
     else if (k === 'h') openHowto();
+    // D steps to the next difficulty (after Nightmare it goes back to Easy).
+    else if (k === 'd') setDifficulty(DIFF_ORDER[(DIFF_ORDER.indexOf(difficulty) + 1) % DIFF_ORDER.length]);
 
   } else if (currentScreen === 'pick') {
     // 1 to 5 take or put back the card with that number.

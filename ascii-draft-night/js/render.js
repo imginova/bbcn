@@ -147,6 +147,16 @@ function officePaints() {
   return paints;
 }
 
+// The cameras get painted too (on request: "have the colors of your picks extend to the cams"). In pick
+// order, each character in your lineup paints one camera's room in its rarity color: the 1st paints
+// CAM 1, the 2nd CAM 2, and so on; after CAM 9 it goes round again, so later picks paint over earlier ones.
+// Returns { room id: rarity class }, like { stage: 'r-common' }.
+function camPaints() {
+  const paints = {};
+  if (run) charsOf(run.lineup).forEach((c, i) => { paints[CAM_ORDER[i % CAM_ORDER.length]] = RARITIES[c.rarity].cls; });
+  return paints;
+}
+
 function renderOffice(now) {
   $('office').classList.toggle('dark', G.powerOut);
   const paints = officePaints();
@@ -300,6 +310,7 @@ function renderFeed(now) {
       Array.from({ length: 40 }, () => ({ ch: chars[Math.floor(Math.random() * chars.length)], cls: 'dim' })));
   } else {
     g = grid(frame(ROOM_ART[room], 38), 40);
+    paintRoom(g, camPaints()[room]);   // the room in the color your lineup painted it (if any)
     // Freddy, Bonnie and Chica, if they're in this room (when they're on tonight).
     if (G.fre.on && freddyRoom() === room) sprite(g, ...FREDDY_SLOTS[room], SPRITES.fre.cam, 'c-fre');
     const B = G.bon, C = G.chi;

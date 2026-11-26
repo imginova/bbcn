@@ -17,8 +17,20 @@
 
 // ---------- the run ----------
 const LIVES = 3;          // lives per run: dying costs one and you replay that night
-const GOAL_POINTS = 150;  // survive a night whose lineup is worth at least this many points to win the run
 const OFFER_SIZE = 5;     // characters shown on the pick screen (you take as many as you want)
+
+// The difficulties (picked on the title screen before a new run). A difficulty only changes the GOAL:
+// survive a night whose lineup is worth at least `goal` points to win the run. All 33 characters
+// together are worth 570, so even Nightmare leaves some room. `cls` borrows a rarity's color.
+// Normal is the old goal of 150, so a run saved before difficulties existed counts as Normal.
+const DIFFICULTIES = {
+  easy:      { name: 'Easy',      goal: 100, cls: 'r-common' },
+  normal:    { name: 'Normal',    goal: 150, cls: 'r-uncommon' },
+  hard:      { name: 'Hard',      goal: 250, cls: 'r-epic' },
+  nightmare: { name: 'Nightmare', goal: 400, cls: 'r-legendary' },
+};
+const DIFF_ORDER = ['easy', 'normal', 'hard', 'nightmare'];   // easiest first
+const DEFAULT_DIFF = 'normal';
 
 // ---------- the clock ----------
 // It was 30 seconds (3-minute nights) until the owner asked for shorter nights. Power drain and heat were

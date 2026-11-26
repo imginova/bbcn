@@ -1,6 +1,6 @@
 # ASCII FNAF: Draft Night
 
-A roguelite fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. Before every night you're dealt five character cards and take as many as you dare: they join your lineup for the rest of the run. Each character has a rarity (Common 5, Uncommon 10, Rare 20, Epic 35, Legendary 50 points) that says how hard it is and how much it's worth. **Survive a night with a lineup worth 150 points to win the run.** You have three lives.
+A roguelite fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. Before every night you're dealt five character cards and take as many as you dare: they join your lineup for the rest of the run. Each character has a rarity (Common 5, Uncommon 10, Rare 20, Epic 35, Legendary 50 points) that says how hard it is and how much it's worth. **Survive a night with a lineup worth the goal to win the run.** The goal depends on the difficulty you pick before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points. You have three lives.
 
 There are 33 characters: 25 from the main list (9 common, 5 uncommon, 5 rare, 3 epic, 3 legendary) and 8 more obscure, gimmicky BONUS ones mixed into the same rarities, each working its own way (the rules are in the game's **How to play**, and on each card).
 
@@ -38,5 +38,5 @@ The scripts are loaded in that order at the bottom of `index.html`, and **the or
 ## Changing things
 
 - **Make a character easier or harder:** change its numbers in `js/config.js` (each one has its own block).
-- **Change the run:** `LIVES`, `GOAL_POINTS` and `OFFER_SIZE` are at the top of `js/config.js`. How many points each rarity is worth, and how often it turns up on the pick screen, is `RARITIES` in `js/data.js`.
+- **Change the run:** `LIVES`, `OFFER_SIZE` and the difficulties' goals (`DIFFICULTIES`) are at the top of `js/config.js`. How many points each rarity is worth, and how often it turns up on the pick screen, is `RARITIES` in `js/data.js`.
 - **Add a character:** describe it in `js/data.js` (with its `rarity`) and add it to `ROSTER`; give it a face in `ICONS` (`js/art.js`), a color in `style.css`, its numbers in `js/config.js` and its rules in `js/game.js`.

@@ -106,8 +106,8 @@ const ICONS = {
   wmc: [' \\|/ ', '(o>o)', '(:::)'],         // Watermelon Chica: pink, a watermelon slice for a bib
   hnd: ['_|||_', '[o_o]', ' /_\\ '],         // Hand-unit: a robot hand on a stand, a little screen face
   bpt: [' \\|/ ', '[o_o]', ' \\_/ '],        // Bounce pot: a flower pot with a face and a sprout
-  mun: ['/\\ /\\', '(o o)', '\\VVV/'],       // Munchie: a little grabby thing that's all mouth
-  ckf: [' [_] ', '(o^o)', '(.:.)'],          // Cookie Freddy: a cookie-colored Freddy with chocolate chips
+  mun: [' o o ', '\\/\\/\\', '/\\/\\/'],    // Munchie: two big eyes on chattering teeth
+  ckf: [' [_] ', '(o^o)', ' >o< '],          // Cookie Freddy: Freddy dipped in chocolate, pink hat and bow tie
   fen: [' .-. ', '[o o]', '/|=|>'],          // the Flamethrower endo: bare metal, a flamethrower
   pbb: [' @_@ ', '(*.*)', ' | | '],          // Plush babies: little Circus Baby plushes
 };
@@ -146,8 +146,8 @@ const ICON_ACCENTS = {
   wmc: ['', ' v v', 'ggggg'],             // Watermelon Chica: violet eyes, a green rind
   hnd: ['', ' c c'],                      // Hand-unit: a glowing blue screen face
   bpt: [' ggg', ' w w'],                  // Bounce pot: a green sprout, white eyes
-  mun: ['', ' y y', ' www'],              // Munchie: yellow eyes, white teeth
-  ckf: [' xxx', ' b b', ' x x'],          // Cookie Freddy: black hat, blue eyes, chocolate chips
+  mun: [' b b'],                         // Munchie: blue eyes on a silver body
+  ckf: [' ppp', 'ncccn', ' ppp'],        // Cookie Freddy: pink hat, chocolate ears, blue eyes, pink bow tie
   fen: ['', ' r r', '    o'],             // the Flamethrower endo: red eyes, an orange flame
   pbb: [' o o', ' g g'],                  // Plush babies: orange pigtails, green eyes
 };
@@ -493,7 +493,7 @@ const SPRITES = {
 // drawing is used.
 const ACCENT = {
   r: 'acc-red', o: 'acc-orange', y: 'acc-yellow', g: 'acc-green', b: 'acc-blue', v: 'acc-violet',
-  p: 'acc-pink', k: 'acc-gold', c: 'acc-sky', x: 'acc-black', w: 'acc-white', G: 'acc-grey',
+  p: 'acc-pink', k: 'acc-gold', c: 'acc-sky', x: 'acc-black', w: 'acc-white', G: 'acc-grey', n: 'acc-brown', D: 'acc-dark',
 };
 // Freddy: black top hat and bow tie, blue eyes.
 SPRITES.fre.scare.accent = art(String.raw`
@@ -706,6 +706,13 @@ function paintOffice(g, paints) {
       }
     }
   });
+}
+
+// Paint a whole camera picture in one rarity color (`cls`, like 'r-epic'): every line of the room and
+// its frame that has no color yet. The characters are drawn on top afterwards, so they keep theirs.
+function paintRoom(g, cls) {
+  if (!cls) return;
+  for (const row of g) for (const cell of row) if (cell.ch !== ' ' && !cell.cls) cell.cls = cls + ' paint';
 }
 
 // The office for this moment, as a grid (without the visitors: render.js adds those). `paints` says
@@ -1267,59 +1274,109 @@ SPRITES.bpt = {
 };
 SPRITES.bpt.pot.accent = ['  y', ' ggg', ' w w'];
 
-// ----- Munchie: a little grabby thing that's all mouth, clinging to your screen -----
+// ----- Munchie: a set of chattering teeth (redrawn on request, 2026-11-25, from the official design the
+// owner shared, then again to match it more closely). Two big eyes sit at the back: heavy black lids (#)
+// over the top half and blue irises (@) looking down. Under them: a long upper jaw with big triangle teeth
+// hanging down, two slanted posts (/ /) holding it up, and a lower jaw with big teeth pointing up. The
+// whole body is SILVER (its own color, c-mun): the owner pointed out that the pink and tan in the official
+// picture are only the lighting. On your screen it's seen from the side, mouth open to the left; the
+// jumpscare is head on, mouth wide open at you.
 SPRITES.mun = {
   grab: art(String.raw`
-  /\      /\
- (  o    o  )
-  \ VVVVVV /
---{ AAAAAA }--
-  /|      |\
- / |      | \ `),
+              _____  _____
+             /#####\/#####\
+             |(@)  ||(@)  |
+ ____________\_____/\_____/
+ \  /\  /\  /\  /\  /\    |
+  \/  \/  \/  \/  \/  \___|
+                      /  /
+                     /  /
+  /\  /\  /\  /\    /  /
+ /  \/  \/  \/  \__/__/
+ \____________________/`),
   scare: art(String.raw`
-     /\            /\
-    /  \          /  \
-   (    o        o    )
-    \  VVVVVVVVVVVV  /
-     | |          | |
-    /  AAAAAAAAAAAA  \
----{                  }---
-    \/\/\/\/\/\/\/\/\/`),
+     _________     _________
+    /#########\   /#########\
+    |  (@)    |   |  (@)    |
+     \_______/     \_______/
+  ______________________________
+  \   /\   /\   /\   /\   /\   /
+   \ /  \ /  \ /  \ /  \ /  \ /
+    V    V    V    V    V    V
+      |                    |
+      |                    |
+    A    A    A    A    A    A
+   / \  / \  / \  / \  / \  / \
+  /   \/   \/   \/   \/   \/   \
+  \____________________________/`),
 };
-tintBox(SPRITES.mun.grab, 1, 1, 0, 99, 'y', 'o');
-tintBox(SPRITES.mun.grab, 2, 3, 0, 99, 'w', 'VA');
-tintBox(SPRITES.mun.scare, 2, 2, 0, 99, 'y', 'o');
-tintBox(SPRITES.mun.scare, 3, 5, 0, 99, 'w', 'VA');
+// Dark lids (a white outline filled with dark #) and white eyes with blue irises. The silver body is
+// Munchie's own color, so it needs no tint.
+tintBox(SPRITES.mun.grab, 0, 1, 0, 99, 'w');
+tintBox(SPRITES.mun.grab, 1, 1, 0, 99, 'D', '#');
+tintBox(SPRITES.mun.grab, 2, 3, 13, 99, 'w');
+tintBox(SPRITES.mun.grab, 2, 2, 0, 99, 'b', '@');
+tintBox(SPRITES.mun.scare, 0, 1, 0, 99, 'w');
+tintBox(SPRITES.mun.scare, 1, 1, 0, 99, 'D', '#');
+tintBox(SPRITES.mun.scare, 2, 3, 0, 99, 'w');
+tintBox(SPRITES.mun.scare, 2, 2, 0, 99, 'b', '@');
 
-// ----- Cookie Freddy: a cookie-colored Freddy covered in chocolate chips (the dots) -----
+// ----- Cookie Freddy: Freddy dipped in chocolate (redrawn on request, 2026-11-25, from the official
+// design the owner shared). A cookie-colored bear whose head and ears are coated in dripping chocolate
+// (the ' marks) with rainbow sprinkles (:), a pink top hat and bow tie, blue eye rings, a teal nose and
+// rainbow teeth. -----
 SPRITES.ckf = {
   office: art(String.raw`
      ___
-   _|___|_
-  .-------.
- / o  .  o \
-|  .  ^  .  |
-|   \___/ . |
- \ .     . /
-  '-------'`),
+    |   |
+ () |___| ()
+  /'':'':''\
+ |'(o) (o)'|
+ |   ,v,   |
+ |  [iii]  |
+  \_______/
+     >o<`),
   scare: art(String.raw`
-          _______
-         |       |
-       __|_______|__
-     .-------------.
-    /  .   .    .   \
-   |    O       O    |
-   | .      ^      . |
-   |   .  \___/  .   |
-    \   .       .   /
-     '-------------'`),
+             _______
+            |       |
+            |       |
+  .--.    __|_______|__    .--.
+ ( () )/''':''':''':''':'\( () )
+  '--' |' :' '  '  ' :' '| '--'
+       |   ~~~     ~~~   |
+       |   (O)     (O)   |
+       |       ,v,       |
+       |    [iiiiiii]    |
+        \    '-----'    /
+         '-.___>o<___.-'`),
 };
-tintBox(SPRITES.ckf.office, 0, 1, 0, 99, 'x');
-tintBox(SPRITES.ckf.office, 3, 3, 0, 99, 'b', 'o');
-tintBox(SPRITES.ckf.office, 3, 6, 0, 99, 'x', '.');
-tintBox(SPRITES.ckf.scare, 0, 2, 0, 99, 'x');
-tintBox(SPRITES.ckf.scare, 5, 5, 0, 99, 'b', 'O');
-tintBox(SPRITES.ckf.scare, 4, 8, 0, 99, 'x', '.');
+// The office one: pink hat, chocolate ears and coating, sprinkles, blue eye rings with pink middles, a
+// teal nose, rainbow teeth and a pink bow tie. tintBox colors a box of rows and columns (see above).
+tintBox(SPRITES.ckf.office, 0, 2, 4, 8, 'p');
+tintBox(SPRITES.ckf.office, 2, 2, 0, 3, 'n');
+tintBox(SPRITES.ckf.office, 2, 2, 9, 99, 'n');
+tintBox(SPRITES.ckf.office, 3, 3, 0, 99, 'n');
+tintBox(SPRITES.ckf.office, 3, 3, 5, 5, 'y');
+tintBox(SPRITES.ckf.office, 3, 3, 8, 8, 'c');
+tintBox(SPRITES.ckf.office, 4, 4, 0, 99, 'n', "'");
+tintBox(SPRITES.ckf.office, 4, 4, 0, 99, 'c', '()');
+tintBox(SPRITES.ckf.office, 4, 4, 0, 99, 'p', 'o');
+tintBox(SPRITES.ckf.office, 5, 5, 0, 99, 'c', 'v');
+['r', 'y', 'g'].forEach((color, i) => tintBox(SPRITES.ckf.office, 6, 6, 5 + i, 5 + i, color));
+tintBox(SPRITES.ckf.office, 8, 8, 0, 99, 'p');
+// The jumpscare one, colored the same way.
+tintBox(SPRITES.ckf.scare, 0, 3, 10, 22, 'p');
+tintBox(SPRITES.ckf.scare, 3, 5, 0, 6, 'n');
+tintBox(SPRITES.ckf.scare, 3, 5, 26, 99, 'n');
+tintBox(SPRITES.ckf.scare, 4, 5, 7, 25, 'n', "'/\\");
+[[4, 11, 'y'], [4, 15, 'c'], [4, 19, 'r'], [4, 23, 'g'], [5, 10, 'o'], [5, 21, 'v']]
+  .forEach(([r, c, color]) => tintBox(SPRITES.ckf.scare, r, r, c, c, color));
+tintBox(SPRITES.ckf.scare, 6, 6, 0, 99, 'o', '~');
+tintBox(SPRITES.ckf.scare, 7, 7, 0, 99, 'c', '()');
+tintBox(SPRITES.ckf.scare, 7, 7, 0, 99, 'p', 'O');
+tintBox(SPRITES.ckf.scare, 8, 8, 0, 99, 'c', 'v');
+['r', 'o', 'y', 'g', 'c', 'b', 'v'].forEach((color, i) => tintBox(SPRITES.ckf.scare, 9, 9, 13 + i, 13 + i, color));
+tintBox(SPRITES.ckf.scare, 11, 11, 0, 99, 'p', '>o<');
 
 // ----- the Flamethrower endo -----
 SPRITES.fen = {
