@@ -184,7 +184,7 @@ function newGame() {
     // longer it's charging up on the floor (charge, 0 = not charging) and until when it can't hit again.
     // It starts crouched on the floor, charging up its first bounce.
     // `speed` and `chargeTime` are its own (Grave weed below shares the same bouncing, with its own).
-    bpt: bouncer(isOn(BOUNCEPOT), BOUNCE_SPEED, BOUNCE_CHARGE),
+    bpt: bouncer(isOn(BOUNCEPOT), BOUNCE_SPEED, BOUNCE_CHARGE, BOUNCE_JUMP),
     // Munchie: whether it's on your screen, where (fractions of the view, its top-left corner), its clock.
     mun: { on: isOn(MUNCHIE), active: false, x: 0, y: 0, deadline: 0, timer: waitFrom(MUNCHIE_WAIT) },
     // Cookie Freddy: the coatings he wants (empty: he isn't here), the ones you've got, his clock.
@@ -207,16 +207,17 @@ function newGame() {
     // shut on it) or 'attack' (at `side`, after a door opened), plus its clocks.
     nsb: { on: isOn(NSTAFFBOT), phase: 'idle', side: 'L', deadline: 0, blinkT: 0, timer: waitFrom(NSB_WAIT) },
     // Grave weed: bounces like Bounce pot (see bouncer below), slower.
-    grw: bouncer(isOn(GRAVEWEED), GRAVE_SPEED, GRAVE_CHARGE),
+    grw: bouncer(isOn(GRAVEWEED), GRAVE_SPEED, GRAVE_CHARGE, GRAVE_JUMP),
 
     // The controlled shock: when it's charged again (G.t), and until when its flash shows (milliseconds).
     shockReady: 0, zapUntil: 0,
   };
 }
 // Something that bounces around the view (Bounce pot, Grave weed). It starts crouched on the floor at a
-// random spot, charging up its first bounce, heading left or right (dir).
-function bouncer(on, speed, chargeTime) {
-  return { on, speed, chargeTime, x: rand(0.1, 0.8), y: 1 - POT_H, vx: 0, vy: 0, dir: pick([-1, 1]), charge: chargeTime, safeUntil: 0 };
+// random spot, charging up its first bounce, heading left or right (dir). `jump` is its [lowest, highest]
+// spring off the floor.
+function bouncer(on, speed, chargeTime, jump) {
+  return { on, speed, chargeTime, jump, x: rand(0.1, 0.8), y: 1 - POT_H, vx: 0, vy: 0, dir: pick([-1, 1]), charge: chargeTime, safeUntil: 0 };
 }
 // Showtimes land on a round time: a multiple of 10 in-game minutes (a sixth of an hour).
 const roundShow = t => Math.ceil(t / (HOUR_SECONDS / 6)) * (HOUR_SECONDS / 6);
@@ -1542,6 +1543,7 @@ function updateBouncer(P, dt, pitch) {
       P.charge = P.chargeTime;
       sfx.potCharge(P.chargeTime, pitch);
     }
+    if (P.y < 0) { P.y = 0; P.vy = 0; }                                  // bumps its head on the top
     if (P.x <= 0) { P.x = 0; P.vx = Math.abs(P.vx); }                    // off the left side
     if (P.x >= 1 - POT_W) { P.x = 1 - POT_W; P.vx = -Math.abs(P.vx); }   // off the right side
   }
@@ -1554,7 +1556,7 @@ function updateBouncePot(dt) {
   // It hit the pointer: it bounces off, costs power, and can't hit again for BOUNCE_SAFE seconds.
   P.safeUntil = G.t + BOUNCE_SAFE;
   P.charge = 0;
-  P.vy = -rand(...BOUNCE_JUMP);
+  P.vy = -rand(...P.jump);
   G.power -= BOUNCE_COST;
   sfx.potHit();
   if (G.power <= 0) powerOutStart();
@@ -1562,7 +1564,7 @@ function updateBouncePot(dt) {
 // Spring off the floor: a random height, across the way it was going at its own speed, leaning a little
 // toward the mouse pointer (the further away the pointer is, the more it leans; pointer off the view: no lean).
 function launchPot(P, pitch) {
-  P.vy = -rand(...BOUNCE_JUMP);
+  P.vy = -rand(...P.jump);
   const lean = aim.where ? BOUNCE_LEAN * (aim.fx - (P.x + POT_W / 2)) : 0;
   P.vx = Math.max(-BOUNCE_MAX_SPEED, Math.min(BOUNCE_MAX_SPEED, P.dir * P.speed + lean));
   sfx.potLaunch(pitch * 1.5);

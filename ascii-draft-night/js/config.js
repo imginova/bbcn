@@ -295,7 +295,10 @@ const BOUNCE_COST = 3;
 const BOUNCE_SAFE = 1.5;
 const BOUNCE_SPEED = 0.22;
 const BOUNCE_GRAVITY = 1.6;
-const BOUNCE_JUMP = [0.95, 1.3];   // how hard it bounces up off the bottom (a random amount each time)
+// How hard it springs up off the bottom (a random amount each time, in screens per second). The highest
+// it gets is about speed² ÷ (2 × gravity) of the view: 1.6 takes it nearly to the top. It was [0.95, 1.3]
+// (about halfway up) until the owner asked for higher jumps (2026-11-26).
+const BOUNCE_JUMP = [1.25, 1.6];
 // Each time it lands it crouches on the floor and charges up for BOUNCE_CHARGE seconds (squashing and
 // shaking: your warning), then springs off leaning a little toward your mouse pointer: BOUNCE_LEAN times
 // how far away the pointer is, added to its speed across, never more than BOUNCE_MAX_SPEED in all.
@@ -382,3 +385,4 @@ const NSB_BLINK = 0.5;   // seconds between the caution bot's blinks
 const GRAVE_SPEED = 0.17;
 const GRAVE_CHARGE = 0.8;
 const GRAVE_GRACE = 3;
+const GRAVE_JUMP = [0.95, 1.3];   // its jump: Bounce pot's old one (about halfway up the view)
