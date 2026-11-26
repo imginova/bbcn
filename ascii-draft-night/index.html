@@ -48,9 +48,14 @@
       <p class="eyebrow">Night guard · pick your own nightmare</p>
       <h1>ASCII FNAF</h1>
       <p class="line-tag">DRAFT NIGHT</p>
-      <p class="tag-line">Before every night you're dealt five characters. Take as many as you dare: they stay for the whole run. Survive a night with a lineup worth 150 points to win. You have three lives.</p>
+      <p class="tag-line">Before every night you're dealt five characters. Take as many as you dare: they stay for the whole run. Survive a night with a lineup worth <b id="goalText">150</b> points to win. You have three lives.</p>
       <!-- The rarities and their points, filled by boot() in main.js. -->
       <p class="rarity-key" id="rarityKey"></p>
+      <!-- The difficulty for a new run: one button per difficulty, filled by renderTitle() in screens.js. -->
+      <div class="diff-pick">
+        <p class="lab" id="diffLab">Difficulty for a new run <kbd>D</kbd></p>
+        <div class="diffs" id="diffs" role="group" aria-labelledby="diffLab"></div>
+      </div>
       <div class="menu">
         <button id="btnContinue" type="button" class="primary" hidden>Continue run <kbd>Enter</kbd></button>
         <button id="btnNewRun" type="button">New run <kbd>N</kbd></button>
@@ -237,8 +242,8 @@
     <ul>
       <li>A run is several nights in a row. Before each night you're shown <b>5 cards</b>. Take as many as you like (or none): they join your <b>lineup</b> for the rest of the run, and everyone in your lineup is out there every night.</li>
       <li>Each character has a rarity: <b class="r-common">Common 5</b>, <b class="r-uncommon">Uncommon 10</b>, <b class="r-rare">Rare 20</b>, <b class="r-epic">Epic 35</b> and <b class="r-legendary">Legendary 50</b> points. Rarer ones are harder and turn up less often.</li>
-      <li>Your office starts out grey. Every character you take paints one more part of it (the poster, the monitor, the door frames...) in the color of its rarity, so you can see your lineup grow.</li>
-      <li><b>Survive a night with a lineup worth 150 points or more and you win the run.</b></li>
+      <li>Your office starts out grey. Every character you take paints one more part of it (the poster, the monitor, the door frames...) in the color of its rarity, so you can see your lineup grow. Each one also paints a camera room: your 1st pick paints CAM 1, your 2nd CAM 2, and so on.</li>
+      <li><b>Survive a night with a lineup worth the run's goal or more and you win the run.</b> The goal is set by the difficulty you pick on the title screen before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points.</li>
       <li>You have <b>3 lives</b>. Getting caught (or passing out from the heat) costs one, and you replay that night with the same lineup. Lose all three and the run is over.</li>
     </ul>
     <p class="lab">The office</p>

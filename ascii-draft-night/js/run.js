@@ -6,7 +6,8 @@
      1. The pick screen shows OFFER_SIZE (5) characters. Take as many as
         you like (or none); they join your LINEUP for the rest of the run.
      2. You play a night against everyone in your lineup.
-     3. Survive it, and if your lineup is worth GOAL_POINTS (150) or more,
+     3. Survive it, and if your lineup is worth the run's goal or more
+        (100, 150, 250 or 400 points, by the difficulty in DIFFICULTIES),
         you've won the run. If not, it's back to the pick screen for the
         next night.
      4. Get caught, and you lose a life and replay the same night. At 0
@@ -24,18 +25,43 @@
 //   lineup  the ids of everyone in your lineup, like ['fre', 'chi']
 //   offer   the ids of the characters on the pick screen (empty once you've started the night)
 //   picked  the ids you've taken from the offer so far (they join the lineup when the night starts)
+//   diff    the run's difficulty, like 'hard' (runs saved before difficulties existed don't have one)
 let run = store.get('run', null);
+
+// The difficulty the NEXT new run will use, picked on the title screen. A run in progress keeps its own.
+let difficulty = store.get('difficulty', DEFAULT_DIFF);
+if (!DIFFICULTIES[difficulty]) difficulty = DEFAULT_DIFF;   // only in memory: the saved value is left alone
+
+// A run's difficulty, and how many points it needs to win. A run without one (or with one this
+// version doesn't know) counts as Normal, the goal every run had before difficulties.
+const diffOf = r => r && DIFFICULTIES[r.diff] ? r.diff : DEFAULT_DIFF;
+const goalOf = r => DIFFICULTIES[diffOf(r)].goal;
 
 // Your records over every run. RULE: saved things are only ever added to, never thrown away.
 //   runs       runs started
-//   wins       runs won
+//   wins       runs won (every difficulty)
 //   bestNight  the most nights survived in one run
 //   bestPoints the most points a lineup was worth on a night you survived
-//   fastestWin the fewest nights a won run took (0 until you win one)
+//   fastestWin the fewest nights a won run took (0 until you win one; every difficulty)
+//   diffs      wins and fastestWin for each difficulty, like { hard: { wins: 1, fastestWin: 6 } }
 const records = Object.assign({ runs: 0, wins: 0, bestNight: 0, bestPoints: 0, fastestWin: 0 }, store.get('records', {}) || {});
+// Records saved before difficulties existed have no `diffs`. Every run back then was Normal, so the
+// wins so far become Normal's. (Nothing is removed: wins and fastestWin stay as they were.)
+if (!records.diffs) records.diffs = records.wins ? { normal: { wins: records.wins, fastestWin: records.fastestWin } } : {};
+// The records of one difficulty (made empty the first time it's needed).
+const diffRecord = d => records.diffs[d] || (records.diffs[d] = { wins: 0, fastestWin: 0 });
 
 const saveRun = () => store.set('run', run);
 const saveRecords = () => store.set('records', records);
+
+// Pick the difficulty for the next new run (the title screen's buttons and the D key).
+function setDifficulty(d) {
+  if (!DIFFICULTIES[d]) return;
+  difficulty = d;
+  store.set('difficulty', d);
+  sfx.pickCard(true);
+  renderTitle();
+}
 
 // The characters in a list of ids. An id this version of the game doesn't know (from a newer or
 // older version) is skipped here, but it stays in the saved run, so nothing is lost.
@@ -76,7 +102,7 @@ function makeOffer(owned) {
 // ---------- the steps of a run ----------
 // Start a brand new run (throwing away the one in progress, if any).
 function newRun() {
-  run = { night: 1, lives: LIVES, lineup: [], offer: makeOffer([]), picked: [] };
+  run = { night: 1, lives: LIVES, lineup: [], offer: makeOffer([]), picked: [], diff: difficulty };
   records.runs++;
   saveRecords();
   saveRun();
@@ -109,9 +135,13 @@ function nightSurvived() {
   const points = pointsOfIds(run.lineup);
   records.bestNight = Math.max(records.bestNight, run.night);
   records.bestPoints = Math.max(records.bestPoints, points);
-  if (points >= GOAL_POINTS) {
+  if (points >= goalOf(run)) {
+    const fastest = old => old ? Math.min(old, run.night) : run.night;
     records.wins++;
-    records.fastestWin = records.fastestWin ? Math.min(records.fastestWin, run.night) : run.night;
+    records.fastestWin = fastest(records.fastestWin);
+    const mine = diffRecord(diffOf(run));   // this difficulty's own records
+    mine.wins++;
+    mine.fastestWin = fastest(mine.fastestWin);
     saveRecords();
     const done = run;
     run = null;   // the run is over: it's won

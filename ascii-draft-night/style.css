@@ -63,7 +63,7 @@
   --c-wmc: #ff6f8e;   /* Watermelon Chica: watermelon pink (a green rind) */
   --c-hnd: #9ab3cc;   /* Hand-unit: steel blue-grey (a glowing blue screen) */
   --c-bpt: #d9774a;   /* Bounce pot: terracotta (a green sprout) */
-  --c-mun: #a2d45e;   /* Munchie: grabby green */
+  --c-mun: #c9cfd8;   /* Munchie: silver all over */
   --c-ckf: #d6a35c;   /* Cookie Freddy: baked cookie (chocolate chips) */
   --c-fen: #c0c8d0;   /* the Flamethrower endo: bare metal (orange flames) */
   --c-pbb: #f3dccf;   /* Plush babies: pale, like Circus Baby (orange pigtails, green eyes) */
@@ -185,6 +185,8 @@ pre [class*="c-"] { font-weight: 600; }
 .acc-green { color: #8fe39a; } .acc-blue { color: #6fb7ff; } .acc-violet { color: #b04dff; }
 .acc-pink { color: #ff4fa3; } .acc-gold { color: #ffc94a; } .acc-sky { color: #9fe3ff; }
 .acc-white { color: #ffffff; text-shadow: 0 0 4px #fff; } .acc-grey { color: #b9c2cc; }
+.acc-dark { color: #3b3f46; }   /* a dark fill, like Munchie's black eyelids */
+.acc-brown { color: #b0682f; text-shadow: 0 0 3px rgba(176,104,47,.5); }   /* chocolate (Cookie Freddy) */
 /* Black parts (hats, bow ties). Black alone would vanish on the dark background, so a thin white glow
    (text-shadow) outlines each character. */
 .acc-black { color: #0a0a0a; text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff, 0 0 3px rgba(255,255,255,.5); }
@@ -228,6 +230,13 @@ pre [class*="c-"] { font-weight: 600; }
 .title .line-tag { font-family: var(--font-display); font-size: 34px; letter-spacing: .3em; color: var(--dim); margin-top: -18px; }
 .rarity-key { font-size: 13px; letter-spacing: .06em; font-weight: 600; }
 .menu { display: flex; flex-wrap: wrap; gap: 10px; }
+/* The difficulty buttons: each in its own color (a rarity's, through --rc). The picked one is filled in. */
+.diff-pick { display: flex; flex-direction: column; gap: 8px; }
+.diffs { display: flex; flex-wrap: wrap; gap: 8px; }
+.diffs button { color: var(--rc); border-color: var(--rc); display: flex; flex-direction: column; align-items: center; line-height: 1.2; min-width: 96px; }
+.diffs button small { color: var(--dim); font-size: 11px; }
+.diffs button[aria-pressed="true"] { background: var(--rc); color: var(--bg); font-weight: 600; }
+.diffs button[aria-pressed="true"] small { color: inherit; }
 .best { color: var(--dim); }
 .best b { color: var(--fg); font-weight: 600; }
 

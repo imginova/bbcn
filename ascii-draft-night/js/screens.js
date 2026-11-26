@@ -41,12 +41,23 @@ const miniCard = c => `<div class="mini-card ${RARITIES[c.rarity].cls}" data-id=
 function renderTitle() {
   confirmNew = false;
   $('btnContinue').hidden = !run;
-  if (run) $('btnContinue').innerHTML = `Continue run · night ${run.night} <kbd>Enter</kbd>`;
+  if (run) $('btnContinue').innerHTML = `Continue run · ${DIFFICULTIES[diffOf(run)].name} · night ${run.night} <kbd>Enter</kbd>`;
   $('btnNewRun').innerHTML = 'New run <kbd>N</kbd>';
+  $('goalText').textContent = DIFFICULTIES[difficulty].goal;
+  // One button per difficulty; aria-pressed="true" marks the picked one (the CSS fills it in).
+  setHtml($('diffs'), DIFF_ORDER.map(d => {
+    const D = DIFFICULTIES[d];
+    return `<button type="button" class="${D.cls}" data-diff="${d}" aria-pressed="${d === difficulty}">${D.name}<small>${D.goal} pts</small></button>`;
+  }).join(''));
   const r = records;
+  // Wins for each difficulty you've won at least once, like "Easy 2 (fastest: 4 nights)".
+  const wins = DIFF_ORDER.filter(d => records.diffs[d] && records.diffs[d].wins).map(d => {
+    const mine = records.diffs[d];
+    return `<span class="${DIFFICULTIES[d].cls}">${DIFFICULTIES[d].name}</span> <b>${mine.wins}</b> (fastest: ${mine.fastestWin} nights)`;
+  });
   $('recordLine').innerHTML = r.runs
     ? `Runs: <b>${r.runs}</b> · won: <b>${r.wins}</b> · best night: <b>${r.bestNight}</b> · most points survived: <b>${r.bestPoints}</b>` +
-      (r.fastestWin ? ` · fastest win: <b>${r.fastestWin} nights</b>` : '')
+      (wins.length ? `<br>Wins: ${wins.join(' · ')}` : '')
     : 'No runs yet.';
 }
 // The "New run" button. With a run saved, the first click only asks ("This ends your run"), and a
@@ -68,8 +79,9 @@ function showPick() { show('pick'); }
 function renderPick() {
   if (!run) { show('title'); return; }
   $('pickEyebrow').textContent = `Before night ${run.night}`;
-  $('runStatus').innerHTML = `<span class="hearts">${heartsText(run.lives)}</span> ${run.lives} ${run.lives === 1 ? 'life' : 'lives'} left` +
-    ` · lineup worth <b>${pointsOfIds(run.lineup)}</b> of <b>${GOAL_POINTS}</b> points`;
+  const D = DIFFICULTIES[diffOf(run)], goal = D.goal;
+  $('runStatus').innerHTML = `<span class="${D.cls}">${D.name}</span> · <span class="hearts">${heartsText(run.lives)}</span> ${run.lives} ${run.lives === 1 ? 'life' : 'lives'} left` +
+    ` · lineup worth <b>${pointsOfIds(run.lineup)}</b> of <b>${goal}</b> points`;
   // The cards on offer. Each one is a button; data-id says who it is, and the number in its corner is
   // the key (1 to 5) that takes it.
   setHtml($('offer'), run.offer.length
@@ -89,9 +101,9 @@ function renderPick() {
     ? charsOf(ids).map(c => run.picked.includes(c.id) ? miniCard(c).replace('mini-card', 'mini-card new') : miniCard(c)).join('')
     : '<p class="dim">Nobody yet. Take some cards!</p>');
   const pts = pointsOfIds(ids);
-  $('tonightLine').innerHTML = `Tonight: <b>${pts}</b> of ${GOAL_POINTS} points · ` +
-    (pts >= GOAL_POINTS ? '<b class="r-legendary">Survive this night to WIN THE RUN!</b>'
-      : ids.length ? `${GOAL_POINTS - pts} more to go.` : 'an empty night is safe, but it gets you nowhere.');
+  $('tonightLine').innerHTML = `Tonight: <b>${pts}</b> of ${goal} points · ` +
+    (pts >= goal ? '<b class="r-legendary">Survive this night to WIN THE RUN!</b>'
+      : ids.length ? `${goal - pts} more to go.` : 'an empty night is safe, but it gets you nowhere.');
   $('btnBegin').innerHTML = `Start night ${run.night} <kbd>Enter</kbd>`;
 }
 
@@ -162,13 +174,14 @@ function showWin(outcome, powerLeft) {
   lastWin = outcome;
   const R = outcome.run, won = outcome.result === 'won';
   const night = won ? R.night : R.night - 1;   // for 'next', run.night has already moved on
-  $('winEyebrow').textContent = won ? 'Run complete' : `Night ${night} complete`;
+  const d = diffOf(R), D = DIFFICULTIES[d];
+  $('winEyebrow').textContent = won ? `Run complete · ${D.name}` : `Night ${night} complete`;
   $('winBig').textContent = won ? 'YOU WIN' : '6:00 AM';
   $('winMsg').innerHTML = won
-    ? `You survived night ${night} with a lineup worth <b>${outcome.points}</b> points (the goal was ${GOAL_POINTS}), with ${powerLeft}% power left and ${heartsText(R.lives)} lives to spare.`
-    : `You made it to morning with ${powerLeft}% power left. Your lineup is worth <b>${outcome.points}</b> of ${GOAL_POINTS} points: pick more characters for night ${R.night}.`;
+    ? `You survived night ${night} with a lineup worth <b>${outcome.points}</b> points (the goal on ${D.name} was ${D.goal}), with ${powerLeft}% power left and ${heartsText(R.lives)} lives to spare.`
+    : `You made it to morning with ${powerLeft}% power left. Your lineup is worth <b>${outcome.points}</b> of ${D.goal} points: pick more characters for night ${R.night}.`;
   setHtml($('winLineup'), charsOf(R.lineup).map(miniCard).join(''));
-  $('winRecord').innerHTML = won && records.fastestWin === night ? '<b>Your fastest win yet.</b>' : '';
+  $('winRecord').innerHTML = won && diffRecord(d).fastestWin === night ? `<b>Your fastest ${D.name} win yet.</b>` : '';
   $('btnNext').hidden = won;
   $('btnNewRunWin').hidden = !won;
   show('win');
