@@ -23,6 +23,8 @@ onClick('btnMute', toggleMute);
 onClick('btnContinue', continueRun);
 onClick('btnNewRun', pressNewRun);
 onClick('btnHowTitle', openHowto);
+onClick('btnEmblems', () => show('emblems'));
+onClick('btnEmblemsBack', () => show('title'));
 onClick('btnHowPick', openHowto);
 onClick('btnHowPause', openHowto);
 onClick('btnHowClose', closeHowto);
@@ -119,6 +121,13 @@ for (const id of ['offer', 'lineup']) {
   });
   $(id).addEventListener('pointerleave', () => { hoverCard = null; renderWho(); });
 }
+// The same on the emblem screen's cards.
+$('emblemGroups').addEventListener('pointerover', e => {
+  const card = e.target.closest('[data-id]');
+  const who = card ? card.dataset.id : null;
+  if (who !== hoverEmblem) { hoverEmblem = who; renderEmblems(); }
+});
+$('emblemGroups').addEventListener('pointerleave', () => { hoverEmblem = null; renderEmblems(); });
 // The same on the pause panel's cards.
 $('pauseRoster').addEventListener('pointerover', e => {
   const card = e.target.closest('[data-id]');
@@ -224,6 +233,7 @@ document.addEventListener('keydown', e => {
     if (k === 'Enter') { e.preventDefault(); run ? continueRun() : newRun(); }
     else if (k === 'n') pressNewRun();
     else if (k === 'h') openHowto();
+    else if (k === 'e') show('emblems');
     // D steps to the next difficulty (after Nightmare it goes back to Easy).
     else if (k === 'd') setDifficulty(DIFF_ORDER[(DIFF_ORDER.indexOf(difficulty) + 1) % DIFF_ORDER.length]);
 
@@ -262,6 +272,9 @@ document.addEventListener('keydown', e => {
     // Anywhere else, 1 to 9 pick a camera. /^[1-9]$/ means "exactly one digit from 1 to 9".
     else if (/^[1-9]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h') openHowto();
+
+  } else if (currentScreen === 'emblems') {
+    if (k === 'Escape' || k === 'Enter') { e.preventDefault(); show('title'); }
 
   } else if (currentScreen === 'win') {
     if (k === 'Enter') { e.preventDefault(); lastWin && lastWin.result === 'won' ? newRun() : showPick(); }

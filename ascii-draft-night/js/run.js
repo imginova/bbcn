@@ -51,6 +51,28 @@ if (!records.diffs) records.diffs = records.wins ? { normal: { wins: records.win
 // The records of one difficulty (made empty the first time it's needed).
 const diffRecord = d => records.diffs[d] || (records.diffs[d] = { wins: 0, fastestWin: 0 });
 
+// The completion emblems (on request, 2026-11-25): for each character id, the difficulties you've WON a
+// run on with that character in your lineup, like { fre: ['easy', 'hard'] }. RULE: only ever added to;
+// an id or a difficulty this version doesn't know stays saved. (Runs won before emblems existed can't
+// give any: the old records never saved which lineup won.)
+const emblems = store.get('emblems', {}) || {};
+const hasEmblem = (id, d) => (emblems[id] || []).includes(d);
+// How many emblems you have, out of how many there are (every character, every difficulty).
+const emblemCount = () => ROSTER.reduce((n, c) => n + DIFF_ORDER.filter(d => hasEmblem(c.id, d)).length, 0);
+const EMBLEM_TOTAL = ROSTER.length * DIFF_ORDER.length;
+// Give everyone in a winning lineup that difficulty's emblem. Returns the new ones, as [{ id, diff }],
+// so the 6 AM screen can show them.
+function earnEmblems(ids, d) {
+  const fresh = [];
+  for (const id of ids) {
+    if (hasEmblem(id, d)) continue;
+    emblems[id] = [...(emblems[id] || []), d];
+    fresh.push({ id, diff: d });
+  }
+  store.set('emblems', emblems);
+  return fresh;
+}
+
 const saveRun = () => store.set('run', run);
 const saveRecords = () => store.set('records', records);
 
@@ -143,10 +165,11 @@ function nightSurvived() {
     mine.wins++;
     mine.fastestWin = fastest(mine.fastestWin);
     saveRecords();
+    const fresh = earnEmblems(run.lineup, diffOf(run));   // everyone in the lineup earns this difficulty's emblem
     const done = run;
     run = null;   // the run is over: it's won
     saveRun();
-    return { result: 'won', run: done, points };
+    return { result: 'won', run: done, points, emblems: fresh };
   }
   saveRecords();
   run.night++;

@@ -378,6 +378,30 @@ const sfx = (() => {
     handFall() { noise(0.4, { vol: 0.5, freq: 900 }); tone(300, 0.4, { type: 'sawtooth', vol: 0.15, slide: -250 }); },
     // Bounce pot hitting your pointer: a hollow clay clonk.
     potHit() { tone(240, 0.12, { type: 'triangle', vol: 0.4 }); noise(0.1, { vol: 0.3, freq: 1500 }); },
+    // Bounce pot charging up on the floor (a quiet spring creaking upward), then springing off (a boing).
+    // Kept quiet, because he bounces all night.
+    potCharge(dur = BOUNCE_CHARGE, pitch = 160) { tone(pitch, dur, { type: 'triangle', vol: 0.06, slide: pitch * 1.4 }); },
+    potLaunch(pitch = 240) { tone(pitch, 0.2, { type: 'sine', vol: 0.12, slide: pitch * 1.75 }); },
+
+    // ----- the third list -----
+    // BB running off with your flashlight: a high "ha ha!" and a click.
+    bbLaugh() {
+      [620, 760, 620, 760].forEach((f, i) => tone(f, 0.09, { type: 'square', vol: 0.14, delay: i * 0.11 }));
+      tone(1800, 0.03, { vol: 0.2, delay: 0.5 });
+    },
+    // Mangle getting onto a camera: a burst of radio static with a garbled warble in it. Then her static
+    // crackling (`vol` 0 to 1: loud on her camera, faint anywhere else). Shocked: a fizzle.
+    mangleIn() {
+      noise(0.6, { vol: 0.35, freq: 2500, type: 'highpass' });
+      for (let i = 0; i < 5; i++) tone(500 + Math.random() * 700, 0.07, { type: 'sawtooth', vol: 0.08, delay: i * 0.09 });
+    },
+    mangleCrackle(vol) { noise(0.25, { vol: 0.45 * vol, freq: 3000, type: 'highpass' }); },
+    mangleOut() { noise(0.4, { vol: 0.3, freq: 1200 }); tone(700, 0.4, { type: 'sawtooth', vol: 0.12, slide: -600 }); },
+    // Nightmare BB waking (a low, warped giggle) and going back to sleep (a soft falling hum).
+    nbbWake() { [300, 260, 300, 220].forEach((f, i) => tone(f, 0.12, { type: 'sawtooth', vol: 0.12, slide: -40, delay: i * 0.13 })); },
+    nbbSleep() { tone(330, 0.5, { type: 'sine', vol: 0.1, slide: -200 }); },
+    // The caution bot's blink: a short beep from the middle (it doesn't tell you which door).
+    nsbBlink() { tone(1320, 0.06, { type: 'square', vol: 0.1 }); },
     // Munchie grabbing your screen: a scrabble of little claws and a chomp. Flicked off: a whoosh.
     munchieIn() {
       for (let i = 0; i < 5; i++) noise(0.04, { vol: 0.2, freq: 3500, type: 'highpass', delay: i * 0.05 });

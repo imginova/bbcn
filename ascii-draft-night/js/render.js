@@ -79,13 +79,19 @@ function renderGame(now) {
   // The bonus characters that sit on your SCREEN (over the office and the monitor alike): Bounce pot,
   // Munchie and the Plush babies that climbed up. Positions are fractions of the view, so they're
   // placed in percent.
-  const pot = $('bouncepot');
-  pot.hidden = !G.bpt.on || G.powerOut;
-  if (!pot.hidden) {
-    setHtml(pot, drawingHtml(SPRITES.bpt.pot, 'c-bpt'));
-    pot.style.left = G.bpt.x * 100 + '%';
-    pot.style.top = G.bpt.y * 100 + '%';
-    pot.classList.toggle('hit', G.t < G.bpt.safeUntil);
+  // Bounce pot and Grave weed bounce the same way, so they're drawn the same way.
+  for (const [P, el, id] of [[G.bpt, $('bouncepot'), 'bpt'], [G.grw, $('graveweed'), 'grw']]) {
+    el.hidden = !P.on || G.powerOut;
+    if (el.hidden) continue;
+    // Charging up on the floor: the squeezed spring for the first half, then the full crouch, shaking
+    // (the "charging" class) so you see the bounce coming.
+    const charging = P.charge > 0;
+    const look = !charging ? SPRITES[id].pot : P.charge > P.chargeTime / 2 ? SPRITES[id].squash : SPRITES[id].crouch;
+    setHtml(el, drawingHtml(look, 'c-' + id));
+    el.style.left = P.x * 100 + '%';
+    el.style.top = P.y * 100 + '%';
+    el.classList.toggle('hit', G.t < P.safeUntil);
+    el.classList.toggle('charging', charging);
   }
   const mun = $('munchie');
   mun.hidden = !G.mun.active;
@@ -122,8 +128,8 @@ function renderGame(now) {
   $('stCam').textContent = off ? 'NO POWER' : G.mask ? 'MASK ON' : G.cam ? 'UP' : 'DOWN';
   $('camWarn').hidden = !boxLow() || off;
   $('btnFlash').classList.toggle('on', flashOn());
-  $('btnFlash').disabled = off;
-  $('stFlash').textContent = off ? 'NO POWER' : flashOn() ? 'ON' : 'HOLD';
+  $('stFlash').textContent = off ? 'NO POWER' : G.noFlash ? 'BB TOOK IT' : flashOn() ? 'ON' : 'HOLD';
+  $('btnFlash').disabled = off || G.noFlash;
   $('btnMask').classList.toggle('on', G.mask);
   $('btnMask').setAttribute('aria-pressed', String(G.mask));
   $('stMask').textContent = G.mask ? 'ON' : G.cam ? 'CAM UP' : 'OFF';
@@ -185,6 +191,20 @@ function drawVisitors(g, now) {
   // The vent crawlers who climbed in.
   if (G.tbn.present) sprite(g, ...TBONNIE_SPOT, SPRITES.tbn.office, 'c-tbn');
   if (G.tch.present) sprite(g, ...TCHICA_SPOT,SPRITES.tch.office, 'c-tch');
+  if (G.bb.present) sprite(g, ...BB_SPOT, SPRITES.bb.office, 'c-bb');
+  // Nightmare BB on the floor in front of the desk: asleep, or awake (blinking until you shine him).
+  // He glows while the light is on his face.
+  const NB = G.nbb;
+  if (NB.on) sprite(g, ...NBB_SPOT, NB.awake ? SPRITES.nbb.awake : SPRITES.nbb.asleep,
+    'c-nbb' + (NB.shineT > 0 ? ' shone' : NB.awake ? ' blink' : ''));
+  // The caution bot, bottom left, all night. Its sign: ! when all is quiet, an arrow at the door the
+  // staff bot is coming to (blinking), or !!! while it waits behind both shut doors.
+  const NS = G.nsb;
+  if (NS.on) {
+    sprite(g, ...NSB_SPOT, SPRITES.nsb.bot, 'c-nsb');
+    const sign = NS.phase === 'idle' ? NSB_SIGN.idle : NS.phase === 'wait' ? NSB_SIGN.wait : NSB_SIGN[NS.side];
+    write(g, NSB_SPOT[0] + 1, NSB_SPOT[1] + 1, sign, 'c-nsb acc-red' + (NS.phase === 'idle' ? '' : ' blink'));
+  }
   // Withered Freddy and Nightmare Fredbear passing the windows.
   for (const [P, drawing, cls] of [[G.wfr, SPRITES.wfr.window, 'c-wfr'], [G.nfb, SPRITES.nfb.window, 'c-nfb']]) {
     if (!P.on || (P === G.nfb && (P.mode !== 'prowl' || P.side))) continue;
@@ -403,7 +423,7 @@ function renderVents() {
   let html = '';
   for (const n of VENT_LIST) {
     const tags = CRAWLERS
-      .filter(c => G[c.id].on && !G[c.id].present && G[c.id].room === n)
+      .filter(c => c !== BB && G[c.id].on && !G[c.id].present && G[c.id].room === n)   // BB never shows here
       .map(c => `<b class="c-${c.id}">${VENT_TAGS[c.id]}</b>`);
     const lured = G.lure && G.lure.room === n;
     const picked = G.ventSel === n ? ' picked' : '';   // the arrow keys' choice

@@ -8,7 +8,7 @@
    element.hidden = true hides it, element.hidden = false shows it.
    ===================================================================== */
 
-let currentScreen = 'title';   // which screen is showing: 'title', 'pick', 'game' or 'win'
+let currentScreen = 'title';   // which screen is showing: 'title', 'pick', 'game', 'win' or 'emblems'
 let scareTimer = 0;            // the timer that swaps the jumpscare for the Game Over text
 let confirmNew = false;        // "New run" was clicked once while a run is saved: the next click starts over
 let lastWin = null;            // what the last 6 AM screen was about ({ result: 'won' or 'next', ... })
@@ -19,9 +19,10 @@ function show(name) {
   // A button on the screen we're leaving may still have keyboard focus, even though it's hidden now.
   // Then Enter would go to that hidden button and do nothing, so let go of it.
   if (document.activeElement instanceof HTMLButtonElement) document.activeElement.blur();
-  for (const s of ['title', 'pick', 'game', 'win']) $('scr-' + s).hidden = s !== name;
+  for (const s of ['title', 'pick', 'game', 'win', 'emblems']) $('scr-' + s).hidden = s !== name;
   if (name === 'title') renderTitle();
   if (name === 'pick') renderPick();
+  if (name === 'emblems') renderEmblems();
   if (name === 'game') dirty = true;
 }
 
@@ -32,10 +33,36 @@ function whoHtml(c) {
   const R = RARITIES[c.rarity], n = kills[c.id] || 0;
   return `<b class="c-${c.id}">${c.name.toUpperCase()}</b> <span class="${R.cls}">· ${R.name}${c.bonus ? ' bonus' : ''} · ${R.points} pts</span>` +
     ` <span class="dim">· ${c.where}</span><br>${c.desc}` +
+    `<br><span class="dim">Emblems:</span> ${DIFF_ORDER.map(d => `${medalHtml(c.id, d)} <span class="dim">${DIFFICULTIES[d].name}</span>`).join(' &nbsp;')}` +
     (n ? `<br><span class="kills">☠ Got you ${n === 1 ? 'once' : n + ' times'}</span>` : '');
 }
 // A small card for a lineup or roster: face, name and points, with a border in its rarity's color.
 const miniCard = c => `<div class="mini-card ${RARITIES[c.rarity].cls}" data-id="${c.id}">${iconHtml(c)}<b>${c.name}</b><span class="pts">${pointsOf(c)} pts</span></div>`;
+
+// ---------- emblems ----------
+// One completion emblem as a little medal in its difficulty's color: ● once you've won a run on that
+// difficulty with this character, a faint ○ until then. (The title attribute is the text that shows
+// when the mouse rests on it, and what a screen reader says.)
+function medalHtml(id, d) {
+  const D = DIFFICULTIES[d], got = hasEmblem(id, d);
+  return `<span class="medal ${D.cls}${got ? ' got' : ''}" title="${D.name}: ${got ? 'won' : 'not yet'}">${got ? '●' : '○'}</span>`;
+}
+// All four of a character's medals in a row, easiest first.
+const medalsHtml = id => `<span class="medals">${DIFF_ORDER.map(d => medalHtml(id, d)).join('')}</span>`;
+
+// The emblem screen: every character, grouped by rarity, with its four medals under its card.
+let hoverEmblem = null;   // the id of the card the mouse is over on the emblem screen
+function renderEmblems() {
+  $('emblemTotal').innerHTML = `<b>${emblemCount()}</b> of ${EMBLEM_TOTAL} emblems · ` +
+    DIFF_ORDER.map(d => `<span class="${DIFFICULTIES[d].cls}">● ${DIFFICULTIES[d].name}</span>`).join(' · ');
+  setHtml($('emblemGroups'), RARITY_ORDER.map(r => {
+    const chars = ROSTER.filter(c => c.rarity === r);
+    return `<p class="lab ${RARITIES[r].cls}">${RARITIES[r].name}</p><div class="mini-roster">` +
+      chars.map(c => miniCard(c).replace(/<\/div>$/, medalsHtml(c.id) + '</div>')).join('') + '</div>';
+  }).join(''));
+  const c = hoverEmblem && byId(hoverEmblem);
+  $('emblemWho').innerHTML = c ? whoHtml(c) : '<span class="dim">Point at a character to see how it works.</span>';
+}
 
 // ---------- title ----------
 function renderTitle() {
@@ -57,7 +84,7 @@ function renderTitle() {
   });
   $('recordLine').innerHTML = r.runs
     ? `Runs: <b>${r.runs}</b> · won: <b>${r.wins}</b> · best night: <b>${r.bestNight}</b> · most points survived: <b>${r.bestPoints}</b>` +
-      (wins.length ? `<br>Wins: ${wins.join(' · ')}` : '')
+      (wins.length ? `<br>Wins: ${wins.join(' · ')}` : '') + `<br>Emblems: <b>${emblemCount()}</b> of ${EMBLEM_TOTAL}`
     : 'No runs yet.';
 }
 // The "New run" button. With a run saved, the first click only asks ("This ends your run"), and a
@@ -90,7 +117,7 @@ function renderPick() {
       return `<button type="button" class="card ${R.cls}${taken ? ' taken' : ''}" data-id="${c.id}" aria-pressed="${taken}">` +
         `<span class="key">${i + 1}</span>${n ? `<small class="kills">☠${n}</small>` : ''}` +
         (c.bonus ? '<span class="bonus-tag">BONUS</span>' : '') + `<span class="rar">${R.name} · ${R.points}</span>${iconHtml(c, ' big')}<b class="name">${c.name}</b>` +
-        `<span class="where">${c.where}</span><span class="taken-tag">${taken ? '✓ TAKEN' : 'TAKE'}</span></button>`;
+        `<span class="where">${c.where}</span>${medalsHtml(c.id)}<span class="taken-tag">${taken ? '✓ TAKEN' : 'TAKE'}</span></button>`;
     }).join('')
     : '<p class="dim">You already have everyone. Brave.</p>');
   renderWho();
@@ -182,6 +209,13 @@ function showWin(outcome, powerLeft) {
     : `You made it to morning with ${powerLeft}% power left. Your lineup is worth <b>${outcome.points}</b> of ${D.goal} points: pick more characters for night ${R.night}.`;
   setHtml($('winLineup'), charsOf(R.lineup).map(miniCard).join(''));
   $('winRecord').innerHTML = won && diffRecord(d).fastestWin === night ? `<b>Your fastest ${D.name} win yet.</b>` : '';
+  // The emblems this win earned: the cards of everyone who just got this difficulty's medal.
+  const fresh = won ? (outcome.emblems || []).map(e => byId(e.id)).filter(Boolean) : [];
+  $('winEmblems').hidden = !won;
+  if (won) $('winEmblems').innerHTML = fresh.length
+    ? `<p class="lab">New emblems <span class="${D.cls}">● ${D.name}</span> (${fresh.length})</p><div class="mini-roster lineup">` +
+      fresh.map(c => miniCard(c).replace(/<\/div>$/, medalsHtml(c.id) + '</div>')).join('') + '</div>'
+    : `<p class="best">No new emblems: everyone in this lineup already had their ${D.name} emblem.</p>`;
   $('btnNext').hidden = won;
   $('btnNewRunWin').hidden = !won;
   show('win');
