@@ -363,6 +363,38 @@ const sfx = (() => {
     showtime() { [523, 659, 784].forEach((f, i) => tone(f, 0.15, { type: 'square', vol: 0.1, delay: i * 0.12 })); },
     applause() { for (let i = 0; i < 10; i++) noise(0.05, { vol: 0.12, freq: 2500, type: 'highpass', delay: i * 0.06 + Math.random() * 0.03 }); },
 
+    // ----- the bonus characters -----
+    // Salvage sign popping up: a flat two-tone buzzer. Each tap on it: a clunk, higher as it gets
+    // closer to working (left = presses still needed).
+    salvage() { tone(220, 0.15, { type: 'square', vol: 0.15 }); tone(175, 0.25, { type: 'square', vol: 0.15, delay: 0.16 }); },
+    salvageTap(left) { tone(300 + (SALVAGE_PRESSES - left) * 120, 0.06, { type: 'square', vol: 0.12 }); },
+    // Watermelon Chica turning up: a wet squelch from her side. Bouncing a door open: a springy boing.
+    wmcIn(side) { noise(0.3, { vol: 0.35, freq: 600, pan: panOf(side) }); tone(180, 0.3, { type: 'sine', vol: 0.2, slide: -80, pan: panOf(side) }); },
+    boing(side) { tone(150, 0.35, { type: 'sine', vol: 0.35, slide: 300, pan: panOf(side) }); },
+    // Hand-unit: a robotic "hello" blip, a click for each key you mash (higher as he wobbles: progress
+    // 0 to 1), and a crash when he falls over.
+    handIn() { [660, 990, 660].forEach((f, i) => tone(f, 0.09, { type: 'square', vol: 0.12, delay: i * 0.1 })); },
+    handTick(progress) { tone(400 + 600 * progress, 0.03, { type: 'square', vol: 0.07 }); },
+    handFall() { noise(0.4, { vol: 0.5, freq: 900 }); tone(300, 0.4, { type: 'sawtooth', vol: 0.15, slide: -250 }); },
+    // Bounce pot hitting your pointer: a hollow clay clonk.
+    potHit() { tone(240, 0.12, { type: 'triangle', vol: 0.4 }); noise(0.1, { vol: 0.3, freq: 1500 }); },
+    // Munchie grabbing your screen: a scrabble of little claws and a chomp. Flicked off: a whoosh.
+    munchieIn() {
+      for (let i = 0; i < 5; i++) noise(0.04, { vol: 0.2, freq: 3500, type: 'highpass', delay: i * 0.05 });
+      tone(120, 0.12, { type: 'square', vol: 0.2, delay: 0.3 });
+    },
+    munchieFlick() { noise(0.35, { vol: 0.25, freq: 2000, type: 'highpass' }); tone(900, 0.3, { type: 'triangle', vol: 0.1, slide: -700 }); },
+    // Cookie Freddy: a cheerful "mm-mm!" when he turns up, a crunch when he's got his coatings.
+    cookieIn() { tone(330, 0.15, { type: 'triangle', vol: 0.15 }); tone(392, 0.2, { type: 'triangle', vol: 0.15, delay: 0.17 }); },
+    cookieOut() { noise(0.2, { vol: 0.4, freq: 1200 }); noise(0.15, { vol: 0.3, freq: 1600, delay: 0.15 }); },
+    // The Flamethrower endo: a roaring whoosh when he fires up, a sputter when he leaves.
+    flameOn() { noise(1.2, { vol: 0.45, freq: 500 }); tone(70, 1.0, { type: 'sawtooth', vol: 0.15, slide: 30 }); },
+    flameOff() { for (let i = 0; i < 3; i++) noise(0.08, { vol: 0.2, freq: 700, delay: i * 0.12 }); },
+    // Plush babies: a tiny squeak when one turns up, and a scrabble up the glass when one climbs onto
+    // your screen.
+    plushBaby() { tone(1400, 0.07, { type: 'triangle', vol: 0.12, slide: 200 }); },
+    plushClimb() { for (let i = 0; i < 4; i++) tone(700 + i * 150, 0.06, { type: 'square', vol: 0.12, delay: i * 0.08 }); },
+
     // ----- the heat -----
     // Getting too hot: a long, heavy breath.
     hot() { noise(1.0, { vol: 0.25, freq: 600 }); tone(140, 1.0, { type: 'sine', vol: 0.1, slide: -60 }); },

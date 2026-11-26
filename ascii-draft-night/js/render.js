@@ -18,6 +18,13 @@ function setHtml(el, html) {
 // A bar like [|||||.....] that is `filled` out of `total` long.
 const bar = (filled, total) => '[' + '|'.repeat(filled) + '.'.repeat(total - filled) + ']';
 
+// A whole drawing as HTML, on its own (for the things drawn over the view: Bounce pot, Munchie...).
+function drawingHtml(lines, cls) {
+  const g = blank(Math.max(...lines.map(l => l.length)), lines.length);
+  sprite(g, 0, 0, lines, cls);
+  return toHtml(g);
+}
+
 // Lives as hearts: ♥ for each one left, ♡ for each one lost.
 const heartsText = lives => '♥'.repeat(Math.max(0, lives)) + '♡'.repeat(Math.max(0, LIVES - lives));
 
@@ -69,6 +76,29 @@ function renderGame(now) {
     ? `<span class="c-ffr">FUNTIME FREDDY:</span> "${escText(F.line)}"` : '&nbsp;');
   // The heat's red glow: nothing below the first warning (70%), then stronger up to full at 95%.
   $('heatGlow').style.opacity = Math.max(0, Math.min(1, (G.heat - HOT_WARN[0]) / (95 - HOT_WARN[0])));
+  // The bonus characters that sit on your SCREEN (over the office and the monitor alike): Bounce pot,
+  // Munchie and the Plush babies that climbed up. Positions are fractions of the view, so they're
+  // placed in percent.
+  const pot = $('bouncepot');
+  pot.hidden = !G.bpt.on || G.powerOut;
+  if (!pot.hidden) {
+    setHtml(pot, drawingHtml(SPRITES.bpt.pot, 'c-bpt'));
+    pot.style.left = G.bpt.x * 100 + '%';
+    pot.style.top = G.bpt.y * 100 + '%';
+    pot.classList.toggle('hit', G.t < G.bpt.safeUntil);
+  }
+  const mun = $('munchie');
+  mun.hidden = !G.mun.active;
+  if (G.mun.active) {
+    setHtml($('munchieArt'), drawingHtml(SPRITES.mun.grab, 'c-mun'));
+    mun.style.left = G.mun.x * 100 + '%';
+    mun.style.top = G.mun.y * 100 + '%';
+    mun.classList.toggle('blink', G.mun.deadline - G.t < 3);
+  }
+  for (const [id, n] of [['pbCornerL', 1], ['pbCornerR', 2]]) {
+    $(id).hidden = G.pbb.onScreen < n;
+    if (!$(id).hidden) setHtml($(id), drawingHtml(SPRITES.pbb.corner, 'c-pbb'));
+  }
   // Lolbit's LOL screen, with the letters typed so far lit up.
   const L = G.lol;
   $('lolbit').hidden = !L.active;
@@ -165,6 +195,28 @@ function drawVisitors(g, now) {
   // Bonnet running across the floor. (Her position is in fractions of a character, so round it.)
   const B = G.bnt;
   if (B.active) sprite(g, Math.round(B.y), Math.round(B.x), SPRITES.bnt.office, 'c-bnt');
+  // ----- bonus -----
+  // Plush babies in the windows.
+  for (const side of ['L', 'R']) {
+    const baby = G.pbb.spots['win' + side];
+    if (baby) sprite(g, ...WINDOWS[side], SPRITES.pbb.small, 'c-pbb' + plushClass(baby));
+  }
+  // The Flamethrower endo, and his flames flickering along the floor.
+  if (G.fen.present) {
+    const f = Math.floor(now / 150) % 2;
+    write(g, 14, 0, FLAME_ROWS[0][f], 'flame');
+    write(g, 15, 0, FLAME_ROWS[1][f], 'flame hot');
+    sprite(g, ...ENDO_SPOT, SPRITES.fen.office, 'c-fen');
+  }
+  // Cookie Freddy, and what he wants written on the floor in front of him (the ones you've got are gone).
+  const C = G.ckf;
+  if (C.wants.length) {
+    sprite(g, ...COOKIE_SPOT, SPRITES.ckf.office, 'c-ckf');
+    const left = C.wants.filter(n => !C.got.includes(n));
+    write(g, 15, 1, `COAT ME IN: ${left.join(' + ')}`.padEnd(42), 'c-ckf order');
+  }
+  // Hand-unit, in front of the desk. He wobbles more the more you've mashed.
+  if (G.hnd.present) sprite(g, ...HAND_SPOT, SPRITES.hnd.office, 'c-hnd' + (G.hnd.presses > HAND_PRESSES / 2 ? ' wobble' : ''));
   // Shadow Bonnie's white eyes, hidden in the dark (see #darkShade). They glow while the light is on them.
   const S = G.sbn;
   if (S.active) write(g, S.eyes[0], S.eyes[1], SPRITES.sbn.eyes, 'c-sbn acc-white' + (S.shineT > 0 ? ' shone' : ''));
@@ -205,8 +257,17 @@ function doorGrid(side, paints = []) {
   if (G.nbn.side === side) inDoorway(g, side, 4, 2, SPRITES.nbn.door, 'c-nbn' + (G.nbn.flashT > 0 ? ' shone' : ''));
   // Withered Foxy in the left doorway (all of him: he's right there), glowing while the light is on him.
   if (side === 'L' && G.wfx.on && wfoxyInDoorway()) sprite(g, 5, 2, SPRITES.wfx.door, 'c-wfx' + (G.wfx.flashT > 0 && G.wfx.phase === 'open' ? ' shone' : ''));
+  // Watermelon Chica in her doorway.
+  if (G.wmc.side === side) inDoorway(g, side, 5, 1, SPRITES.wmc.door, 'c-wmc');
+  // A plush baby sitting on the floor of the doorway. It glows while the light is on it, and blinks
+  // when it's about to climb onto your screen.
+  const baby = G.pbb.spots['door' + side];
+  if (baby) sprite(g, 11, 3, SPRITES.pbb.small, 'c-pbb' + plushClass(baby));
   return g;
 }
+
+// The extra class for a plush baby: glowing in the light, or blinking in its last 3 seconds.
+const plushClass = B => B.shineT > 0 ? ' shone' : G.t - B.since > PB_NEGLECT - 3 ? ' blink' : '';
 
 // Someone standing in a doorway. The doorway is dark, so only their glowing eyes show, unless the
 // flashlight is shining into it: then you see all of them.
@@ -282,6 +343,18 @@ function renderFeed(now) {
       for (let r = 1; r <= 9; r++) write(g, r, 4, ' '.repeat(32));
       sprite(g, ...TRASH_SPOT, SPRITES.trs[G.trs.member], 'c-trs');
     }
+    // The kitchen: the coatings Cookie Freddy wants that you've already taken light up in his color.
+    if (room === 'kitchen') {
+      for (const name of G.ckf.got) {
+        const [r1, r2, c1, c2] = KITCHEN_JARS[name];
+        for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = 'c-ckf';
+      }
+    }
+  }
+  // Salvage sign, in front of the picture (even over static), while it needs more presses.
+  if (G.slv.presses > 0) {
+    sprite(g, ...SALVAGE_SPOT, SPRITES.slv.sign, 'c-slv');
+    write(g, SALVAGE_SPOT[0] + 2, SALVAGE_SPOT[1] + 4, `press SHOCK x${G.slv.presses}`, 'c-slv blink');
   }
   setHtml($('feed'), toHtml(g));
   // The shock's flash over the picture, for a moment after each zap.

@@ -33,7 +33,7 @@ The owner's request: "a fnaf rouge-lite-ish where you survive through nights whi
 - **Night survived** (`nightSurvived`): if the lineup is worth `GOAL_POINTS` (150) or more, the run is won (`run = null`, records updated, `sfx.fanfare`). Otherwise `run.night++` and a new offer.
 - **Caught** (`nightLost`): one life gone; the scare screen says CAUGHT and offers "Retry night N". At 0 lives: RUN OVER, `run = null`, "New run".
 - **Quitting mid-night** (pause → Quit to title) keeps the run; that night starts again from 12 AM (no life lost). Closing the page does the same.
-- All 25 characters are worth 450 points in total.
+- All 33 characters (25 + 8 bonus) are worth 570 points in total.
 - **The painted office** (on request, 2026-11-25: "the more characters added the more the office would be colored by the rarity of the character"; the owner chose "piece by piece"): the office starts dim grey; each character in `run.lineup`, in pick order, paints the next part of `OFFICE_PARTS` (`art.js`: poster, monitor, left and right door frames, vent, desk front, windows, floor, desk top and legs, ceiling) in its rarity class (`officePaints` in `render.js`, `paintOffice`, the door frames in `doorGrid`). With more characters than parts (11) it wraps round, so later picks paint over earlier ones. Painted cells get `.paint` (bold, soft glow).
 
 ## The office
@@ -44,9 +44,9 @@ The owner's request: "a fnaf rouge-lite-ish where you survive through nights whi
 - **Layout:** left door (12 wide) + office (44 × 16, `OFFICE_ART`) + right door. The office has a **window** at each end (`WINDOWS`, inside 6 × 3), the poster, the vent, the monitor, the **fan** on the desk (spins when on, `FAN_SPIN`).
 - **Flashlight:** hold F / right mouse / the button. `beamOn` (office), `beamOnFeed` (cameras), `doorLit(side)` (a doorway, **only while that door is open**: a shut door blocks the light).
 - **Mask:** W in the office. Not with the monitor up; the monitor can't go up with it on.
-- **Monitor:** CAMS (8 cameras: 1 Show stage, 2 Dining, 3 Pirate cove, 4 West hall, 5 East hall, 6 Prize corner (music box), 7 Funtime Auditorium, 8 Parts & service) and VENTS (only with Toy Bonnie or Toy Chica: 15 vents, 3 × 5, lures like Line 1).
+- **Monitor:** CAMS (9 cameras: 1 Show stage, 2 Dining, 3 Pirate cove, 4 West hall, 5 East hall, 6 Prize corner (music box), 7 Funtime Auditorium, 8 Parts & service, 9 Kitchen (added with Cookie Freddy)) and VENTS (only with Toy Bonnie or Toy Chica: 15 vents, 3 × 5, lures like Line 1).
 - **Controlled shock:** X / the Shock button (shown only with Springtrap or Baby: `shockOn`). Zaps the camera you're on (`shock`), `SHOCK_COOLDOWN` 1 s.
-- **Controls:** A/D doors, Space/S monitor, C/V tabs, 1–8 cameras (arrow keys + Enter on VENTS), W mask / wind on CAM 6, F flashlight, E fan, X shock, L/O while Lolbit's screen is up, P/Esc pause, M mute. Clicks: Chica's cupcakes and Bonnet's nose (`clickOffice`), Nightmare Chica's cupcake (`clickFeed`); both use the pointer's row/column (`aim`) on `pointerdown`.
+- **Controls:** A/D doors, Space/S monitor, C/V tabs, 1–9 cameras (arrow keys + Enter on VENTS), W mask / wind on CAM 6, F flashlight, E fan, X shock, L/O while Lolbit's screen is up, P/Esc pause, M mute. Clicks: Chica's cupcakes and Bonnet's nose (`clickOffice`), Nightmare Chica's cupcake (`clickFeed`); both use the pointer's row/column (`aim`) on `pointerdown`.
 
 ## The characters
 
@@ -79,6 +79,23 @@ No levels: each character always plays the same; its numbers are in its own bloc
 | Legendary | Funtime Foxy | Line 2's showtime, on the **CAM 1** stage sign (`roundShow`, 40–60 s apart); be watching CAM 1 then (1.5 s grace) |
 | Legendary | Nightmare Fredbear | Every 22–34 s one attack, picked at random: `prowl` (walks past a window to a door, breathes, then flash him 0.6 s within 3.5 s; a shut door doesn't help), `toy` (mask within 2.5 s, held 3 s), `plush` (his little plush hides; shine it within 1.8 s) |
 
+
+### The bonus characters (added 2026-11-25)
+
+The owner's second list: "bonus characters that tend to be both more obscure and gimmicky". They have `bonus: true` in `data.js` (a BONUS tag on their cards, ", bonus" after the rarity in the info box and How to play) and are dealt like everyone else, by rarity. The owner asked Claude to sort them all into rarities ("I'm not a good judge of difficulty"); the owner's own first guesses were Bounce pot uncommon, Flamethrower endo and Hand-unit rare, Plush babies epic. **Mr. Hugs is not in Trash and the Gang on purpose: the owner has plans for him** (maybe a later bonus character). With them the roster is 33 characters, 570 points.
+
+| Rarity | Character | As built |
+|---|---|---|
+| Common | Salvage sign | Owner chose: taking it **brings the Shock button along** even without Springtrap or Baby (`shockOn`). Each shock has `SALVAGE_CHANCE` (40%) of popping up a SALVAGE sign on the camera (`G.slv.presses`, drawn by `renderFeed`): press Shock `SALVAGE_PRESSES` (3) more times, no charging needed, and the last one zaps. Never attacks |
+| Uncommon | Watermelon Chica | Turns up in a random doorway (bouncing it open if it was shut). Shutting that door on her (`watermelonShut`, called from `toggleDoor`) bounces it back open 0.25 s later (`popAt`), until the 3rd shut (`WMC_SHUTS`): then it stays shut and she leaves. `WMC_TIME` 6 s or she gets you |
+| Uncommon | Hand-unit | On monitor down (`lookedBack`), `HAND_CHANCE` 20%. While he's in, every key press goes to him (input.js; held keys don't count) and tapping him counts too (`mashHand`): `HAND_PRESSES` 15 within `HAND_TIME` 4 s, or he gets you |
+| Uncommon | Bounce pot | Owner chose: **dodge it with the mouse pointer all night**. It bounces around the whole view (over office and monitor, `#bouncepot`, clicks pass through), positions as fractions of the view; the pointer's are `aim.fx`/`aim.fy`. A hit costs `BOUNCE_COST` 3% power, then `BOUNCE_SAFE` 1.5 s with no hits. Never attacks |
+| Uncommon | Munchie | Owner chose: **blocks the view, then gets you**. Clings to the screen (`#munchie`, over everything, catches clicks) for `MUNCHIE_TIME` 8 s. Grab it and flick: input.js measures the pointer over the last 0.1 s on release; `MUNCHIE_FLICK` 900 px/s or more throws it off (`flickMunchie`), slower just drops it where it is (`dragMunchie`) |
+| Rare | Cookie Freddy | Stands in the office (`COOKIE_SPOT`) with his order written on the floor ("COAT ME IN: ..."). Click those `COOKIE_ASKS` (2) of `INGREDIENTS` on the new **CAM 9 Kitchen** (`KITCHEN_JARS`, `pickIngredient` via `clickFeed`) within `COOKIE_TIME` 16 s; a wrong one costs `COOKIE_WRONG` 2 s. Taken ones light up on the shelf |
+| Rare | Flamethrower endo | Like ASCII Nights' endo: every 28–42 s he stays 10–14 s, adding `ENDO_HEAT` 6%/s; the fan only slows heating to `FAN_SLOW` (0.25) while he's in (`updateHeat`). 100% heat while he's in = he gets the blame. Flames flicker along the office floor (`FLAME_ROWS`) |
+| Epic | Plush babies | Owner chose: **shine them; ones on the screen stay**. One every 9–16 s in a free spot of four (`G.pbb.spots`: doorL, doorR, winL, winR), each on its own clock. `PB_SHINE` 0.5 s of light sends one off (`plushLit`: `doorLit` for doorways, so the door must be open; the beam on the window's middle for windows). Left `PB_NEGLECT` 12 s (they blink for the last 3), it climbs onto your screen (`onScreen`): the 1st hides the top-left corner, the 2nd the top-right (`#pbCornerL/R`), the 3rd (`PB_DEADLY`) gets you. A power-out clears the spots but not the screen |
+
+**Tested 2026-11-25** in the browser, by script: every bonus character's counter and failure, the Salvage sign's three presses, Watermelon Chica's bounces, keyboard mashing with real key events (and that it didn't shut a door), a slow drag versus a fast flick on Munchie with pointer events, the wrong-ingredient penalty, the endo's heat with the fan, a plush baby shone in a window and three on the screen; 10 random-input nights with all 33 on (no errors).
 **All numbers are first guesses.** Nothing has been play-tested by a person, and there's no bot balance test yet, so the rarities may not line up with real difficulty.
 
 ## How the code is organized

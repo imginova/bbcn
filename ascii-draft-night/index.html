@@ -128,6 +128,7 @@
               <button type="button" data-room="whall" style="grid-area:whall">CAM 4<br>West hall<span class="mw"></span></button>
               <span class="you">YOU</span>
               <button type="button" data-room="ehall" style="grid-area:ehall">CAM 5<br>East hall<span class="mw"></span></button>
+              <button type="button" data-room="kitchen" style="grid-area:kitchen">CAM 9 · Kitchen<span class="mw"></span></button>
             </div>
           </div>
           <div class="vent-pane" id="ventPane" hidden>
@@ -149,6 +150,13 @@
         </div>
         <!-- The heat: a red glow that creeps up from the bottom of the view as the office gets hot. -->
         <div class="heat-glow" id="heatGlow"></div>
+        <!-- Bonus characters that sit on your SCREEN, over the office and the monitor alike. render.js
+             places them (in percent of the view). Plush babies that climbed up hide the top corners;
+             Bounce pot bounces around (it never catches clicks); Munchie clings on and must be flicked off. -->
+        <pre class="art pb-corner left" id="pbCornerL" hidden aria-hidden="true"></pre>
+        <pre class="art pb-corner right" id="pbCornerR" hidden aria-hidden="true"></pre>
+        <pre class="art bouncepot" id="bouncepot" hidden aria-hidden="true"></pre>
+        <div class="munchie" id="munchie" hidden role="button" aria-label="Munchie: drag and flick it off"><pre class="art" id="munchieArt"></pre></div>
         <!-- Lolbit's LOL screen: covers the view and blocks clicks under it until you type L O L
              (or tap the three letters). render.js shows it and lights up the letters already typed. -->
         <div class="lolbit" id="lolbit" hidden>
@@ -173,7 +181,7 @@
         <!-- Only shown on nights with Springtrap or Circus Baby. -->
         <button id="btnShock" type="button" hidden><span>Shock<kbd>X</kbd></span><span class="state" id="stShock">READY</span></button>
       </div>
-      <p class="keys hint">Hold F or the right mouse button to shine the flashlight where the mouse points (office, doorways and cameras) · E fan · X shock the camera you're on · C cams · V vents · 1–8 cameras · on VENTS, arrow keys pick a vent and Enter lures it · W: mask in the office, wind on CAM 6 · P pauses · M sound</p>
+      <p class="keys hint">Hold F or the right mouse button to shine the flashlight where the mouse points (office, doorways and cameras) · E fan · X shock the camera you're on · C cams · V vents · 1–9 cameras · on VENTS, arrow keys pick a vent and Enter lures it · W: mask in the office, wind on CAM 6 · P pauses · M sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -251,7 +259,7 @@
         <tr><td>Left / right door</td><td>A / D, or click the door or its button</td></tr>
         <tr><td>Monitor up / down</td><td>Space or S, or the Camera button</td></tr>
         <tr><td>Cams / vents tab</td><td>C / V, or the tabs on the monitor</td></tr>
-        <tr><td>Pick a camera</td><td>1 to 8, or click a room on the map</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 9, or click a room on the map</td></tr>
         <tr><td>Audio lure</td><td>On the VENTS tab: click a vent, or pick one with the arrow keys and press Enter</td></tr>
         <tr><td>Flashlight</td><td>Hold F or the right mouse button (or hold the Flashlight button) and point with the mouse</td></tr>
         <tr><td>Mask</td><td>W in the office, or the Mask button (not with the monitor up)</td></tr>
@@ -260,6 +268,9 @@
         <tr><td>Bonnet's nose, Nightmare Chica's cupcake</td><td>Click them</td></tr>
         <tr><td>Wind the music box</td><td>W or the Wind button while on CAM 6</td></tr>
         <tr><td>Chica's cupcakes</td><td>Click them</td></tr>
+        <tr><td>Hand-unit</td><td>Mash any keys (or tap him) until he falls over</td></tr>
+        <tr><td>Munchie</td><td>Grab it and flick it off: drag and let go while still moving fast</td></tr>
+        <tr><td>Cookie Freddy</td><td>Click his coatings on the Kitchen camera (CAM 9)</td></tr>
         <tr><td>Lolbit's screen</td><td>Type L, O, L (or tap the letters)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>

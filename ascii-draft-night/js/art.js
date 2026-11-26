@@ -101,6 +101,15 @@ const ICONS = {
   wfr: [' [_] ', '(O^.)', ' >#< '],          // Withered Freddy: torn up, one eye hanging, wires
   ffx: ['/\\_/\\', '(o o)', ' \\v/ '],       // Funtime Foxy: white, pink ears and snout, yellow eyes
   nfb: [' [_] ', '(@^@)', '>VVV<'],          // Nightmare Fredbear: gold, purple hat and bow tie, pale eyes
+  // The bonus characters.
+  slv: ['.---.', '|SLV|', "'-+-'"],          // Salvage sign: a yellow sign on a post
+  wmc: [' \\|/ ', '(o>o)', '(:::)'],         // Watermelon Chica: pink, a watermelon slice for a bib
+  hnd: ['_|||_', '[o_o]', ' /_\\ '],         // Hand-unit: a robot hand on a stand, a little screen face
+  bpt: [' \\|/ ', '[o_o]', ' \\_/ '],        // Bounce pot: a flower pot with a face and a sprout
+  mun: ['/\\ /\\', '(o o)', '\\VVV/'],       // Munchie: a little grabby thing that's all mouth
+  ckf: [' [_] ', '(o^o)', '(.:.)'],          // Cookie Freddy: a cookie-colored Freddy with chocolate chips
+  fen: [' .-. ', '[o o]', '/|=|>'],          // the Flamethrower endo: bare metal, a flamethrower
+  pbb: [' @_@ ', '(*.*)', ' | | '],          // Plush babies: little Circus Baby plushes
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -133,6 +142,14 @@ const ICON_ACCENTS = {
   wfr: [' xxx', ' b ', '  G'],            // Withered Freddy: black hat, a blue eye, bare wires
   ffx: ['p   p', ' y y', '  p'],          // Funtime Foxy: pink ears and snout, yellow eyes
   nfb: [' vvv', ' w w', 'vwwwv'],         // Nightmare Fredbear: purple hat and bow tie, pale eyes, white teeth
+  slv: ['', ' xxx', '  G'],               // Salvage sign: black letters, a grey post
+  wmc: ['', ' v v', 'ggggg'],             // Watermelon Chica: violet eyes, a green rind
+  hnd: ['', ' c c'],                      // Hand-unit: a glowing blue screen face
+  bpt: [' ggg', ' w w'],                  // Bounce pot: a green sprout, white eyes
+  mun: ['', ' y y', ' www'],              // Munchie: yellow eyes, white teeth
+  ckf: [' xxx', ' b b', ' x x'],          // Cookie Freddy: black hat, blue eyes, chocolate chips
+  fen: ['', ' r r', '    o'],             // the Flamethrower endo: red eyes, an orange flame
+  pbb: [' o o', ' g g'],                  // Plush babies: orange pigtails, green eyes
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>
@@ -216,6 +233,17 @@ const ROOM_ART = {
   ====|________________________|====
    .   .   .   .   .   .   .   .   .
  ------------------------------------`,
+  // The kitchen (CAM 9), added with Cookie Freddy: his four coatings on the shelf (KITCHEN_JARS below).
+  kitchen: String.raw`
+ K I T C H E N  ~  the coatings shelf
+ .---------.  .---------.     ____
+ |CHOCOLATE|  |SPRINKLES|    |oven|
+ '---------'  '---------'    |    |
+ .---------.  .---------.    |____|
+ | FROSTING|  | CARAMEL |
+ '---------'  '---------'
+ ____________________________________
+ | sink        stove        counter |`,
   parts: String.raw`
  .---. .---. .---.       [ ][ ][ ]
  |o o| |x x| |o -|       [ ][ ][ ]
@@ -1154,6 +1182,7 @@ const NCHICA_SPOTS = {
   prize: [[2, 25], [4, 30], [9, 4]],
   audit: [[8, 12], [5, 34], [2, 36]],
   parts: [[2, 8], [8, 18], [3, 28]],
+  kitchen: [[9, 30], [3, 32], [8, 5]],
 };
 
 // In the office ([row, column] in the 44 x 16 office picture).
@@ -1167,3 +1196,197 @@ const BONNET_ROWS = [12.5, 14];    // Bonnet runs along the floor, between these
 const PLUSH_SPOTS = [[6, 11], [4, 33], [12, 6], [12, 34], [13, 19], [7, 37], [1, 21]];
 // Where Shadow Bonnie's eyes can be (never over the vent). [row, column] of the left eye.
 const SHADOW_EYES = [[2, 12], [5, 6], [6, 38], [8, 20], [11, 5], [11, 36], [12, 18], [14, 9], [14, 30], [3, 39]];
+
+// =====================================================================
+// The BONUS characters' drawings (the owner's second list).
+// =====================================================================
+
+// ----- Salvage sign: pops up on the camera when you try to shock -----
+// The last line is filled in by render.js with how many more presses it needs.
+SPRITES.slv = {
+  sign: art(String.raw`
+ .----------------------.
+ |   S A L V A G E  !   |
+ |                      |
+ '----------.  .--------'
+            |  |`),
+};
+
+// ----- Watermelon Chica: in a doorway (only her eyes show in the dark) -----
+SPRITES.wmc = {
+  door: art(String.raw`
+  \ | /
+ .-----.
+/ O   O \
+|  /\   |
+|  \/   |
+ \_____/
+(:::::::)`),
+  // Chica's jumpscare with a watermelon slice instead of her bib.
+  scare: SPRITES.chi.scare.map(line => line.replace("|LET'S EAT!!!|", '(::::::::::::)').replace("'------------'", " '----------' ")),
+};
+SPRITES.wmc.door.accent = ['', '', '  v   v', '   oo', '   oo', '', 'gggggggg'];
+SPRITES.wmc.door.eyes = { at: [[2, 2], [2, 6]], color: 'v' };
+tintBox(SPRITES.wmc.scare, 2, 2, 0, 99, 'v', 'O');
+tintBox(SPRITES.wmc.scare, 3, 4, 0, 99, 'o', '/\\');
+tintBox(SPRITES.wmc.scare, 7, 8, 0, 99, 'g');
+
+// ----- Hand-unit: a robot hand on a stand, with a little screen for a face -----
+SPRITES.hnd = {
+  office: art(String.raw`
+    _  _  _  _
+   | || || || |
+   | || || || | _
+   |          |/ /
+   |  [o_o]   | /
+   |__________|/
+       |  |
+    ___|__|___`),
+  scare: art(String.raw`
+     _   _   _   _
+    | | | | | | | |
+    | | | | | | | |
+    | | | | | | | |   __
+    | '-' '-' '-' |  / /
+    |             | / /
+    |   [ O_O ]   |/ /
+    |   HELLO!!   | /
+    |_____________|/
+         |   |`),
+};
+tintBox(SPRITES.hnd.office, 4, 4, 0, 99, 'c', '[o_]');
+tintBox(SPRITES.hnd.scare, 6, 7, 0, 99, 'c');
+
+// ----- Bounce pot: a flower pot with a face and a sprout (drawn over the whole view) -----
+SPRITES.bpt = {
+  pot: art(String.raw`
+  @
+ \|/
+[o_o]
+ \_/`),
+};
+SPRITES.bpt.pot.accent = ['  y', ' ggg', ' w w'];
+
+// ----- Munchie: a little grabby thing that's all mouth, clinging to your screen -----
+SPRITES.mun = {
+  grab: art(String.raw`
+  /\      /\
+ (  o    o  )
+  \ VVVVVV /
+--{ AAAAAA }--
+  /|      |\
+ / |      | \ `),
+  scare: art(String.raw`
+     /\            /\
+    /  \          /  \
+   (    o        o    )
+    \  VVVVVVVVVVVV  /
+     | |          | |
+    /  AAAAAAAAAAAA  \
+---{                  }---
+    \/\/\/\/\/\/\/\/\/`),
+};
+tintBox(SPRITES.mun.grab, 1, 1, 0, 99, 'y', 'o');
+tintBox(SPRITES.mun.grab, 2, 3, 0, 99, 'w', 'VA');
+tintBox(SPRITES.mun.scare, 2, 2, 0, 99, 'y', 'o');
+tintBox(SPRITES.mun.scare, 3, 5, 0, 99, 'w', 'VA');
+
+// ----- Cookie Freddy: a cookie-colored Freddy covered in chocolate chips (the dots) -----
+SPRITES.ckf = {
+  office: art(String.raw`
+     ___
+   _|___|_
+  .-------.
+ / o  .  o \
+|  .  ^  .  |
+|   \___/ . |
+ \ .     . /
+  '-------'`),
+  scare: art(String.raw`
+          _______
+         |       |
+       __|_______|__
+     .-------------.
+    /  .   .    .   \
+   |    O       O    |
+   | .      ^      . |
+   |   .  \___/  .   |
+    \   .       .   /
+     '-------------'`),
+};
+tintBox(SPRITES.ckf.office, 0, 1, 0, 99, 'x');
+tintBox(SPRITES.ckf.office, 3, 3, 0, 99, 'b', 'o');
+tintBox(SPRITES.ckf.office, 3, 6, 0, 99, 'x', '.');
+tintBox(SPRITES.ckf.scare, 0, 2, 0, 99, 'x');
+tintBox(SPRITES.ckf.scare, 5, 5, 0, 99, 'b', 'O');
+tintBox(SPRITES.ckf.scare, 4, 8, 0, 99, 'x', '.');
+
+// ----- the Flamethrower endo -----
+SPRITES.fen = {
+  office: art(String.raw`
+   .-.
+  [o o]
+  /|=|\===>
+   | |
+  _/ \_`),
+  scare: art(String.raw`
+        .-----.
+       [ O   O ]
+        | VVV |
+        '-----'
+     ___/|===|\________
+    |    |   |   ======>~~~~
+         |   |
+        _/   \_`),
+};
+tintBox(SPRITES.fen.office, 1, 1, 0, 99, 'r', 'o');
+tintBox(SPRITES.fen.scare, 1, 1, 0, 99, 'r', 'O');
+tintBox(SPRITES.fen.scare, 4, 4, 23, 99, 'o');
+// His flames along the office floor: two pictures that take turns, so they flicker.
+const FLAME_ROWS = [
+  ['^  ^^  ^ ^^  ^  ^^ ^  ^^  ^ ^^ ^  ^^  ^ ^^ ', ' ^^ ^  ^^ ^  ^^  ^ ^^  ^ ^^ ^ ^^  ^ ^^  ^ ^'],
+  ['~^~~^^~^~~^~^^~~^~^~~^^~~^~^~~^^~^~~^~^^~~^', '^~~^~~^^~^~^~~^^~~^~^^~~^~~^~^^~~^~~^~^~~^~'],
+];
+
+// ----- Plush babies: little Circus Baby plushes -----
+SPRITES.pbb = {
+  // In a window or a doorway.
+  small: art(String.raw`
+ @_@
+(*.*)
+ | |`),
+  // Climbed onto your screen: a big one hiding a top corner of the view.
+  corner: art(String.raw`
+ @@@   ___   @@@
+@@@@ /     \ @@@@
+ @@ |  * *  | @@
+    |   o   |
+     \_____/
+     /|===|\ `),
+  scare: art(String.raw`
+     @@@@                     @@@@
+    @@@@@@     _________     @@@@@@
+     @@@@    /           \    @@@@
+            |   *     *   |
+            |      o      |
+            |    \___/    |
+             \___________/
+              /|=======|\ `),
+};
+for (const d of [SPRITES.pbb.small, SPRITES.pbb.corner, SPRITES.pbb.scare]) {
+  tintBox(d, 0, 99, 0, 99, 'o', '@');
+  tintBox(d, 0, 99, 0, 99, 'g', '*');
+  tintBox(d, 0, 99, 0, 99, 'r', 'o');
+}
+
+// ---------- where the bonus characters go ----------
+// The kitchen's ingredient jars on CAM 9 (for Cookie Freddy): [first row, last row, first column, last
+// column] of each in the framed camera picture. A click anywhere on a jar takes that ingredient.
+const KITCHEN_JARS = {
+  CHOCOLATE: [2, 4, 2, 12], SPRINKLES: [2, 4, 15, 25],
+  FROSTING: [5, 7, 2, 12], CARAMEL: [5, 7, 15, 25],
+};
+const HAND_SPOT = [6, 14];        // Hand-unit, in front of the desk
+const COOKIE_SPOT = [6, 1];       // Cookie Freddy, on the left of the desk
+const ENDO_SPOT = [8, 33];        // the Flamethrower endo, on the right
+const SALVAGE_SPOT = [3, 8];      // the Salvage sign, on the camera picture

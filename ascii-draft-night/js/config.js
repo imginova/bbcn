@@ -247,3 +247,74 @@ const NFB_DOOR_TIME = 3.5;
 const NFB_TOY_REACT = 2.5;
 const NFB_TOY_HOLD = 3;
 const NFB_PLUSH_TIME = 1.8;
+
+// ======================================================================
+// The BONUS characters: more obscure and gimmicky (the owner's second list).
+// They're sorted into the same rarities as everyone else.
+// ======================================================================
+
+// ---------- Salvage sign (bonus, common) ----------
+// Each time you use the controlled shock, SALVAGE_CHANCE of the time a SALVAGE sign pops up on the
+// camera instead: press Shock SALVAGE_PRESSES more times (fast, no charging needed) and the last press
+// zaps as normal. Taking Salvage sign brings the Shock button along, even without Springtrap or Baby.
+const SALVAGE_CHANCE = 0.4;
+const SALVAGE_PRESSES = 3;
+
+// ---------- Watermelon Chica (bonus, uncommon) ----------
+// She turns up in a doorway. Shutting the door on her makes it bounce back open: shut it WMC_SHUTS times
+// within WMC_TIME seconds and she leaves.
+const WMC_WAIT = [24, 38];
+const WMC_TIME = 6;
+const WMC_SHUTS = 3;
+
+// ---------- Hand-unit (bonus, uncommon) ----------
+// When you flip the monitor down, HAND_CHANCE of the time he's in your office. Mash the keyboard (any
+// keys, or tap him) HAND_PRESSES times within HAND_TIME seconds and he falls over.
+const HAND_CHANCE = 0.2;
+const HAND_PRESSES = 15;
+const HAND_TIME = 4;
+
+// ---------- Bounce pot (bonus, uncommon) ----------
+// Bounces across the view all night, from the bottom. Keep the mouse pointer out of its way: every hit
+// costs BOUNCE_COST % power (then it can't hit again for BOUNCE_SAFE seconds). Its speed across and its
+// gravity are in "screens per second", so it moves the same on any screen size.
+const BOUNCE_COST = 3;
+const BOUNCE_SAFE = 1.5;
+const BOUNCE_SPEED = 0.22;
+const BOUNCE_GRAVITY = 1.6;
+const BOUNCE_JUMP = [0.95, 1.3];   // how hard it bounces up off the bottom (a random amount each time)
+
+// ---------- Munchie (bonus, uncommon) ----------
+// Grabs onto your screen (covering part of the view) every MUNCHIE_WAIT seconds. Grab it with the mouse
+// and flick it off (drag it and let go while it's still moving fast: MUNCHIE_FLICK pixels per second or
+// more) within MUNCHIE_TIME seconds, or it gets you.
+const MUNCHIE_WAIT = [22, 36];
+const MUNCHIE_TIME = 8;
+const MUNCHIE_FLICK = 900;
+
+// ---------- Cookie Freddy (bonus, rare) ----------
+// He turns up in your office, saying the COOKIE_ASKS coatings he wants. Go to the Kitchen (CAM 9) and click
+// those ingredients within COOKIE_TIME seconds. A wrong ingredient costs COOKIE_WRONG seconds.
+const COOKIE_WAIT = [28, 42];
+const COOKIE_TIME = 16;
+const COOKIE_ASKS = 2;
+const COOKIE_WRONG = 2;
+
+// ---------- the Flamethrower endo (bonus, rare) ----------
+// Every ENDO_WAIT seconds he stays ENDO_STAY seconds and heats the office ENDO_HEAT % per second on top of
+// the normal heat. While he's there the fan can't cool it: it only slows the heating to FAN_SLOW of it.
+// If the heat hits 100% while he's there, he gets the blame.
+const ENDO_WAIT = [28, 42];
+const ENDO_STAY = [10, 14];
+const ENDO_HEAT = 6;
+const FAN_SLOW = 0.25;
+
+// ---------- Plush babies (bonus, epic) ----------
+// Little Circus Baby plushes turn up in the doorways and windows (4 spots), each on its own timer. Shine
+// the flashlight on one for PB_SHINE seconds to send it away (a shut door blocks the light). One left for
+// PB_NEGLECT seconds climbs onto your screen and hides a top corner for the rest of the night. The 3rd one
+// on the screen gets you.
+const PB_WAIT = [9, 16];
+const PB_NEGLECT = 12;
+const PB_SHINE = 0.5;
+const PB_DEADLY = 3;
