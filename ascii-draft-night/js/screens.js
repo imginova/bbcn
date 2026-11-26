@@ -30,7 +30,7 @@ function show(name) {
 // and its kill tally. Used by the info box on the pick screen and on the pause panel.
 function whoHtml(c) {
   const R = RARITIES[c.rarity], n = kills[c.id] || 0;
-  return `<b class="c-${c.id}">${c.name.toUpperCase()}</b> <span class="${R.cls}">· ${R.name} · ${R.points} pts</span>` +
+  return `<b class="c-${c.id}">${c.name.toUpperCase()}</b> <span class="${R.cls}">· ${R.name}${c.bonus ? ' bonus' : ''} · ${R.points} pts</span>` +
     ` <span class="dim">· ${c.where}</span><br>${c.desc}` +
     (n ? `<br><span class="kills">☠ Got you ${n === 1 ? 'once' : n + ' times'}</span>` : '');
 }
@@ -77,7 +77,7 @@ function renderPick() {
       const R = RARITIES[c.rarity], taken = run.picked.includes(c.id), n = kills[c.id] || 0;
       return `<button type="button" class="card ${R.cls}${taken ? ' taken' : ''}" data-id="${c.id}" aria-pressed="${taken}">` +
         `<span class="key">${i + 1}</span>${n ? `<small class="kills">☠${n}</small>` : ''}` +
-        `<span class="rar">${R.name} · ${R.points}</span>${iconHtml(c, ' big')}<b class="name">${c.name}</b>` +
+        (c.bonus ? '<span class="bonus-tag">BONUS</span>' : '') + `<span class="rar">${R.name} · ${R.points}</span>${iconHtml(c, ' big')}<b class="name">${c.name}</b>` +
         `<span class="where">${c.where}</span><span class="taken-tag">${taken ? '✓ TAKEN' : 'TAKE'}</span></button>`;
     }).join('')
     : '<p class="dim">You already have everyone. Brave.</p>');
@@ -179,7 +179,7 @@ function showWin(outcome, powerLeft) {
 // One line per character in the roster, from its desc, grouped by rarity.
 function buildHowto() {
   $('howtoChars').innerHTML = RARITY_ORDER.flatMap(r => ROSTER.filter(c => c.rarity === r)).map(c =>
-    `<li><b class="c-${c.id}">${c.name}</b> <span class="${RARITIES[c.rarity].cls}">(${RARITIES[c.rarity].name})</span>: ${c.desc}</li>`).join('');
+    `<li><b class="c-${c.id}">${c.name}</b> <span class="${RARITIES[c.rarity].cls}">(${RARITIES[c.rarity].name}${c.bonus ? ', bonus' : ''})</span>: ${c.desc}</li>`).join('');
 }
 function openHowto() {
   if (currentScreen === 'game' && G && !G.over && !G.paused) setPaused(true);   // don't die while reading

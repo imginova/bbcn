@@ -58,6 +58,15 @@
   --c-wfr: #9a6a3c;   /* Withered Freddy: a faded, dusty brown */
   --c-ffx: #f7eef3;   /* Funtime Foxy: white (pink snout and ears, yellow eyes) */
   --c-nfb: #d6a630;   /* Nightmare Fredbear: gold (purple hat and bow tie) */
+  /* The bonus characters. */
+  --c-slv: #f2d64b;   /* Salvage sign: a yellow warning sign */
+  --c-wmc: #ff6f8e;   /* Watermelon Chica: watermelon pink (a green rind) */
+  --c-hnd: #9ab3cc;   /* Hand-unit: steel blue-grey (a glowing blue screen) */
+  --c-bpt: #d9774a;   /* Bounce pot: terracotta (a green sprout) */
+  --c-mun: #a2d45e;   /* Munchie: grabby green */
+  --c-ckf: #d6a35c;   /* Cookie Freddy: baked cookie (chocolate chips) */
+  --c-fen: #c0c8d0;   /* the Flamethrower endo: bare metal (orange flames) */
+  --c-pbb: #f3dccf;   /* Plush babies: pale, like Circus Baby (orange pigtails, green eyes) */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   /* The size of the ASCII pictures: the office row is 68 characters wide (two 12-wide doors and the
@@ -163,6 +172,9 @@ pre.art, .viewport, .hud, .controls, .map, .feed-head, .wind, .icon, .cards, .lv
 .c-bab { color: var(--c-bab); } .c-sbn { color: var(--c-sbn); } .c-plu { color: var(--c-plu); }
 .c-ffr { color: var(--c-ffr); } .c-wfr { color: var(--c-wfr); } .c-ffx { color: var(--c-ffx); }
 .c-nfb { color: var(--c-nfb); }
+.c-slv { color: var(--c-slv); } .c-wmc { color: var(--c-wmc); } .c-hnd { color: var(--c-hnd); }
+.c-bpt { color: var(--c-bpt); } .c-mun { color: var(--c-mun); } .c-ckf { color: var(--c-ckf); }
+.c-fen { color: var(--c-fen); } .c-pbb { color: var(--c-pbb); }
 /* Shadow Bonnie is black: a thin white glow outlines each character, or he'd vanish on the dark screen. */
 .c-sbn { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
@@ -339,7 +351,7 @@ pre [class*="c-"] { font-weight: 600; }
 .map {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-areas: "prize stage parts" "cove dining audit" "whall you ehall";
+  grid-template-areas: "prize stage parts" "cove dining audit" "whall you ehall" "kitchen kitchen kitchen";
   gap: 6px;
   width: min(270px, 100%);
   align-self: center;
@@ -421,3 +433,32 @@ pre [class*="c-"] { font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   .shake, .rec::before, .blink, .warn, .cupcake { animation: none; }
 }
+
+/* ---------- the bonus characters ---------- */
+/* The BONUS tag on a card, in its top middle. */
+.card .bonus-tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 0 8px;
+  background: var(--panel); color: var(--rc); border: 1px solid var(--rc); font-size: 10px; letter-spacing: .2em; font-weight: 600; }
+/* The Flamethrower endo's flames on the office floor. */
+.flame { color: #ffa21f; text-shadow: 0 0 6px #ff6a1f; font-weight: 600; }
+.flame.hot { color: #ff4a2a; }
+/* Cookie Freddy's order written on the floor. */
+.order { font-weight: 600; }
+/* Hand-unit wobbling once he's halfway to falling over. */
+.wobble { display: inline-block; animation: wobble .18s linear infinite; }
+@keyframes wobble { 50% { transform: translateX(1px); } }
+/* Bounce pot: drawn over the view, but clicks go straight through it (you dodge it, you don't click it). */
+.bouncepot { position: absolute; z-index: 6; pointer-events: none; font-size: calc(var(--art) * 1.4); text-shadow: 0 0 6px rgba(217,119,74,.6); }
+.bouncepot.hit { animation: blink .15s steps(2) infinite; }
+/* Munchie: clinging to the screen, over everything (even the mask), and it catches the mouse so you can
+   grab it. touch-action: none lets a finger drag it on a phone. */
+.munchie { position: absolute; z-index: 7; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background: rgba(8,9,10,.6); padding: 4px; border: 1px dashed var(--c-mun); }
+.munchie:active { cursor: grabbing; }
+.munchie pre { font-size: calc(var(--art) * 1.5); text-shadow: 0 0 6px var(--c-mun); }
+.munchie.blink { border-style: solid; border-color: var(--danger); }
+/* Plush babies on your screen: big, hiding the top corners of the view (clicks go through them). */
+.pb-corner { position: absolute; top: 0; z-index: 6; pointer-events: none; font-size: calc(var(--art) * 2.2); line-height: 1.05;
+  background: rgba(8,9,10,.85); padding: 6px 10px; text-shadow: 0 0 8px rgba(243,220,207,.5); }
+.pb-corner.left { left: 0; }
+.pb-corner.right { right: 0; }
+@media (prefers-reduced-motion: reduce) { .wobble, .bouncepot.hit { animation: none; } }

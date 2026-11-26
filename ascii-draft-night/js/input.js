@@ -131,6 +131,9 @@ function updateAim(e) {
   const box = view.getBoundingClientRect();
   aim.x = e.clientX - box.left;
   aim.y = e.clientY - box.top;
+  // The same as fractions of the view (0 = left/top, 1 = right/bottom), for Bounce pot.
+  aim.fx = aim.x / box.width;
+  aim.fy = aim.y / box.height;
   aim.where = null;
   for (const [where, id, cols, rows] of AIM_AREAS) {
     const r = $(id).getBoundingClientRect();
@@ -224,6 +227,10 @@ document.addEventListener('keydown', e => {
   } else if (currentScreen === 'game' && G && !G.over) {
     if (k === 'p' || k === 'Escape') { setPaused(!G.paused); return; }
     if (G.paused) return;
+    // Hand-unit is in the office: every key you press goes to mashing him (and does nothing else), so
+    // mashing the keyboard can't slam doors or flip the monitor. Holding a key down doesn't count:
+    // e.repeat is true for the extra presses a held key sends.
+    if (G.hnd.present) { e.preventDefault(); if (!e.repeat) mashHand(); return; }
     // e.repeat is true for the extra presses a held-down key sends; most keys ignore those, so
     // holding A doesn't slam the door open and shut over and over.
     if (k === 'f') { flashKey = true; return; }          // held: released in keyup below
@@ -242,8 +249,8 @@ document.addEventListener('keydown', e => {
     // vent. The number keys do nothing there.
     else if (G.cam && G.tab === 'vents' && k in VENT_ARROWS) { e.preventDefault(); moveVentSel(...VENT_ARROWS[k]); }
     else if (G.cam && G.tab === 'vents' && k === 'Enter') { e.preventDefault(); playLure(G.ventSel); }
-    // Anywhere else, 1 to 8 pick a camera. /^[1-8]$/ means "exactly one digit from 1 to 8".
-    else if (/^[1-8]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
+    // Anywhere else, 1 to 9 pick a camera. /^[1-9]$/ means "exactly one digit from 1 to 9".
+    else if (/^[1-9]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
     else if (k === 'h') openHowto();
 
   } else if (currentScreen === 'win') {
@@ -274,3 +281,36 @@ document.addEventListener('visibilitychange', () => {
     sfx.wake();
   }
 });
+
+// ---------- Munchie: grab it and flick it off ----------
+// Pressing on Munchie grabs it, and moving drags it around. Letting go flicks it off, but only if you were
+// still moving fast at that moment: at least MUNCHIE_FLICK pixels a second over the last tenth of a second.
+// Let go while standing still and it just clings on where you left it.
+let munchieGrab = null;   // while dragging: where on Munchie you grabbed (dx, dy) and the recent pointer spots
+const munchieEl = $('munchie');
+munchieEl.addEventListener('pointerdown', e => {
+  if (!G || !G.mun.active) return;
+  sfx.init();
+  const r = munchieEl.getBoundingClientRect();
+  munchieGrab = { dx: e.clientX - r.left, dy: e.clientY - r.top, spots: [{ x: e.clientX, y: e.clientY, t: performance.now() }] };
+  try { munchieEl.setPointerCapture(e.pointerId); } catch {}   // keep getting moves even if the pointer outruns it
+  e.preventDefault();
+  e.stopPropagation();                          // it isn't a click on the office underneath
+});
+munchieEl.addEventListener('pointermove', e => {
+  if (!munchieGrab) return;
+  const box = view.getBoundingClientRect();
+  dragMunchie((e.clientX - munchieGrab.dx - box.left) / box.width, (e.clientY - munchieGrab.dy - box.top) / box.height);
+  munchieGrab.spots.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+});
+function letGoMunchie() {
+  if (!munchieGrab) return;
+  const now = performance.now();
+  const recent = munchieGrab.spots.filter(p => now - p.t <= 100);   // where the pointer was lately
+  munchieGrab = null;
+  if (recent.length < 2) return;   // it wasn't moving
+  const a = recent[0], b = recent[recent.length - 1];
+  const speed = Math.hypot(b.x - a.x, b.y - a.y) / Math.max(0.016, (b.t - a.t) / 1000);   // pixels a second
+  if (speed >= MUNCHIE_FLICK) flickMunchie();
+}
+for (const ev of ['pointerup', 'pointercancel']) munchieEl.addEventListener(ev, letGoMunchie);

@@ -29,10 +29,10 @@ function loop(now) {
   if (currentScreen === 'game' && G && !G.over) {
     if (!G.paused) update(dt * speed);
     // Redraw about 15 times a second, or straight away if something important changed.
-    // (While the flashlight or the fan is on, every frame, so the light keeps up with the mouse and
-    // the fan's blades turn smoothly.)
+    // (While the flashlight or the fan is on, or Bounce pot is bouncing, every frame, so the light keeps
+    // up with the mouse, the fan's blades turn and the pot moves smoothly.)
     sinceRender += dt;
-    if (!G.over && (dirty || flashOn() || G.fan || sinceRender > 1 / 15)) {
+    if (!G.over && (dirty || flashOn() || G.fan || G.bpt.on || sinceRender > 1 / 15)) {
       renderGame(now);
       dirty = false;
       sinceRender = 0;

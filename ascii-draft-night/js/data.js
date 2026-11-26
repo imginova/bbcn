@@ -16,9 +16,13 @@ const ROOMS = {
   prize:  { cam: 6, name: 'PRIZE CORNER' },
   audit:  { cam: 7, name: 'FUNTIME AUDITORIUM' },
   parts:  { cam: 8, name: 'PARTS & SERVICE' },
+  kitchen: { cam: 9, name: 'KITCHEN' },   // added with Cookie Freddy: where his coatings are
 };
-// Which room each number key (1 to 8) opens.
-const CAM_ORDER = ['stage', 'dining', 'cove', 'whall', 'ehall', 'prize', 'audit', 'parts'];
+// Which room each number key (1 to 9) opens.
+const CAM_ORDER = ['stage', 'dining', 'cove', 'whall', 'ehall', 'prize', 'audit', 'parts', 'kitchen'];
+// The ingredients on the kitchen's shelf (CAM 9), for Cookie Freddy. Their places in the picture are
+// KITCHEN_JARS in art.js.
+const INGREDIENTS = ['CHOCOLATE', 'SPRINKLES', 'FROSTING', 'CARAMEL'];
 
 // ---------- the vents ----------
 // 15 vent rooms in 3 rows of 5, numbered like this:
@@ -201,11 +205,55 @@ const NFREDBEAR = {
 };
 
 // Every character that can be picked, in roster order (grouped by rarity). The pick screen offers only these.
+// ----- the BONUS characters (the owner's second list: more obscure and gimmicky) -----
+// `bonus: true` puts a BONUS tag on their cards. They're dealt like everyone else, by rarity. Claude
+// sorted them into rarities (on request: "you can sort all of the characters").
+const SALVAGE = {
+  id: 'slv', name: 'Salvage sign', rarity: 'common', bonus: true, where: 'SHOCK',
+  desc: 'Brings the controlled shock along. Sometimes when you shock, a SALVAGE sign pops up instead: press Shock a few more times, fast, and then it works.',
+};
+const WMCHICA = {
+  id: 'wmc', name: 'Watermelon Chica', rarity: 'uncommon', bonus: true, where: 'EITHER DOOR',
+  desc: 'Turns up in a doorway. Shut the door on her and she bounces it back open: shut it 3 times, quickly, and she leaves.',
+};
+const HANDUNIT = {
+  id: 'hnd', name: 'Hand-unit', rarity: 'uncommon', bonus: true, where: 'OFFICE',
+  desc: 'Can be in your office when you flip the monitor down. Mash the keyboard (any keys, or tap him) until he falls over.',
+  how: 'had a few words with you',
+};
+const BOUNCEPOT = {
+  id: 'bpt', name: 'Bounce pot', rarity: 'uncommon', bonus: true, where: 'SCREEN',
+  desc: 'Bounces across your screen all night. Keep the mouse pointer out of its way: every hit costs power. Never attacks.',
+};
+const MUNCHIE = {
+  id: 'mun', name: 'Munchie', rarity: 'uncommon', bonus: true, where: 'SCREEN',
+  desc: 'Grabs onto your screen and covers part of it. Grab it with the mouse and flick it off (let go while you\'re still moving fast), or it gets you.',
+  how: 'chewed through your screen',
+};
+const COOKIE = {
+  id: 'ckf', name: 'Cookie Freddy', rarity: 'rare', bonus: true, where: 'OFFICE',
+  desc: 'Turns up in your office and says what he wants to be coated with. Go to the Kitchen (CAM 9) and click those ingredients before time runs out. The wrong one wastes time.',
+  how: 'didn\'t get his coating',
+};
+const FENDO = {
+  id: 'fen', name: 'Flamethrower endo', rarity: 'rare', bonus: true, where: 'OFFICE',
+  desc: 'Comes into your office now and then and heats it up fast. While he\'s there the fan can only slow the heat down: keep it on until he leaves.',
+  how: 'turned up the heat too far',
+};
+const PLUSHBABY = {
+  id: 'pbb', name: 'Plush babies', rarity: 'epic', bonus: true, where: 'DOORS & WINDOWS',
+  desc: 'Little plush babies turn up in the doorways and windows, each on its own timer. Shine each one away. One left too long climbs onto your screen and hides a corner for the rest of the night; the 3rd one on your screen gets you.',
+  how: 'covered your screen',
+};
+
+// Every character that can be picked, in roster order (grouped by rarity, the bonus ones last). The pick
+// screen offers only these.
 const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT,
   FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET,
   WBONNIE, WFOXY, SPRING, NCHICA, BABY,
   SBONNIE, PLUSH, FFREDDY,
-  WFREDDY, FFOXY, NFREDBEAR];
+  WFREDDY, FFOXY, NFREDBEAR,
+  SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY];
 // Find a character by its id, for example byId('fre') is FREDDY.
 const byId = id => ROSTER.find(c => c.id === id);
 // The two who come through the cameras and are sent back with the shock.

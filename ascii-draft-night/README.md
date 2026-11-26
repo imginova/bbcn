@@ -2,9 +2,9 @@
 
 A roguelite fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. Before every night you're dealt five character cards and take as many as you dare: they join your lineup for the rest of the run. Each character has a rarity (Common 5, Uncommon 10, Rare 20, Epic 35, Legendary 50 points) that says how hard it is and how much it's worth. **Survive a night with a lineup worth 150 points to win the run.** You have three lives.
 
-There are 25 characters: 9 common, 5 uncommon, 5 rare, 3 epic and 3 legendary, each working its own way (the rules are in the game's **How to play**, and on each card).
+There are 33 characters: 25 from the main list (9 common, 5 uncommon, 5 rare, 3 epic, 3 legendary) and 8 more obscure, gimmicky BONUS ones mixed into the same rarities, each working its own way (the rules are in the game's **How to play**, and on each card).
 
-The office has two doors, two windows, a flashlight that works in the doorways and on the cameras too, a mask, a desk fan (the office heats up all night), a controlled shock, a monitor with 8 cameras and a vent map with audio lures, and a battery that drains whenever you use anything.
+The office has two doors, two windows, a flashlight that works in the doorways and on the cameras too, a mask, a desk fan (the office heats up all night), a controlled shock, a monitor with 9 cameras and a vent map with audio lures, and a battery that drains whenever you use anything.
 
 > **A fan game.** ASCII FNAF: Draft Night is not affiliated with Scott Cawthon or Five Nights at Freddy's. The characters belong to their creator. The game is free and must stay free: no price, no ads, no donations. All the drawings and sounds were made from scratch for this game.
 

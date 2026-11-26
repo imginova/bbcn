@@ -170,6 +170,27 @@ function newGame() {
     nfb: { on: isOn(NFREDBEAR), mode: null, timer: waitFrom(NFB_WAIT), at: 2, dir: 1, stepT: 0, side: null,
       flashT: 0, maskT: 0, deadline: 0, spot: null },
 
+    // ----- bonus -----
+    // Salvage sign: how many more presses of Shock the sign needs (0: no sign up).
+    slv: { on: isOn(SALVAGE), presses: 0 },
+    // Watermelon Chica: her doorway (null: not here), how many times you've shut it on her, her clock,
+    // and when the door she bounced will fly open again.
+    wmc: { on: isOn(WMCHICA), side: null, shuts: 0, deadline: 0, popAt: 0, timer: waitFrom(WMC_WAIT) },
+    // Hand-unit: whether he's in the office, and how many key presses so far.
+    hnd: { on: isOn(HANDUNIT), present: false, presses: 0, deadline: 0 },
+    // Bounce pot: where it is (x across and y down, as fractions of the view: 0 = left/top, 1 =
+    // right/bottom), how fast it's moving, and until when it can't hit again.
+    bpt: { on: isOn(BOUNCEPOT), x: rand(0.1, 0.8), y: 0.88, vx: BOUNCE_SPEED * pick([-1, 1]), vy: -rand(...BOUNCE_JUMP), safeUntil: 0 },
+    // Munchie: whether it's on your screen, where (fractions of the view, its top-left corner), its clock.
+    mun: { on: isOn(MUNCHIE), active: false, x: 0, y: 0, deadline: 0, timer: waitFrom(MUNCHIE_WAIT) },
+    // Cookie Freddy: the coatings he wants (empty: he isn't here), the ones you've got, his clock.
+    ckf: { on: isOn(COOKIE), wants: [], got: [], deadline: 0, timer: waitFrom(COOKIE_WAIT) },
+    // The Flamethrower endo: whether he's here, and until when.
+    fen: { on: isOn(FENDO), present: false, until: 0, timer: waitFrom(ENDO_WAIT) },
+    // Plush babies: who's sitting in each of the 4 spots ({ since, shineT } or null) and how many are on
+    // your screen (they stay there all night).
+    pbb: { on: isOn(PLUSHBABY), spots: { doorL: null, doorR: null, winL: null, winR: null }, onScreen: 0, timer: waitFrom(PB_WAIT) },
+
     // The controlled shock: when it's charged again (G.t), and until when its flash shows (milliseconds).
     shockReady: 0, zapUntil: 0,
   };
@@ -203,7 +224,8 @@ function update(dt) {
     updateFoxy, updateGolden, updateToyFreddy, updateNightmareBonnie, updateBonnet,
     updateWitheredBonnie, updateWitheredFoxy, updateSpringtrap, updateBaby, updateNightmareChica,
     updateShadowBonnie, updatePlushtrap, updateFuntimeFreddy,
-    updateWitheredFreddy, updateFuntimeFoxy, updateFredbear]) {
+    updateWitheredFreddy, updateFuntimeFoxy, updateFredbear,
+    updateWatermelon, updateHandUnit, updateBouncePot, updateMunchie, updateCookie, updateEndo, updatePlushBabies]) {
     if (G.over || G.powerOut) return;
     step(dt);
   }
@@ -220,14 +242,19 @@ function updatePower(dt) {
 
 // ---------- the office heat ----------
 // Every night the office slowly heats up, and the fan cools it down. At 100% you pass out.
+// While the Flamethrower endo is here it heats much faster, and the fan can only slow the heating down
+// (to FAN_SLOW of it); if it reaches 100% while he's here, he gets the blame.
 function updateHeat(dt) {
-  if (G.fan) G.heat = Math.max(0, G.heat - FAN_COOL * dt);
-  else G.heat += HEAT_RISE * dt;
+  const endo = G.fen.present;
+  const rise = HEAT_RISE + (endo ? ENDO_HEAT : 0);
+  if (!G.fan) G.heat += rise * dt;
+  else if (endo) G.heat += rise * FAN_SLOW * dt;
+  else G.heat = Math.max(0, G.heat - FAN_COOL * dt);
   // A heavy breath each time the heat passes one of the HOT_WARN marks.
   const warns = HOT_WARN.filter(mark => G.heat >= mark).length;
   if (warns > G.hotWarns) sfx.hot();
   G.hotWarns = warns;
-  if (G.heat >= 100) passOut();
+  if (G.heat >= 100) endo ? lose(FENDO) : passOut();
 }
 
 // ---------- Freddy ----------
@@ -329,7 +356,9 @@ function updateCupcakes(dt) {
 // Chica's cupcakes? A cupcake is 3 characters wide; anywhere on it (or almost a row above or below)
 // counts.
 function clickOffice(r, c) {
-  if (!ready() || !seeingOffice()) return;
+  if (!ready()) return;
+  if (G.hnd.present && !G.cam) { mashHand(); return; }   // tapping Hand-unit counts as mashing
+  if (!seeingOffice()) return;
   if (boopBonnet(r, c)) return;
   const C = G.cups;
   const hit = C.spots.find(([row, col]) => Math.abs(r - row) <= 0.8 && c >= col - 0.8 && c <= col + 2.8);
@@ -590,6 +619,14 @@ function powerOutStart() {
   G.wfr.trying = false;
   G.nfb.mode = null;
   if (G.wfx.phase !== 'away') { G.wfx.phase = 'away'; G.wfx.timer = waitFrom(WFX_WAIT); }
+  // The bonus characters too (Plush babies already on your screen stay there).
+  G.slv.presses = 0;
+  G.wmc.side = null;
+  G.hnd.present = false;
+  G.mun.active = false;
+  G.ckf.wants = [];
+  G.fen.present = false;
+  for (const spot in G.pbb.spots) G.pbb.spots[spot] = null;
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -611,6 +648,7 @@ function toggleDoor(side) {
   if (!powered()) { sfx.deny(); return; }
   G.doors[side] = !G.doors[side];   // flip: open becomes closed, closed becomes open
   sfx.door(side);
+  if (G.doors[side] && G.wmc.side === side) watermelonShut(side);   // shut on Watermelon Chica
   dirty = true;
 }
 
@@ -790,6 +828,15 @@ function lookedBack() {
     Go.present = true;
     Go.deadline = G.t + GOLDEN_WINDOW;
     sfx.goldenIn();
+  }
+  // ...or Hand-unit (a bonus character).
+  const H = G.hnd;
+  if (H.on && !H.present && Math.random() < HAND_CHANCE) {
+    H.present = true;
+    H.presses = 0;
+    H.deadline = G.t + HAND_TIME;
+    sfx.handIn();
+    dirty = true;
   }
 }
 // He leaves the moment the mask goes on. Too slow, and he gets you.
@@ -1033,14 +1080,31 @@ function updateShockWalker(c, S, interval, chance, sound, dt) {
 const updateSpringtrap = dt => updateShockWalker(SPRING, G.spr, SPRING_INTERVAL, SPRING_CHANCE, sfx.springMove, dt);
 const updateBaby = dt => updateShockWalker(BABY, G.bab, BABY_INTERVAL, BABY_CHANCE, sfx.babyMove, dt);
 
-// Is the shock any use tonight? Only with Springtrap or Circus Baby in your lineup.
-const shockOn = () => SHOCKABLE.some(isOn);
+// Is the shock there tonight? With Springtrap or Circus Baby in your lineup, or Salvage sign (who brings it along).
+const shockOn = () => SHOCKABLE.some(isOn) || isOn(SALVAGE);
 // The controlled shock (the Shock button or X): with the monitor up on CAMS, it zaps the camera you're
 // looking at. Springtrap there goes back one room; Circus Baby all the way back to the start. Each shock
 // costs SHOCK_COST % power and needs SHOCK_COOLDOWN seconds to charge again.
+// With Salvage sign in your lineup, a shock sometimes brings up its SALVAGE sign instead: then each press
+// just knocks one off SALVAGE_PRESSES (no charging needed), and the last one zaps as normal.
 function shock() {
   if (!ready()) return;
-  if (!powered() || !shockOn() || !camsShowing() || G.t < G.shockReady) { sfx.deny(); return; }
+  if (!powered() || !shockOn() || !camsShowing()) { sfx.deny(); return; }
+  const SL = G.slv;
+  if (SL.presses > 0) {
+    SL.presses--;
+    sfx.salvageTap(SL.presses);
+    dirty = true;
+    if (SL.presses > 0) return;   // still more to go
+  } else {
+    if (G.t < G.shockReady) { sfx.deny(); return; }
+    if (SL.on && Math.random() < SALVAGE_CHANCE) {
+      SL.presses = SALVAGE_PRESSES;
+      sfx.salvage();
+      dirty = true;
+      return;
+    }
+  }
   G.shockReady = G.t + SHOCK_COOLDOWN;
   G.power -= SHOCK_COST;
   G.zapUntil = performance.now() + 250;   // render.js flashes the camera picture until then
@@ -1072,9 +1136,12 @@ function updateNightmareChica(dt) {
   if (G.t >= N.deadline) lose(NCHICA);
 }
 // A click on the camera picture at row r, column c (from input.js): did it hit her cupcake?
+// (Also Cookie Freddy's ingredients on the kitchen camera: see pickIngredient.)
 function clickFeed(r, c) {
-  const N = G && G.nch;
-  if (!N || !ready() || !N.room || !onCam(N.room) || performance.now() < G.staticUntil) return;
+  if (!ready() || !camsShowing() || performance.now() < G.staticUntil) return;
+  if (onCam('kitchen') && pickIngredient(r, c)) return;
+  const N = G.nch;
+  if (!N.room || !onCam(N.room)) return;
   const [row, col] = N.spot;
   if (Math.abs(r - row) > 0.8 || c < col - 0.8 || c > col + 2.8) return;
   N.room = null;
@@ -1323,5 +1390,237 @@ function fredbearDone() {
   N.side = null;
   N.spot = null;
   N.timer = waitFrom(NFB_WAIT);
+  dirty = true;
+}
+
+// =====================================================================
+// The BONUS characters (the owner's second list). Salvage sign lives in
+// shock() above; the rest are here.
+// =====================================================================
+
+// ---------- Watermelon Chica (bonus, uncommon) ----------
+// She turns up in a doorway (and bounces it open if it was shut). Each time you shut that door on her it
+// bounces back open a moment later (popAt), until the WMC_SHUTS-th time: then it stays shut and she
+// leaves. Run out of WMC_TIME and she gets you.
+function updateWatermelon(dt) {
+  const W = G.wmc;
+  if (!W.on) return;
+  if (!W.side) {
+    W.timer -= dt;
+    if (W.timer > 0) return;
+    W.side = pick(['L', 'R']);
+    W.shuts = 0;
+    W.deadline = G.t + WMC_TIME;
+    W.popAt = G.doors[W.side] ? G.t + 0.2 : 0;   // a shut door gets bounced open straight away
+    sfx.wmcIn(W.side);
+    dirty = true;
+    return;
+  }
+  if (W.popAt && G.t >= W.popAt) {
+    W.popAt = 0;
+    G.doors[W.side] = false;
+    sfx.boing(W.side);
+    dirty = true;
+  }
+  if (G.t >= W.deadline) lose(WMCHICA, W.side);
+}
+// The door on her side was just shut (toggleDoor).
+function watermelonShut(side) {
+  const W = G.wmc;
+  W.shuts++;
+  if (W.shuts >= WMC_SHUTS) {
+    sfx.bonk(side);
+    W.side = null;
+    W.popAt = 0;
+    W.timer = waitFrom(WMC_WAIT);
+  } else {
+    W.popAt = G.t + 0.25;   // she bounces it back open
+  }
+}
+
+// ---------- Hand-unit (bonus, uncommon) ----------
+// He turns up when you flip the monitor down (lookedBack). Mash the keyboard (any keys: input.js sends
+// them all here while he's in) or tap him, HAND_PRESSES times within HAND_TIME seconds.
+function updateHandUnit() {
+  const H = G.hnd;
+  if (H.present && G.t >= H.deadline) lose(HANDUNIT);
+}
+function mashHand() {
+  const H = G.hnd;
+  if (!ready() || !H.present) return;
+  H.presses++;
+  sfx.handTick(H.presses / HAND_PRESSES);
+  if (H.presses >= HAND_PRESSES) {
+    H.present = false;
+    sfx.handFall();
+  }
+  dirty = true;
+}
+
+// ---------- Bounce pot (bonus, uncommon) ----------
+// It bounces around the view all night: across at BOUNCE_SPEED, falling with BOUNCE_GRAVITY, bouncing
+// up off the bottom and off the sides. Positions are fractions of the view (see newGame), and the mouse
+// pointer's are too (aim.fx, aim.fy from input.js). If it touches the pointer: BOUNCE_COST % power gone.
+const POT_W = 0.07, POT_H = 0.16;   // its size, as fractions of the view
+function updateBouncePot(dt) {
+  const P = G.bpt;
+  if (!P.on) return;
+  P.vy += BOUNCE_GRAVITY * dt;
+  P.x += P.vx * dt;
+  P.y += P.vy * dt;
+  if (P.y >= 1 - POT_H) { P.y = 1 - POT_H; P.vy = -rand(...BOUNCE_JUMP); }   // off the bottom
+  if (P.x <= 0) { P.x = 0; P.vx = Math.abs(P.vx); }                          // off the left side
+  if (P.x >= 1 - POT_W) { P.x = 1 - POT_W; P.vx = -Math.abs(P.vx); }         // off the right side
+  // Did it hit the pointer? (Only while the pointer is over the view.)
+  if (aim.where && G.t >= P.safeUntil
+    && aim.fx >= P.x - 0.01 && aim.fx <= P.x + POT_W + 0.01 && aim.fy >= P.y - 0.01 && aim.fy <= P.y + POT_H + 0.01) {
+    P.safeUntil = G.t + BOUNCE_SAFE;
+    P.vy = -rand(...BOUNCE_JUMP);
+    G.power -= BOUNCE_COST;
+    sfx.potHit();
+    if (G.power <= 0) powerOutStart();
+  }
+}
+
+// ---------- Munchie (bonus, uncommon) ----------
+// It grabs onto your screen somewhere (x, y: its top-left corner, as fractions of the view). Grab it
+// and flick it off (input.js measures the flick and calls flickMunchie) before MUNCHIE_TIME runs out.
+// It's on your screen, so it's there whether you're on the monitor or not.
+function updateMunchie(dt) {
+  const M = G.mun;
+  if (!M.on) return;
+  if (!M.active) {
+    M.timer -= dt;
+    if (M.timer > 0) return;
+    M.active = true;
+    M.x = rand(0.05, 0.6);
+    M.y = rand(0.05, 0.45);
+    M.deadline = G.t + MUNCHIE_TIME;
+    sfx.munchieIn();
+    dirty = true;
+    return;
+  }
+  if (G.t >= M.deadline) lose(MUNCHIE);
+}
+// Dragging it around (input.js): its new place, kept on the view.
+function dragMunchie(x, y) {
+  const M = G.mun;
+  if (!ready() || !M.active) return;
+  M.x = Math.max(0, Math.min(0.75, x));
+  M.y = Math.max(0, Math.min(0.75, y));
+  dirty = true;
+}
+function flickMunchie() {
+  const M = G.mun;
+  if (!ready() || !M.active) return;
+  M.active = false;
+  M.timer = waitFrom(MUNCHIE_WAIT);
+  sfx.munchieFlick();
+  dirty = true;
+}
+
+// ---------- Cookie Freddy (bonus, rare) ----------
+// He turns up in your office wanting COOKIE_ASKS coatings (shown on the floor in front of him). Click them
+// on the kitchen camera (CAM 9) before COOKIE_TIME runs out. The wrong one costs COOKIE_WRONG seconds.
+function updateCookie(dt) {
+  const C = G.ckf;
+  if (!C.on) return;
+  if (!C.wants.length) {
+    C.timer -= dt;
+    if (C.timer > 0) return;
+    C.wants = shuffle(INGREDIENTS).slice(0, COOKIE_ASKS);
+    C.got = [];
+    C.deadline = G.t + COOKIE_TIME;
+    sfx.cookieIn();
+    dirty = true;
+    return;
+  }
+  if (G.t >= C.deadline) lose(COOKIE);
+}
+// A click on the kitchen camera at row r, column c (clickFeed). Returns true if it was on a jar.
+function pickIngredient(r, c) {
+  const name = INGREDIENTS.find(n => {
+    const [r1, r2, c1, c2] = KITCHEN_JARS[n];
+    return r >= r1 - 0.5 && r <= r2 + 0.5 && c >= c1 - 0.5 && c <= c2 + 0.5;
+  });
+  if (!name) return false;
+  const C = G.ckf;
+  if (!C.wants.length) { sfx.deny(); return true; }   // nobody wants anything right now
+  if (C.wants.includes(name) && !C.got.includes(name)) {
+    C.got.push(name);
+    sfx.pop();
+    if (C.got.length === C.wants.length) {   // all of them: a happy crunch, and he's gone
+      C.wants = [];
+      C.timer = waitFrom(COOKIE_WAIT);
+      sfx.cookieOut();
+    }
+  } else {
+    C.deadline -= COOKIE_WRONG;
+    sfx.deny();
+  }
+  dirty = true;
+  return true;
+}
+
+// ---------- the Flamethrower endo (bonus, rare) ----------
+// He comes and goes; while he's here, updateHeat heats the office fast and the fan can only slow it down.
+function updateEndo(dt) {
+  const E = G.fen;
+  if (!E.on) return;
+  if (!E.present) {
+    E.timer -= dt;
+    if (E.timer > 0) return;
+    E.present = true;
+    E.until = G.t + waitFrom(ENDO_STAY);
+    sfx.flameOn();
+    dirty = true;
+  } else if (G.t >= E.until) {
+    E.present = false;
+    E.timer = waitFrom(ENDO_WAIT);
+    sfx.flameOff();
+    dirty = true;
+  }
+}
+
+// ---------- Plush babies (bonus, epic) ----------
+// They turn up one at a time in a free spot (the two doorways and the two windows), each on its own clock.
+// PB_SHINE seconds of steady light sends one away (doorLit for a doorway, so its door must be open; the
+// beam on the window for a window). One left for PB_NEGLECT seconds climbs onto your screen for the rest
+// of the night; the PB_DEADLY-th one there gets you.
+// Is the light on the plush baby in `spot`?
+function plushLit(spot) {
+  if (spot === 'doorL') return doorLit('L');
+  if (spot === 'doorR') return doorLit('R');
+  const [r, c] = WINDOWS[spot === 'winL' ? 'L' : 'R'];
+  return beamOn(r + 1, c + 2.5);   // the middle of the window
+}
+function updatePlushBabies(dt) {
+  const P = G.pbb;
+  if (!P.on) return;
+  for (const spot in P.spots) {
+    const B = P.spots[spot];
+    if (!B) continue;
+    if (plushLit(spot)) {
+      B.shineT += dt;
+      if (B.shineT >= PB_SHINE) { P.spots[spot] = null; sfx.pop(); dirty = true; continue; }
+    } else {
+      B.shineT = 0;
+    }
+    if (G.t - B.since >= PB_NEGLECT) {
+      P.spots[spot] = null;
+      P.onScreen++;
+      sfx.plushClimb();
+      dirty = true;
+      if (P.onScreen >= PB_DEADLY) { lose(PLUSHBABY); return; }
+    }
+  }
+  // A new one every so often, in a free spot.
+  const free = Object.keys(P.spots).filter(s => !P.spots[s]);
+  if (!free.length) return;
+  P.timer -= dt;
+  if (P.timer > 0) return;
+  P.timer = waitFrom(PB_WAIT);
+  P.spots[pick(free)] = { since: G.t, shineT: 0 };
+  sfx.plushBaby();
   dirty = true;
 }
