@@ -114,7 +114,7 @@ const ICONS = {
   mgl: ['/\\ /\\', '(O O)', '{=}~o'],        // Mangle: fox ears, and the tangled endo bits
   nbb: ['[=^=]', '(O O)', '(VVV)'],          // Nightmare BB: a dark beanie, a mouth full of teeth
   nsb: ['.---.', '| ! |', '[o_o]'],          // the Nightmare staff bot: its caution bot's sign
-  grw: ['\\v|v/', '(x X)', '|RIP|'],         // Grave weed: a spiky weed on a tombstone
+  grw: ['v/ \\v', 'xX Xx', '|RIP|'],         // Grave weed: two spiky heads on a tombstone
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -159,7 +159,7 @@ const ICON_ACCENTS = {
   mgl: ['pp pp', ' y y', 'GGGGG'],        // Mangle: pink ears, yellow eyes, grey endo parts
   nbb: ['DDrDD', ' y y', ' www'],         // Nightmare BB: a dark beanie, yellow eyes, white teeth
   nsb: ['yyyyy', 'yyryy', ' c c'],        // the Nightmare staff bot: a yellow caution sign, a red !
-  grw: ['ddddd', ' r r', 'GGGGG'],        // Grave weed: dark leaves, red eyes, a grey tombstone
+  grw: ['dd dd', 'rr rr', 'GGGGG'],       // Grave weed: dark leaves, two pairs of red eyes, a grey tombstone
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>
@@ -1650,45 +1650,47 @@ const NSB_SPOT = [11, 1];
 // The sign's middle line: the arrow (or !) goes on row 1, columns 1 to 5 of the drawing.
 const NSB_SIGN = { idle: '  !  ', L: '<--  ', R: '  -->', wait: ' !!! ' };
 
-// ----- Grave weed: a spiky weed with a mean face, growing out of a little tombstone. Like Bounce pot it
-// has a standing look, a squeezed one and a crouch for charging up (same sizes, so it shares his hit box).
+// ----- Grave weed: a spiky weed with TWO mean heads (on request, 2026-11-26: "give grave weed a second
+// head") on a forked stem, growing out of a little tombstone. Like Bounce pot it has a standing look, a
+// squeezed one and a crouch for charging up, at his size (10 wide, 6 tall), so it shares his hit box. -----
 SPRITES.grw = {
   pot: art(String.raw`
-   \v|v/
-   (x X)
-   (VVV)
-  ~ )|( ~
-  .-----.
-  | RIP |`),
+ \v/  \v/
+(x X)(X x)
+(VVV)(VVV)
+~ \_)(_/ ~
+ .------.
+ | RIP  |`),
   squash: art(String.raw`
-   \v|v/
-   (x X)
-   (VVV)
-  ~ =|= ~
-  .-----.
-  | RIP |`),
+ \v/  \v/
+(x X)(X x)
+(VVV)(VVV)
+~ =_)(_= ~
+ .------.
+ | RIP  |`),
   crouch: art(String.raw`
 
-   \v|v/
-   (> <)
-  ~(VVV)~
-  .-----.
-  | RIP |`),
+ \v/  \v/
+(> <)(> <)
+(VVV)(VVV)
+ .------.
+ | RIP  |`),
   scare: art(String.raw`
-     \  v  |  v  /
-      \ \  |  / /
-     (  x     X  )
-     (  VVVVVVV  )
-     (  AAAAAAA  )
-    ~~ )  | |  ( ~~
-     .-----------.
-     |  R I P    |
-     '-----------'`),
+  \  v  |  v  /   \  v  |  v  /
+   \ \  |  / /     \ \  |  / /
+  (  x     X  )   (  X     x  )
+  (  VVVVVVV  )   (  VVVVVVV  )
+  (  AAAAAAA  )   (  AAAAAAA  )
+ ~~ )  | |  ( ~~~~~ )  | |  ( ~~
+     \_____\_________/_____/
+         .--------------.
+         |    R I P     |
+         '--------------'`),
 };
 for (const d of [SPRITES.grw.pot, SPRITES.grw.squash, SPRITES.grw.crouch, SPRITES.grw.scare]) {
-  tintBox(d, 0, 99, 0, 99, 'd', 'v|\\/');   // dark green leaves (also the stem)
+  tintBox(d, 0, 99, 0, 99, 'd', 'v|\\/');   // dark green leaves (also the forked stem)
   tintBox(d, 0, 99, 0, 99, 'r', 'xX><');     // red eyes
   tintBox(d, 0, 99, 0, 99, 'w', 'VA');       // white teeth
   tintBox(d, 0, 99, 0, 99, 'g', '~=');       // green tendrils
-  tintBox(d, d === SPRITES.grw.scare ? 6 : 4, 99, 0, 99, 'G');   // the grey tombstone (its bottom rows)
+  tintBox(d, d === SPRITES.grw.scare ? 7 : 4, 99, 0, 99, 'G');   // the grey tombstone (its bottom rows)
 }
