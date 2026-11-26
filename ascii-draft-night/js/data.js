@@ -218,7 +218,7 @@ const WMCHICA = {
 };
 const HANDUNIT = {
   id: 'hnd', name: 'Hand-unit', rarity: 'uncommon', bonus: true, where: 'OFFICE',
-  desc: 'Can be in your office when you flip the monitor down. Mash the keyboard (any keys, or tap him) until he falls over.',
+  desc: 'His keypad can be in your office when you flip the monitor down. Mash the keyboard (any keys, or tap the keypad) until he glitches out.',
   how: 'had a few words with you',
 };
 const BOUNCEPOT = {

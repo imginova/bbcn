@@ -371,8 +371,8 @@ const sfx = (() => {
     // Watermelon Chica turning up: a wet squelch from her side. Bouncing a door open: a springy boing.
     wmcIn(side) { noise(0.3, { vol: 0.35, freq: 600, pan: panOf(side) }); tone(180, 0.3, { type: 'sine', vol: 0.2, slide: -80, pan: panOf(side) }); },
     boing(side) { tone(150, 0.35, { type: 'sine', vol: 0.35, slide: 300, pan: panOf(side) }); },
-    // Hand-unit: a robotic "hello" blip, a click for each key you mash (higher as he wobbles: progress
-    // 0 to 1), and a crash when he falls over.
+    // Hand-unit: a robotic "hello" blip, a click for each key you mash (higher as he glitches: progress
+    // 0 to 1), and a crash when he glitches out.
     handIn() { [660, 990, 660].forEach((f, i) => tone(f, 0.09, { type: 'square', vol: 0.12, delay: i * 0.1 })); },
     handTick(progress) { tone(400 + 600 * progress, 0.03, { type: 'square', vol: 0.07 }); },
     handFall() { noise(0.4, { vol: 0.5, freq: 900 }); tone(300, 0.4, { type: 'sawtooth', vol: 0.15, slide: -250 }); },

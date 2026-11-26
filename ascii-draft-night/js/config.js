@@ -40,8 +40,9 @@ const NIGHT_HOURS = 6;     // 12 AM to 6 AM
 
 // ---------- power ----------
 // The monitor, each closed door, the flashlight and the fan each cost this much per second while
-// in use. The mask and the audio lures are free. (The monitor alone, all night, costs 54%.)
-const UNIT_DRAIN = 0.45;
+// in use. The mask and the audio lures are free. (The monitor alone, all night, costs 60%.) It was 0.45
+// until the owner asked for "a little faster" drain (2026-11-25).
+const UNIT_DRAIN = 0.5;
 const POWER_OUT_WAIT = [5, 13];   // seconds of darkness after a power-out before Freddy gets you
 
 // ---------- the office heat ----------
@@ -280,8 +281,8 @@ const WMC_TIME = 6;
 const WMC_SHUTS = 3;
 
 // ---------- Hand-unit (bonus, uncommon) ----------
-// When you flip the monitor down, HAND_CHANCE of the time he's in your office. Mash the keyboard (any
-// keys, or tap him) HAND_PRESSES times within HAND_TIME seconds and he falls over.
+// When you flip the monitor down, HAND_CHANCE of the time his keypad is in your office. Mash the keyboard (any
+// keys, or tap the keypad) HAND_PRESSES times within HAND_TIME seconds and he glitches out.
 const HAND_CHANCE = 0.2;
 const HAND_PRESSES = 15;
 const HAND_TIME = 4;
