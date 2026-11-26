@@ -20,12 +20,13 @@
   "charset utf-8" makes symbols like ♥ display correctly, and
   "viewport" makes it fit a phone screen.
 
-  The game has four screens, and only one is visible at a time
+  The game has five screens, and only one is visible at a time
   (the others carry the `hidden` attribute):
     #scr-title  title screen (start or continue a run)
     #scr-pick   the pick screen: take characters for your lineup
     #scr-game   the night itself (HUD, office or monitor, controls)
     #scr-win    6 AM: on to the next night, or the run is won
+    #scr-emblems  every character's completion emblems (from the title)
   plus #scare (jumpscare and game over) and #howto ("How to play"),
   which cover the whole window.
   =====================================================================
@@ -60,6 +61,7 @@
         <button id="btnContinue" type="button" class="primary" hidden>Continue run <kbd>Enter</kbd></button>
         <button id="btnNewRun" type="button">New run <kbd>N</kbd></button>
         <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
+        <button id="btnEmblems" type="button">Emblems <kbd>E</kbd></button>
       </div>
       <!-- Your records over every run, filled by renderTitle() in screens.js. -->
       <p class="best" id="recordLine"></p>
@@ -157,10 +159,12 @@
         <div class="heat-glow" id="heatGlow"></div>
         <!-- Bonus characters that sit on your SCREEN, over the office and the monitor alike. render.js
              places them (in percent of the view). Plush babies that climbed up hide the top corners;
-             Bounce pot bounces around (it never catches clicks); Munchie clings on and must be flicked off. -->
+             Bounce pot and Grave weed bounce around (they never catch clicks); Munchie clings on and must be
+             flicked off. -->
         <pre class="art pb-corner left" id="pbCornerL" hidden aria-hidden="true"></pre>
         <pre class="art pb-corner right" id="pbCornerR" hidden aria-hidden="true"></pre>
         <pre class="art bouncepot" id="bouncepot" hidden aria-hidden="true"></pre>
+        <pre class="art bouncepot" id="graveweed" hidden aria-hidden="true"></pre>
         <div class="munchie" id="munchie" hidden role="button" aria-label="Munchie: drag and flick it off"><pre class="art" id="munchieArt"></pre></div>
         <!-- Lolbit's LOL screen: covers the view and blocks clicks under it until you type L O L
              (or tap the three letters). render.js shows it and lights up the letters already typed. -->
@@ -210,10 +214,27 @@
       <p id="winMsg">You made it to morning.</p>
       <div class="mini-roster lineup" id="winLineup"></div>
       <p class="best" id="winRecord"></p>
+      <!-- The emblems this won run just earned (filled by showWin in screens.js). -->
+      <div class="win-emblems" id="winEmblems" hidden></div>
       <div class="menu">
         <button id="btnNext" type="button" class="primary">Pick characters <kbd>Enter</kbd></button>
         <button id="btnNewRunWin" type="button" class="primary">New run <kbd>Enter</kbd></button>
         <button id="btnTitleWin" type="button">Title</button>
+      </div>
+    </section>
+
+    <!-- EMBLEMS: every character, with a medal for each difficulty you've won a run on with them -->
+    <section id="scr-emblems" class="pick" hidden>
+      <p class="eyebrow">Completion emblems</p>
+      <h2>EMBLEMS</h2>
+      <!-- How many you have, filled by renderEmblems() in screens.js. -->
+      <p class="run-status" id="emblemTotal"></p>
+      <p class="keys">Win a run with a character in your lineup to earn its emblem for that difficulty. Point at a character to see how it works.</p>
+      <!-- One group per rarity, filled by renderEmblems(). -->
+      <div id="emblemGroups"></div>
+      <p class="who-box" id="emblemWho" aria-live="polite"></p>
+      <div class="setup-actions">
+        <button id="btnEmblemsBack" type="button" class="primary">Back <kbd>Esc</kbd></button>
       </div>
     </section>
   </div>
@@ -245,6 +266,7 @@
       <li>Your office starts out grey. Every character you take paints one more part of it (the poster, the monitor, the door frames...) in the color of its rarity, so you can see your lineup grow. Each one also paints a camera room: your 1st pick paints CAM 1, your 2nd CAM 2, and so on.</li>
       <li><b>Survive a night with a lineup worth the run's goal or more and you win the run.</b> The goal is set by the difficulty you pick on the title screen before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points.</li>
       <li>You have <b>3 lives</b>. Getting caught (or passing out from the heat) costs one, and you replay that night with the same lineup. Lose all three and the run is over.</li>
+      <li><b>Completion emblems:</b> win a run, and everyone in your lineup earns a medal for that difficulty. Each character has four to collect (Easy, Normal, Hard, Nightmare): they show on the cards, and the title screen's <b>Emblems</b> button (E) lists them all.</li>
     </ul>
     <p class="lab">The office</p>
     <ul>

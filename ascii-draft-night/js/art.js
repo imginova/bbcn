@@ -110,6 +110,11 @@ const ICONS = {
   ckf: [' [_] ', '(o^o)', ' >o< '],          // Cookie Freddy: Freddy dipped in chocolate, pink hat and bow tie
   fen: [' .-. ', '[o o]', '/|=|>'],          // the Flamethrower endo: bare metal, a flamethrower
   pbb: [' @_@ ', '(*.*)', ' | | '],          // Plush babies: little Circus Baby plushes
+  bb: [' _^_ ', '(o o)', '(\\_/)'],          // BB: a propeller beanie and a big grin
+  mgl: ['/\\ /\\', '(O O)', '{=}~o'],        // Mangle: fox ears, and the tangled endo bits
+  nbb: ['[=^=]', '(O O)', '(VVV)'],          // Nightmare BB: a dark beanie, a mouth full of teeth
+  nsb: ['.---.', '| ! |', '[o_o]'],          // the Nightmare staff bot: its caution bot's sign
+  grw: ['\\v|v/', '(x X)', '|RIP|'],         // Grave weed: a spiky weed on a tombstone
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -150,6 +155,11 @@ const ICON_ACCENTS = {
   ckf: [' ppp', 'ncccn', ' ppp'],        // Cookie Freddy: pink hat, chocolate ears, blue eyes, pink bow tie
   fen: ['', ' r r', '    o'],             // the Flamethrower endo: red eyes, an orange flame
   pbb: [' o o', ' g g'],                  // Plush babies: orange pigtails, green eyes
+  bb: ['  r', ' b b', ' www'],            // BB: a red propeller, blue eyes, a white grin
+  mgl: ['pp pp', ' y y', 'GGGGG'],        // Mangle: pink ears, yellow eyes, grey endo parts
+  nbb: ['DDrDD', ' y y', ' www'],         // Nightmare BB: a dark beanie, yellow eyes, white teeth
+  nsb: ['yyyyy', 'yyryy', ' c c'],        // the Nightmare staff bot: a yellow caution sign, a red !
+  grw: ['ddddd', ' r r', 'GGGGG'],        // Grave weed: dark leaves, red eyes, a grey tombstone
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>
@@ -1323,6 +1333,30 @@ tintBox(SPRITES.bpt.pot, 1, 1, 0, 99, 'w', 'Oo');    // the eyes
 tintBox(SPRITES.bpt.pot, 2, 2, 0, 99, 'w', '\\_/');  // the grin
 tintBox(SPRITES.bpt.pot, 3, 3, 0, 99, 'g');          // the spring and the tendrils
 tintBox(SPRITES.bpt.pot, 4, 5, 0, 99, 'o');          // the clay pot
+// Charging up a bounce on the floor (render.js shows these in turn, and shakes him): first the spring
+// squeezes (=@=), then he crouches right down into the pot with his eyes screwed shut (> <). The
+// crouch keeps the same height, with an empty top row, so the pot stays on the floor.
+SPRITES.bpt.squash = art(String.raw`
+    \v/
+ ${'`'} (O o) ${'`'}
+   (\_/)
+  ~ =@= ~
+   [===]
+    \_/`);
+SPRITES.bpt.crouch = art(String.raw`
+
+    \v/
+ ${'`'} (> <) ${'`'}
+  ~(\_/)~
+   [===]
+    \_/`);
+SPRITES.bpt.squash.accent = SPRITES.bpt.pot.accent;   // the same colors as standing
+tintBox(SPRITES.bpt.crouch, 1, 1, 0, 99, 'g');           // the sprout
+tintBox(SPRITES.bpt.crouch, 2, 2, 0, 99, 'G', '`');      // the flies
+tintBox(SPRITES.bpt.crouch, 2, 2, 0, 99, 'w', '><');     // the shut eyes
+tintBox(SPRITES.bpt.crouch, 3, 3, 0, 99, 'g', '~');      // the tendrils
+tintBox(SPRITES.bpt.crouch, 3, 3, 0, 99, 'w', '\\_/');   // the grin
+tintBox(SPRITES.bpt.crouch, 4, 5, 0, 99, 'o');           // the clay pot
 
 // ----- Munchie: a set of chattering teeth (redrawn on request, 2026-11-25, from the official design the
 // owner shared, then again to match it more closely). Two big eyes sit at the back: heavy black lids (#)
@@ -1500,3 +1534,161 @@ const HAND_NAME = 'EGGS BENEDICT';
 const COOKIE_SPOT = [6, 1];       // Cookie Freddy, on the left of the desk
 const ENDO_SPOT = [8, 33];        // the Flamethrower endo, on the right
 const SALVAGE_SPOT = [1, 9];      // the Salvage sign, on the camera picture (its plaque is 7 rows down)
+
+// =====================================================================
+// The third list (2026-11-25): BB, Mangle, Nightmare BB, the Nightmare staff bot and Grave weed.
+// =====================================================================
+
+// ----- BB: Balloon Boy, in your office after climbing out of the vent. A striped propeller beanie, a big
+// grin, and his balloon on a string. -----
+SPRITES.bb = {
+  office: art(String.raw`
+  _^_
+ [===]   O
+( o o )  |
+( \_/ )--'
+ /| |\ `),
+  scare: art(String.raw`
+          _^_
+        [=====]
+       (  O O  )
+       ( \___/ )         O
+        \_____/          |
+        /|   |\ _________'
+       HELLO! `),
+};
+for (const d of [SPRITES.bb.office, SPRITES.bb.scare]) {
+  tintBox(d, 0, 1, 0, 99, 'r', '_^');      // the propeller
+  tintBox(d, 0, 1, 0, 99, 'b', '[=]');     // the striped beanie
+  tintBox(d, 0, 99, 0, 99, 'b', 'oO');     // blue eyes...
+  tintBox(d, 0, 99, 0, 99, 'w', '\\_/');   // ...a white grin
+}
+tintBox(SPRITES.bb.office, 1, 3, 8, 99, 'r');   // the red balloon and its string
+tintBox(SPRITES.bb.scare, 4, 6, 20, 99, 'r');
+tintBox(SPRITES.bb.scare, 6, 6, 0, 99, 'y', 'HELO!');
+const BB_SPOT = [3, 19];   // BB in your office, in front of the monitor
+
+// ----- Mangle: never seen on the cameras (you hear her). Only her jumpscare: a tangle of white and pink
+// fox parts, with a second, bare endoskeleton head hanging off her. -----
+SPRITES.mgl = {
+  scare: art(String.raw`
+       /\      /\
+      /  \____/  \         .--.
+     |   O    O   |       ( oo )
+     |    \__/    |        '--'
+      \  VVVVVV  /        /
+  ~~~~~\________/~~~~~~~~'
+   --{=}--{=}--{=}--{=}--
+    /   |    |   \    \ `),
+};
+tintBox(SPRITES.mgl.scare, 0, 1, 0, 20, 'p', '/\\');    // pink ears
+tintBox(SPRITES.mgl.scare, 2, 2, 0, 20, 'y', 'O');      // yellow eyes
+tintBox(SPRITES.mgl.scare, 4, 4, 0, 99, 'w', 'V');      // white teeth
+tintBox(SPRITES.mgl.scare, 3, 3, 0, 20, 'p', '\\_/');   // a pink snout
+tintBox(SPRITES.mgl.scare, 1, 3, 23, 99, 'G');          // the bare endo head
+tintBox(SPRITES.mgl.scare, 6, 7, 0, 99, 'G');           // the tangled endo parts
+
+// ----- Nightmare BB: a dark, sharp-toothed BB sitting on your office floor, asleep (- -) or awake (O O,
+// a mouth full of teeth). His face is row 1, column 3 of the drawing (NBB_FACE): that's where the light
+// has to be. -----
+SPRITES.nbb = {
+  asleep: art(String.raw`
+ [=^=]
+( -.- )
+(_____)
+ d   b`),
+  awake: art(String.raw`
+ [=^=]
+( O O )
+(VVVVV)
+ d   b`),
+  scare: art(String.raw`
+          [===^===]
+        (  O     O  )
+        ( VVVVVVVVV )
+        ( AAAAAAAAA )
+         \_________/
+         d         b`),
+};
+for (const d of [SPRITES.nbb.asleep, SPRITES.nbb.awake, SPRITES.nbb.scare]) {
+  tintBox(d, 0, 0, 0, 99, 'r', '^');
+  tintBox(d, 0, 0, 0, 99, 'D', '[=]');     // a dark striped beanie
+  tintBox(d, 1, 1, 0, 99, 'y', 'O');       // yellow eyes when awake
+  tintBox(d, 2, 3, 0, 99, 'w', 'VA');      // white teeth
+}
+// Picked with a search so a shine aimed at any other target (Shadow Bonnie's eyes, Plushtrap's spots, the
+// Freddles, the windows, the cupcakes) never reaches his face: in front of the desk, right of the middle.
+const NBB_SPOT = [10, 25];
+const NBB_FACE = [NBB_SPOT[0] + 1, NBB_SPOT[1] + 3];
+
+// ----- the Nightmare staff bot's caution bot: always in your office (bottom left). Its sign says ! when
+// all is quiet; when the staff bot is coming it shows an arrow (<-- or -->) at that door. -----
+SPRITES.nsb = {
+  bot: art(String.raw`
+.-----.
+|  !  |
+'--+--'
+ [o_o]
+ /| |\ `),
+  scare: art(String.raw`
+      .-------------.
+      |  X       X  |
+      |    _____    |
+      |   |VVVVV|   |
+      |___|AAAAA|___|
+     /|   STAFF     |\
+    / |_____________| \
+       ()         () `),
+};
+tintBox(SPRITES.nsb.bot, 0, 2, 0, 99, 'y');            // a yellow caution sign
+tintBox(SPRITES.nsb.bot, 1, 1, 0, 99, 'r', '!');
+tintBox(SPRITES.nsb.bot, 3, 3, 0, 99, 'c', 'o');
+tintBox(SPRITES.nsb.scare, 1, 1, 0, 99, 'r', 'X');
+tintBox(SPRITES.nsb.scare, 3, 4, 0, 99, 'w', 'VA');
+tintBox(SPRITES.nsb.scare, 5, 5, 0, 99, 'y', 'STAF');
+const NSB_SPOT = [11, 1];
+// The sign's middle line: the arrow (or !) goes on row 1, columns 1 to 5 of the drawing.
+const NSB_SIGN = { idle: '  !  ', L: '<--  ', R: '  -->', wait: ' !!! ' };
+
+// ----- Grave weed: a spiky weed with a mean face, growing out of a little tombstone. Like Bounce pot it
+// has a standing look, a squeezed one and a crouch for charging up (same sizes, so it shares his hit box).
+SPRITES.grw = {
+  pot: art(String.raw`
+   \v|v/
+   (x X)
+   (VVV)
+  ~ )|( ~
+  .-----.
+  | RIP |`),
+  squash: art(String.raw`
+   \v|v/
+   (x X)
+   (VVV)
+  ~ =|= ~
+  .-----.
+  | RIP |`),
+  crouch: art(String.raw`
+
+   \v|v/
+   (> <)
+  ~(VVV)~
+  .-----.
+  | RIP |`),
+  scare: art(String.raw`
+     \  v  |  v  /
+      \ \  |  / /
+     (  x     X  )
+     (  VVVVVVV  )
+     (  AAAAAAA  )
+    ~~ )  | |  ( ~~
+     .-----------.
+     |  R I P    |
+     '-----------'`),
+};
+for (const d of [SPRITES.grw.pot, SPRITES.grw.squash, SPRITES.grw.crouch, SPRITES.grw.scare]) {
+  tintBox(d, 0, 99, 0, 99, 'd', 'v|\\/');   // dark green leaves (also the stem)
+  tintBox(d, 0, 99, 0, 99, 'r', 'xX><');     // red eyes
+  tintBox(d, 0, 99, 0, 99, 'w', 'VA');       // white teeth
+  tintBox(d, 0, 99, 0, 99, 'g', '~=');       // green tendrils
+  tintBox(d, d === SPRITES.grw.scare ? 6 : 4, 99, 0, 99, 'G');   // the grey tombstone (its bottom rows)
+}

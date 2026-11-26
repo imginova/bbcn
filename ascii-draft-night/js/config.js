@@ -116,7 +116,7 @@ const CUP_TIME_EACH = 2.5;
 const TOY_BONNIE_INTERVAL = 3.5;   // fast
 const TOY_CHICA_INTERVAL = 5;      // medium
 const CRAWL_CHANCE = 0.5;
-const LURE_FOOLED = { tbn: 0.85, tch: 0.45 };   // Toy Bonnie: very easy to fool; Toy Chica: so-so
+const LURE_FOOLED = { tbn: 0.85, tch: 0.45, bb: 0.65 };   // Toy Bonnie: very easy to fool; Toy Chica: so-so; BB: fairly easy
 
 // ---------- the Puppet (common) ----------
 // % per second the music box unwinds (from full to empty in about a minute). One click of Wind fills it.
@@ -296,6 +296,13 @@ const BOUNCE_SAFE = 1.5;
 const BOUNCE_SPEED = 0.22;
 const BOUNCE_GRAVITY = 1.6;
 const BOUNCE_JUMP = [0.95, 1.3];   // how hard it bounces up off the bottom (a random amount each time)
+// Each time it lands it crouches on the floor and charges up for BOUNCE_CHARGE seconds (squashing and
+// shaking: your warning), then springs off leaning a little toward your mouse pointer: BOUNCE_LEAN times
+// how far away the pointer is, added to its speed across, never more than BOUNCE_MAX_SPEED in all.
+// (On request, 2026-11-25: "charge up the bounce with a little animation and go slightly towards the player".)
+const BOUNCE_CHARGE = 0.6;
+const BOUNCE_LEAN = 0.25;
+const BOUNCE_MAX_SPEED = 0.4;
 
 // ---------- Munchie (bonus, uncommon) ----------
 // Grabs onto your screen (covering part of the view) every MUNCHIE_WAIT seconds. Grab it with the mouse
@@ -331,3 +338,47 @@ const PB_WAIT = [9, 16];
 const PB_NEGLECT = 12;
 const PB_SHINE = 0.5;
 const PB_DEADLY = 3;
+
+// =====================================================================
+// The third list (2026-11-25): BB, Mangle, Nightmare BB, and two more bonus characters, Grave weed and
+// the Nightmare staff bot. Claude sorted them into rarities, like the bonus ones.
+// =====================================================================
+
+// ---------- BB (uncommon) ----------
+// A third vent crawler, but you can't see him on the VENTS tab (you can still hear him, and lures still
+// work on him). In your office the mask sends him away like the others (VENT_HOLD). Too slow, and he
+// takes your flashlight for the rest of the night (he doesn't kill you). Then he stops coming.
+const BB_INTERVAL = 5;
+
+// ---------- Mangle (rare) ----------
+// Every MANGLE_WAIT seconds she gets onto a random camera with a burst of static, and stays invisible.
+// Her static keeps crackling every MANGLE_CRACKLE seconds: loud on her camera, faint everywhere else.
+// Find her camera by ear and shock it within MANGLE_TIME seconds.
+const MANGLE_WAIT = [24, 38];
+const MANGLE_TIME = 12;
+const MANGLE_CRACKLE = 0.7;
+
+// ---------- Nightmare BB (rare) ----------
+// He sits on the floor of your office, asleep. Each time you flip the monitor down, NBB_CHANCE of the
+// time he wakes up. Awake: shine the flashlight on him for NBB_SHINE seconds before you raise the monitor
+// again, or he gets you. Asleep: don't shine him! NBB_ASLEEP seconds of light on him while he sleeps
+// (a little more than a quick sweep across him) also gets you.
+const NBB_CHANCE = 0.25;
+const NBB_SHINE = 0.6;
+const NBB_ASLEEP = 0.4;
+
+// ---------- the Nightmare staff bot (bonus, uncommon) ----------
+// A caution bot stands in your office all night. Every NSB_WAIT seconds it starts blinking and points its
+// arrow at a door: the Nightmare staff bot is coming to that door. Shut it (only that one) within
+// NSB_TIME seconds. Shut both, and it waits behind them until one opens, then goes for that door (you get
+// REACT_WINDOW seconds to shut it again).
+const NSB_WAIT = [22, 34];
+const NSB_TIME = 4.5;
+const NSB_BLINK = 0.5;   // seconds between the caution bot's blinks
+
+// ---------- Grave weed (bonus, rare) ----------
+// Bounces around the view like Bounce pot (charging up, leaning toward your pointer), but a little
+// slower, and one touch of the mouse pointer gets you. It can't hit you in the first GRAVE_GRACE seconds.
+const GRAVE_SPEED = 0.17;
+const GRAVE_CHARGE = 0.8;
+const GRAVE_GRACE = 3;

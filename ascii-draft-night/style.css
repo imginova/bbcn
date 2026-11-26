@@ -67,6 +67,11 @@
   --c-ckf: #d6a35c;   /* Cookie Freddy: baked cookie (chocolate chips) */
   --c-fen: #c0c8d0;   /* the Flamethrower endo: bare metal (orange flames) */
   --c-pbb: #f3dccf;   /* Plush babies: pale, like Circus Baby (orange pigtails, green eyes) */
+  --c-bb: #f0c48a;    /* BB: his skin (a striped beanie, a red balloon) */
+  --c-mgl: #f2eaf0;   /* Mangle: white (pink ears, grey endo parts) */
+  --c-nbb: #9a86aa;   /* Nightmare BB: a dark, dusky purple (yellow eyes) */
+  --c-nsb: #f2d64b;   /* the Nightmare staff bot: caution yellow */
+  --c-grw: #b083d6;   /* Grave weed: a sickly purple (dark green leaves) */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   /* The size of the ASCII pictures: the office row is 68 characters wide (two 12-wide doors and the
@@ -175,6 +180,8 @@ pre.art, .viewport, .hud, .controls, .map, .feed-head, .wind, .icon, .cards, .lv
 .c-slv { color: var(--c-slv); } .c-wmc { color: var(--c-wmc); } .c-hnd { color: var(--c-hnd); }
 .c-bpt { color: var(--c-bpt); } .c-mun { color: var(--c-mun); } .c-ckf { color: var(--c-ckf); }
 .c-fen { color: var(--c-fen); } .c-pbb { color: var(--c-pbb); }
+.c-bb { color: var(--c-bb); } .c-mgl { color: var(--c-mgl); } .c-nbb { color: var(--c-nbb); }
+.c-nsb { color: var(--c-nsb); } .c-grw { color: var(--c-grw); }
 /* Shadow Bonnie is black: a thin white glow outlines each character, or he'd vanish on the dark screen. */
 .c-sbn { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
@@ -283,6 +290,13 @@ pre [class*="c-"] { font-weight: 600; }
 .mini-card .pts { color: var(--rc); }
 /* A card just taken on this pick screen (it joins the lineup when the night starts). */
 .mini-card.new { border-style: dashed; }
+/* Completion emblems: four little medals in the difficulty colors. Earned ones are filled (●) and glow;
+   the rest are faint outlines (○). */
+.medals { display: inline-flex; gap: 4px; font-size: 14px; line-height: 1; letter-spacing: 0; }
+.medal { color: var(--rc); opacity: .35; }
+.medal.got { opacity: 1; text-shadow: 0 0 5px var(--rc); }
+.win-emblems { display: flex; flex-direction: column; gap: 8px; }
+#emblemGroups { display: flex; flex-direction: column; gap: 8px; }
 
 /* ---------- game ---------- */
 .hud { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; font-variant-numeric: tabular-nums; }
@@ -461,7 +475,12 @@ pre [class*="c-"] { font-weight: 600; }
    and its hit box stays fair (POT_W, POT_H in game.js). It says "pre.bouncepot", not just ".bouncepot",
    so it beats the "pre.art" size rule above (the more exact rule wins).  */
 pre.bouncepot { position: absolute; z-index: 6; pointer-events: none; font-size: calc(var(--art) * 0.75); line-height: 1.1; text-shadow: 0 0 6px rgba(201,216,74,.5); }
+/* Grave weed uses the same rules, with a sickly purple glow. */
+pre#graveweed { text-shadow: 0 0 6px rgba(176,131,214,.55); }
 .bouncepot.hit { animation: blink .15s steps(2) infinite; }
+/* Charging up a bounce: a quick side-to-side shake. */
+.bouncepot.charging { animation: pot-shake .1s linear infinite; }
+@keyframes pot-shake { 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
 /* Munchie: clinging to the screen, over everything (even the mask), and it catches the mouse so you can
    grab it. touch-action: none lets a finger drag it on a phone. */
 .munchie { position: absolute; z-index: 7; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
@@ -474,4 +493,4 @@ pre.bouncepot { position: absolute; z-index: 6; pointer-events: none; font-size:
   background: rgba(8,9,10,.85); padding: 6px 10px; text-shadow: 0 0 8px rgba(243,220,207,.5); }
 .pb-corner.left { left: 0; }
 .pb-corner.right { right: 0; }
-@media (prefers-reduced-motion: reduce) { .wobble, .bouncepot.hit { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .wobble, .bouncepot.hit, .bouncepot.charging { animation: none; } }

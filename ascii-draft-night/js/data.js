@@ -246,18 +246,47 @@ const PLUSHBABY = {
   how: 'covered your screen',
 };
 
+// ----- the third list (2026-11-25), also sorted into rarities by Claude -----
+const BB = {
+  id: 'bb', name: 'BB', rarity: 'uncommon', where: 'VENTS',
+  desc: 'Crawls through the vents like the Toys, but you can\'t see him on the vent map: listen for him (lures still work). When he climbs in, mask on until he leaves, or he runs off with your flashlight for the rest of the night.',
+  how: 'took your flashlight',
+  interval: BB_INTERVAL,
+};
+const MANGLE = {
+  id: 'mgl', name: 'Mangle', rarity: 'rare', where: 'CAMERAS',
+  desc: 'Gets onto a camera with a burst of static, and you can\'t see her there. Flip through the cameras and listen: her static is loudest on her camera. Shock it in time.',
+  how: 'crawled out of the static',
+};
+const NBB = {
+  id: 'nbb', name: 'Nightmare BB', rarity: 'rare', where: 'OFFICE',
+  desc: 'Sits asleep on your office floor. Sometimes he wakes when you flip the monitor down: shine the light on him before you raise it again. But shine him while he\'s asleep and he gets you.',
+  how: 'didn\'t like being woken up',
+};
+const NSTAFFBOT = {
+  id: 'nsb', name: 'Nightmare staff bot', rarity: 'uncommon', bonus: true, where: 'EITHER DOOR',
+  desc: 'A caution bot stands in your office. When it blinks, look at its arrow and shut that door. Shut both and the staff bot waits behind them, then goes for the first door you open.',
+  how: 'clocked in',
+};
+const GRAVEWEED = {
+  id: 'grw', name: 'Grave weed', rarity: 'rare', bonus: true, where: 'SCREEN',
+  desc: 'Bounces across your screen all night like Bounce pot, a little slower. Keep the mouse pointer out of its way: one touch and it gets you.',
+  how: 'pulled you under',
+};
+
 // Every character that can be picked, in roster order (grouped by rarity, the bonus ones last). The pick
 // screen offers only these.
 const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT,
-  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET,
-  WBONNIE, WFOXY, SPRING, NCHICA, BABY,
+  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET, BB,
+  WBONNIE, WFOXY, SPRING, NCHICA, BABY, MANGLE, NBB,
   SBONNIE, PLUSH, FFREDDY,
   WFREDDY, FFOXY, NFREDBEAR,
-  SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY];
+  SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY, NSTAFFBOT, GRAVEWEED];
 // Find a character by its id, for example byId('fre') is FREDDY.
 const byId = id => ROSTER.find(c => c.id === id);
-// The two who come through the cameras and are sent back with the shock.
-const SHOCKABLE = [SPRING, BABY];
+// The ones the controlled shock is for (it shows on nights with any of them): Springtrap and Circus Baby
+// come through the cameras, and Mangle hides on one.
+const SHOCKABLE = [SPRING, BABY, MANGLE];
 
 // Funtime Freddy's lines. The two that send him to a door, and the ones that are just talk.
 const FFR_SAME_SIDE = 'Bon-Bon, go get \'em!';
@@ -270,6 +299,6 @@ const FFR_TALK = ['Hey there, buddy!', 'Is it time for the show?', 'Bon-Bon, are
 // left door to the right door. They walk back and forth along it; only the windows show them.
 const PROWL_PATH = ['L', 'Lwin', 'mid', 'Rwin', 'R'];
 // The vent crawlers that climb toward your office.
-const CRAWLERS = [TBONNIE, TCHICA];
+const CRAWLERS = [TBONNIE, TCHICA, BB];
 // A character's points (from its rarity).
 const pointsOf = c => RARITIES[c.rarity].points;

@@ -2,7 +2,7 @@
 
 A roguelite fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. Before every night you're dealt five character cards and take as many as you dare: they join your lineup for the rest of the run. Each character has a rarity (Common 5, Uncommon 10, Rare 20, Epic 35, Legendary 50 points) that says how hard it is and how much it's worth. **Survive a night with a lineup worth the goal to win the run.** The goal depends on the difficulty you pick before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points. You have three lives.
 
-There are 33 characters: 25 from the main list (9 common, 5 uncommon, 5 rare, 3 epic, 3 legendary) and 8 more obscure, gimmicky BONUS ones mixed into the same rarities, each working its own way (the rules are in the game's **How to play**, and on each card).
+There are 38 characters: 25 from the main list, 8 more obscure, gimmicky BONUS ones, and a third list of 5 (BB, Mangle, Nightmare BB, and two more bonus ones: Grave weed and the Nightmare staff bot), all mixed into the same rarities. Each works its own way (the rules are in the game's **How to play**, and on each card).
 
 The office has two doors, two windows, a flashlight that works in the doorways and on the cameras too, a mask, a desk fan (the office heats up all night), a controlled shock, a monitor with 9 cameras and a vent map with audio lures, and a battery that drains whenever you use anything.
 

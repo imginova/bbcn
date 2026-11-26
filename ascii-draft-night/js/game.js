@@ -42,8 +42,9 @@ const aim = { where: null, r: 0, c: 0, x: 0, y: 0 };
 
 // Is there power to use things right now? Not after a power-out.
 const powered = () => !G.powerOut;
-// Is the flashlight on? It needs power. It works on the office AND the cameras.
-const flashOn = () => (flashKey || flashMouse || flashButton) && powered();
+// Is the flashlight on? It needs power, and BB can run off with it for the rest of the night (G.noFlash).
+// It works on the office AND the cameras.
+const flashOn = () => (flashKey || flashMouse || flashButton) && powered() && !G.noFlash;
 // Is the light's oval around the pointer on row r, column c? (dx / BEAM_COLS)² + (dy / BEAM_ROWS)² <= 1
 // is the maths for "inside that oval".
 const inBeam = (r, c) => {
@@ -179,8 +180,11 @@ function newGame() {
     // Hand-unit: whether he's in the office, and how many key presses so far.
     hnd: { on: isOn(HANDUNIT), present: false, presses: 0, deadline: 0 },
     // Bounce pot: where it is (x across and y down, as fractions of the view: 0 = left/top, 1 =
-    // right/bottom), how fast it's moving, and until when it can't hit again.
-    bpt: { on: isOn(BOUNCEPOT), x: rand(0.1, 0.8), y: 0.88, vx: BOUNCE_SPEED * pick([-1, 1]), vy: -rand(...BOUNCE_JUMP), safeUntil: 0 },
+    // right/bottom), how fast it's moving, which way it's heading (dir: 1 right, -1 left), how much
+    // longer it's charging up on the floor (charge, 0 = not charging) and until when it can't hit again.
+    // It starts crouched on the floor, charging up its first bounce.
+    // `speed` and `chargeTime` are its own (Grave weed below shares the same bouncing, with its own).
+    bpt: bouncer(isOn(BOUNCEPOT), BOUNCE_SPEED, BOUNCE_CHARGE),
     // Munchie: whether it's on your screen, where (fractions of the view, its top-left corner), its clock.
     mun: { on: isOn(MUNCHIE), active: false, x: 0, y: 0, deadline: 0, timer: waitFrom(MUNCHIE_WAIT) },
     // Cookie Freddy: the coatings he wants (empty: he isn't here), the ones you've got, his clock.
@@ -191,9 +195,28 @@ function newGame() {
     // your screen (they stay there all night).
     pbb: { on: isOn(PLUSHBABY), spots: { doorL: null, doorR: null, winL: null, winR: null }, onScreen: 0, timer: waitFrom(PB_WAIT) },
 
+    // ----- the third list -----
+    // BB: a vent crawler like the Toys (see crawler() above). noFlash: he took your flashlight.
+    bb: crawler(BB),
+    noFlash: false,
+    // Mangle: the camera she's hiding on (null: none right now), her clock, and her static's next crackle.
+    mgl: { on: isOn(MANGLE), room: null, deadline: 0, timer: waitFrom(MANGLE_WAIT), crackleT: 0 },
+    // Nightmare BB: awake or asleep, and how long the light has been on his face.
+    nbb: { on: isOn(NBB), awake: false, shineT: 0 },
+    // The Nightmare staff bot: 'idle', 'signal' (the caution bot is pointing at `side`), 'wait' (both doors
+    // shut on it) or 'attack' (at `side`, after a door opened), plus its clocks.
+    nsb: { on: isOn(NSTAFFBOT), phase: 'idle', side: 'L', deadline: 0, blinkT: 0, timer: waitFrom(NSB_WAIT) },
+    // Grave weed: bounces like Bounce pot (see bouncer below), slower.
+    grw: bouncer(isOn(GRAVEWEED), GRAVE_SPEED, GRAVE_CHARGE),
+
     // The controlled shock: when it's charged again (G.t), and until when its flash shows (milliseconds).
     shockReady: 0, zapUntil: 0,
   };
+}
+// Something that bounces around the view (Bounce pot, Grave weed). It starts crouched on the floor at a
+// random spot, charging up its first bounce, heading left or right (dir).
+function bouncer(on, speed, chargeTime) {
+  return { on, speed, chargeTime, x: rand(0.1, 0.8), y: 1 - POT_H, vx: 0, vy: 0, dir: pick([-1, 1]), charge: chargeTime, safeUntil: 0 };
 }
 // Showtimes land on a round time: a multiple of 10 in-game minutes (a sixth of an hour).
 const roundShow = t => Math.ceil(t / (HOUR_SECONDS / 6)) * (HOUR_SECONDS / 6);
@@ -225,7 +248,8 @@ function update(dt) {
     updateWitheredBonnie, updateWitheredFoxy, updateSpringtrap, updateBaby, updateNightmareChica,
     updateShadowBonnie, updatePlushtrap, updateFuntimeFreddy,
     updateWitheredFreddy, updateFuntimeFoxy, updateFredbear,
-    updateWatermelon, updateHandUnit, updateBouncePot, updateMunchie, updateCookie, updateEndo, updatePlushBabies]) {
+    updateWatermelon, updateHandUnit, updateBouncePot, updateMunchie, updateCookie, updateEndo, updatePlushBabies,
+    updateMangle, updateNightmareBB, updateStaffBot, updateGraveWeed]) {
     if (G.over || G.powerOut) return;
     step(dt);
   }
@@ -372,7 +396,7 @@ function clickOffice(r, c) {
 // One step closer to V15: any next-door vent that's nearer (picked at random when there are two).
 const closerVent = n => pick(ventNeighbors(n).filter(m => ventDist(m) < ventDist(n)));
 // Each crawler's voice when it climbs in (and when the mask sends it back).
-const VENT_PITCH = { tbn: 340, tch: 260 };
+const VENT_PITCH = { tbn: 340, tch: 260, bb: 480 };
 
 function updateCrawlers(dt) {
   for (const c of CRAWLERS) {
@@ -425,6 +449,8 @@ function maskCheck(V, hold, dt, react = REACT_WINDOW) {
 }
 
 // In your office: keep the mask on until it makes a sound and goes back to V1. If not, it gets you.
+// BB is different: he runs off with your flashlight instead (for the rest of the night), and with that
+// he's had his fun: he doesn't come back tonight.
 function crawlerInOffice(c, V, dt) {
   const result = maskCheck(V, VENT_HOLD, dt);
   if (result === 'gone') {
@@ -433,6 +459,12 @@ function crawlerInOffice(c, V, dt) {
     V.room = VENT_START;
     V.stall = 0;
     V.timer = around(c.interval);
+    dirty = true;
+  } else if (result === 'fail' && c === BB) {
+    G.noFlash = true;
+    V.present = false;
+    V.on = false;
+    sfx.bbLaugh();
     dirty = true;
   } else if (result === 'fail') {
     lose(c);
@@ -627,6 +659,10 @@ function powerOutStart() {
   G.ckf.wants = [];
   G.fen.present = false;
   for (const spot in G.pbb.spots) G.pbb.spots[spot] = null;
+  // And the third list's: Mangle leaves her camera, Nightmare BB nods off, the staff bot stands down.
+  G.mgl.room = null;
+  G.nbb.awake = false;
+  if (G.nsb.phase !== 'idle') { G.nsb.phase = 'idle'; G.nsb.timer = waitFrom(NSB_WAIT); }
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -660,10 +696,19 @@ function toggleFan() {
   dirty = true;
 }
 
+// Raising the monitor while Nightmare BB is awake gets you (shine him back to sleep first). Called by
+// everything that raises it; returns true if that ended the night.
+function raiseWhileAwake() {
+  if (G.cam || !G.nbb.awake) return false;
+  lose(NBB);
+  return true;
+}
+
 // Raise or lower the monitor.
 function toggleCam() {
   if (!ready()) return;
   if (!powered() || G.mask) { sfx.deny(); return; }   // no monitor without power, or with the mask on
+  if (raiseWhileAwake()) return;
   G.cam = !G.cam;
   sfx.cam();
   if (G.cam) camStatic(0.2);
@@ -675,6 +720,7 @@ function toggleCam() {
 function setCam(room) {
   if (!ready()) return;
   if (!powered() || G.mask) { sfx.deny(); return; }
+  if (raiseWhileAwake()) return;
   G.cam = true;
   G.tab = 'cams';
   G.camRoom = room;
@@ -687,6 +733,7 @@ function setCam(room) {
 function setTab(tab) {
   if (!ready()) return;
   if (!powered() || G.mask || (tab === 'vents' && !ventsOn())) { sfx.deny(); return; }
+  if (raiseWhileAwake()) return;
   if (!G.cam) camStatic(0.2);
   G.cam = true;
   G.tab = tab;
@@ -836,6 +883,14 @@ function lookedBack() {
     H.presses = 0;
     H.deadline = G.t + HAND_TIME;
     sfx.handIn();
+    dirty = true;
+  }
+  // ...and Nightmare BB may wake up.
+  const NB = G.nbb;
+  if (NB.on && !NB.awake && Math.random() < NBB_CHANCE) {
+    NB.awake = true;
+    NB.shineT = 0;
+    sfx.nbbWake();
     dirty = true;
   }
 }
@@ -1080,7 +1135,8 @@ function updateShockWalker(c, S, interval, chance, sound, dt) {
 const updateSpringtrap = dt => updateShockWalker(SPRING, G.spr, SPRING_INTERVAL, SPRING_CHANCE, sfx.springMove, dt);
 const updateBaby = dt => updateShockWalker(BABY, G.bab, BABY_INTERVAL, BABY_CHANCE, sfx.babyMove, dt);
 
-// Is the shock there tonight? With Springtrap or Circus Baby in your lineup, or Salvage sign (who brings it along).
+// Is the shock there tonight? With Springtrap, Circus Baby or Mangle in your lineup, or Salvage sign (who
+// brings it along).
 const shockOn = () => SHOCKABLE.some(isOn) || isOn(SALVAGE);
 // The controlled shock (the Shock button or X): with the monitor up on CAMS, it zaps the camera you're
 // looking at. Springtrap there goes back one room; Circus Baby all the way back to the start. Each shock
@@ -1112,6 +1168,8 @@ function shock() {
   const S = G.spr, B = G.bab;
   if (S.on && SPRING.route[S.step] === G.camRoom) { S.step = Math.max(0, S.step - 1); S.timer = around(SPRING_INTERVAL); hit = true; }
   if (B.on && BABY.route[B.step] === G.camRoom) { B.step = 0; B.timer = around(BABY_INTERVAL); hit = true; }
+  const M = G.mgl;   // Mangle, hiding on this camera: she's gone
+  if (M.room === G.camRoom) { M.room = null; M.timer = waitFrom(MANGLE_WAIT); sfx.mangleOut(); hit = true; }
   sfx.shock(hit);
   if (G.power <= 0) powerOutStart();
   dirty = true;
@@ -1459,27 +1517,154 @@ function mashHand() {
 
 // ---------- Bounce pot (bonus, uncommon) ----------
 // It bounces around the view all night: across at BOUNCE_SPEED, falling with BOUNCE_GRAVITY, bouncing
-// up off the bottom and off the sides. Positions are fractions of the view (see newGame), and the mouse
-// pointer's are too (aim.fx, aim.fy from input.js). If it touches the pointer: BOUNCE_COST % power gone.
+// off the sides. Each time it lands it crouches and charges up for BOUNCE_CHARGE seconds (P.charge;
+// render.js squashes and shakes it), then springs off (launchPot). Positions are fractions of the view
+// (see newGame), and the mouse pointer's are too (aim.fx, aim.fy from input.js). If it touches the
+// pointer: BOUNCE_COST % power gone.
 const POT_W = 0.07, POT_H = 0.16;   // its size, as fractions of the view
+// The bouncing itself, shared with Grave weed (P is G.bpt or G.grw; each has its own speed and
+// chargeTime). `pitch` is how high its charging and launching sounds are. Returns true if it touched
+// the mouse pointer this time (only while the pointer is over the view, and not while it's still safe).
+function updateBouncer(P, dt, pitch) {
+  if (P.charge > 0) {
+    // Crouched on the floor, charging up.
+    P.charge -= dt;
+    if (P.charge <= 0) launchPot(P, pitch);
+  } else {
+    P.vy += BOUNCE_GRAVITY * dt;
+    P.x += P.vx * dt;
+    P.y += P.vy * dt;
+    if (P.y >= 1 - POT_H) {                       // landed: stop and start charging up
+      P.y = 1 - POT_H;
+      P.dir = Math.sign(P.vx) || P.dir;            // remember which way it was going (1 right, -1 left)
+      P.vx = 0;
+      P.vy = 0;
+      P.charge = P.chargeTime;
+      sfx.potCharge(P.chargeTime, pitch);
+    }
+    if (P.x <= 0) { P.x = 0; P.vx = Math.abs(P.vx); }                    // off the left side
+    if (P.x >= 1 - POT_W) { P.x = 1 - POT_W; P.vx = -Math.abs(P.vx); }   // off the right side
+  }
+  return !!aim.where && G.t >= P.safeUntil
+    && aim.fx >= P.x - 0.01 && aim.fx <= P.x + POT_W + 0.01 && aim.fy >= P.y - 0.01 && aim.fy <= P.y + POT_H + 0.01;
+}
 function updateBouncePot(dt) {
   const P = G.bpt;
-  if (!P.on) return;
-  P.vy += BOUNCE_GRAVITY * dt;
-  P.x += P.vx * dt;
-  P.y += P.vy * dt;
-  if (P.y >= 1 - POT_H) { P.y = 1 - POT_H; P.vy = -rand(...BOUNCE_JUMP); }   // off the bottom
-  if (P.x <= 0) { P.x = 0; P.vx = Math.abs(P.vx); }                          // off the left side
-  if (P.x >= 1 - POT_W) { P.x = 1 - POT_W; P.vx = -Math.abs(P.vx); }         // off the right side
-  // Did it hit the pointer? (Only while the pointer is over the view.)
-  if (aim.where && G.t >= P.safeUntil
-    && aim.fx >= P.x - 0.01 && aim.fx <= P.x + POT_W + 0.01 && aim.fy >= P.y - 0.01 && aim.fy <= P.y + POT_H + 0.01) {
-    P.safeUntil = G.t + BOUNCE_SAFE;
-    P.vy = -rand(...BOUNCE_JUMP);
-    G.power -= BOUNCE_COST;
-    sfx.potHit();
-    if (G.power <= 0) powerOutStart();
+  if (!P.on || !updateBouncer(P, dt, 160)) return;
+  // It hit the pointer: it bounces off, costs power, and can't hit again for BOUNCE_SAFE seconds.
+  P.safeUntil = G.t + BOUNCE_SAFE;
+  P.charge = 0;
+  P.vy = -rand(...BOUNCE_JUMP);
+  G.power -= BOUNCE_COST;
+  sfx.potHit();
+  if (G.power <= 0) powerOutStart();
+}
+// Spring off the floor: a random height, across the way it was going at its own speed, leaning a little
+// toward the mouse pointer (the further away the pointer is, the more it leans; pointer off the view: no lean).
+function launchPot(P, pitch) {
+  P.vy = -rand(...BOUNCE_JUMP);
+  const lean = aim.where ? BOUNCE_LEAN * (aim.fx - (P.x + POT_W / 2)) : 0;
+  P.vx = Math.max(-BOUNCE_MAX_SPEED, Math.min(BOUNCE_MAX_SPEED, P.dir * P.speed + lean));
+  sfx.potLaunch(pitch * 1.5);
+}
+
+// ---------- Grave weed (bonus, rare) ----------
+// Bounces just like Bounce pot (a little slower, charging up longer), but one touch of the mouse pointer
+// gets you. Not in the first GRAVE_GRACE seconds of the night, so it can't start right under your pointer.
+function updateGraveWeed(dt) {
+  const P = G.grw;
+  if (P.on && updateBouncer(P, dt, 90) && G.t >= GRAVE_GRACE) lose(GRAVEWEED);
+}
+
+// ---------- Mangle (rare) ----------
+// Every MANGLE_WAIT seconds she gets onto a random camera with a burst of static. You can't see her: her
+// static crackles every MANGLE_CRACKLE seconds, loud while you're looking at her camera and faint
+// everywhere else (monitor down too). Shock her camera (see shock) within MANGLE_TIME seconds.
+function updateMangle(dt) {
+  const M = G.mgl;
+  if (!M.on) return;
+  if (!M.room) {
+    M.timer -= dt;
+    if (M.timer > 0) return;
+    M.room = pick(CAM_ORDER);
+    M.deadline = G.t + MANGLE_TIME;
+    M.crackleT = MANGLE_CRACKLE;
+    sfx.mangleIn();
+    return;
   }
+  M.crackleT -= dt;
+  if (M.crackleT <= 0) {
+    M.crackleT = MANGLE_CRACKLE;
+    sfx.mangleCrackle(onCam(M.room) ? 1 : 0.12);
+  }
+  if (G.t >= M.deadline) lose(MANGLE);
+}
+
+// ---------- Nightmare BB (rare) ----------
+// He sits on your office floor. lookedBack (when you flip the monitor down) can wake him; then shine
+// the flashlight on his face for NBB_SHINE seconds to put him back to sleep, before you raise the
+// monitor again (raiseWhileAwake). While he's asleep, NBB_ASLEEP seconds of light on his face gets you.
+function updateNightmareBB(dt) {
+  const N = G.nbb;
+  if (!N.on) return;
+  if (!beamOn(...NBB_FACE)) { N.shineT = 0; return; }
+  N.shineT += dt;
+  dirty = true;
+  if (!N.awake) {
+    if (N.shineT >= NBB_ASLEEP) lose(NBB);
+  } else if (N.shineT >= NBB_SHINE) {
+    N.awake = false;
+    N.shineT = 0;
+    sfx.nbbSleep();
+  }
+}
+
+// ---------- the Nightmare staff bot (bonus, uncommon) ----------
+// A caution bot stands in your office all night. Every NSB_WAIT seconds it blinks (a beep every NSB_BLINK
+// seconds, from the middle: it doesn't tell you the side) and points its arrow at a door: the staff bot
+// is coming there. Shut that door (and only that one) within NSB_TIME seconds. Shut both, and it waits
+// behind them ('wait'); the moment either opens it goes for that one ('attack'): shut it again in time.
+function updateStaffBot(dt) {
+  const N = G.nsb;
+  if (!N.on) return;
+  const shut = G.doors, other = otherSide(N.side);
+  switch (N.phase) {
+    case 'idle':
+      N.timer -= dt;
+      if (N.timer > 0) return;
+      N.phase = 'signal';
+      N.side = pick(['L', 'R']);
+      N.deadline = G.t + NSB_TIME;
+      N.blinkT = 0;
+      dirty = true;
+      return;
+    case 'signal':
+      N.blinkT -= dt;
+      if (N.blinkT <= 0) { N.blinkT = NSB_BLINK; sfx.nsbBlink(); }
+      if (shut[N.side] && shut[other]) { N.phase = 'wait'; dirty = true; return; }
+      if (shut[N.side]) { staffBotGone(); return; }
+      if (G.t >= N.deadline) lose(NSTAFFBOT, N.side);
+      return;
+    case 'wait':
+      if (shut.L && shut.R) return;
+      N.side = shut.L ? 'R' : 'L';   // the door that opened (if both did at once: the left)
+      N.phase = 'attack';
+      N.deadline = G.t + REACT_WINDOW;
+      sfx.arrive(N.side, 70);
+      dirty = true;
+      return;
+    case 'attack':
+      if (shut[N.side]) staffBotGone();
+      else if (G.t >= N.deadline) lose(NSTAFFBOT, N.side);
+  }
+}
+// Shut out: it bonks on the door and goes away until next time.
+function staffBotGone() {
+  const N = G.nsb;
+  sfx.bonk(N.side);
+  N.phase = 'idle';
+  N.timer = waitFrom(NSB_WAIT);
+  dirty = true;
 }
 
 // ---------- Munchie (bonus, uncommon) ----------
