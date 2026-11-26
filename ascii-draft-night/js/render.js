@@ -225,8 +225,17 @@ function drawVisitors(g, now) {
     const left = C.wants.filter(n => !C.got.includes(n));
     write(g, 15, 1, `COAT ME IN: ${left.join(' + ')}`.padEnd(42), 'c-ckf order');
   }
-  // Hand-unit, in front of the desk. He wobbles more the more you've mashed.
-  if (G.hnd.present) sprite(g, ...HAND_SPOT, SPRITES.hnd.office, 'c-hnd' + (G.hnd.presses > HAND_PRESSES / 2 ? ' wobble' : ''));
+  // Hand-unit's keypad, in front of the desk. Each key you mash types one more letter of HAND_NAME into
+  // his name field; past halfway the keypad shakes and red junk flickers over his screen (he's glitching).
+  const H = G.hnd;
+  if (H.present) {
+    const glitchy = H.presses > HAND_PRESSES / 2;
+    const [r, c] = HAND_SPOT;
+    sprite(g, r, c, SPRITES.hnd.office, 'c-hnd' + (glitchy ? ' wobble' : ''));
+    const typed = HAND_NAME.slice(0, Math.ceil(H.presses / HAND_PRESSES * HAND_NAME.length));
+    write(g, r + 2, c + 4, (typed + '_').slice(0, 13), 'c-hnd acc-sky');
+    if (glitchy) for (let i = 0; i < 4; i++) write(g, r + 1 + Math.floor(Math.random() * 2), c + 2 + Math.floor(Math.random() * 14), pick('#%@&?!'), 'c-hnd acc-red');
+  }
   // Shadow Bonnie's white eyes, hidden in the dark (see #darkShade). They glow while the light is on them.
   const S = G.sbn;
   if (S.active) write(g, S.eyes[0], S.eyes[1], SPRITES.sbn.eyes, 'c-sbn acc-white' + (S.shineT > 0 ? ' shone' : ''));
@@ -365,7 +374,7 @@ function renderFeed(now) {
   // Salvage sign, in front of the picture (even over static), while it needs more presses.
   if (G.slv.presses > 0) {
     sprite(g, ...SALVAGE_SPOT, SPRITES.slv.sign, 'c-slv');
-    write(g, SALVAGE_SPOT[0] + 2, SALVAGE_SPOT[1] + 4, `press SHOCK x${G.slv.presses}`, 'c-slv blink');
+    write(g, SALVAGE_SPOT[0] + 7, SALVAGE_SPOT[1] + 3, `press SHOCK x${G.slv.presses}`, 'c-slv blink');   // on the plaque
   }
   setHtml($('feed'), toHtml(g));
   // The shock's flash over the picture, for a moment after each zap.

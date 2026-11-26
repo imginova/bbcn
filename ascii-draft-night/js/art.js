@@ -102,10 +102,10 @@ const ICONS = {
   ffx: ['/\\_/\\', '(o o)', ' \\v/ '],       // Funtime Foxy: white, pink ears and snout, yellow eyes
   nfb: [' [_] ', '(@^@)', '>VVV<'],          // Nightmare Fredbear: gold, purple hat and bow tie, pale eyes
   // The bonus characters.
-  slv: ['.---.', '|SLV|', "'-+-'"],          // Salvage sign: a yellow sign on a post
-  wmc: [' \\|/ ', '(o>o)', '(:::)'],         // Watermelon Chica: pink, a watermelon slice for a bib
-  hnd: ['_|||_', '[o_o]', ' /_\\ '],         // Hand-unit: a robot hand on a stand, a little screen face
-  bpt: [' \\|/ ', '[o_o]', ' \\_/ '],        // Bounce pot: a flower pot with a face and a sprout
+  slv: [' .-. ', '(-_O)', '  |  '],          // Salvage sign: a winking wooden face on a post
+  wmc: [' \\|/ ', '(O>O)', '|EAT|'],         // Watermelon Chica: a striped Chica with her bib
+  hnd: ['.---.', '|>_ |', '[:::]'],          // Hand-unit: Sister Location's elevator keypad
+  bpt: [' \\v/ ', '(O o)', '[===]'],         // Bounce pot: a sprouting head on a clay pot
   mun: [' o o ', '\\/\\/\\', '/\\/\\/'],    // Munchie: two big eyes on chattering teeth
   ckf: [' [_] ', '(o^o)', ' >o< '],          // Cookie Freddy: Freddy dipped in chocolate, pink hat and bow tie
   fen: [' .-. ', '[o o]', '/|=|>'],          // the Flamethrower endo: bare metal, a flamethrower
@@ -142,10 +142,10 @@ const ICON_ACCENTS = {
   wfr: [' xxx', ' b ', '  G'],            // Withered Freddy: black hat, a blue eye, bare wires
   ffx: ['p   p', ' y y', '  p'],          // Funtime Foxy: pink ears and snout, yellow eyes
   nfb: [' vvv', ' w w', 'vwwwv'],         // Nightmare Fredbear: purple hat and bow tie, pale eyes, white teeth
-  slv: ['', ' xxx', '  G'],               // Salvage sign: black letters, a grey post
-  wmc: ['', ' v v', 'ggggg'],             // Watermelon Chica: violet eyes, a green rind
-  hnd: ['', ' c c'],                      // Hand-unit: a glowing blue screen face
-  bpt: [' ggg', ' w w'],                  // Bounce pot: a green sprout, white eyes
+  slv: ['', ' xxx'],                      // Salvage sign: a black wink and smile
+  wmc: [' ddd', 'DpopD', 'wpppw'],        // Watermelon Chica: dark stripes, pink ring eyes, her bib
+  hnd: ['', ' cc'],                       // Hand-unit: a glowing blue screen
+  bpt: [' ggg', ' w w', 'ooooo'],         // Bounce pot: a green sprout, white eyes, an orange pot
   mun: [' b b'],                         // Munchie: blue eyes on a silver body
   ckf: [' ppp', 'ncccn', ' ppp'],        // Cookie Freddy: pink hat, chocolate ears, blue eyes, pink bow tie
   fen: ['', ' r r', '    o'],             // the Flamethrower endo: red eyes, an orange flame
@@ -493,7 +493,7 @@ const SPRITES = {
 // drawing is used.
 const ACCENT = {
   r: 'acc-red', o: 'acc-orange', y: 'acc-yellow', g: 'acc-green', b: 'acc-blue', v: 'acc-violet',
-  p: 'acc-pink', k: 'acc-gold', c: 'acc-sky', x: 'acc-black', w: 'acc-white', G: 'acc-grey', n: 'acc-brown', D: 'acc-dark',
+  p: 'acc-pink', k: 'acc-gold', c: 'acc-sky', x: 'acc-black', w: 'acc-white', G: 'acc-grey', n: 'acc-brown', D: 'acc-dark', d: 'acc-dkgreen',
 };
 // Freddy: black top hat and bow tie, blue eyes.
 SPRITES.fre.scare.accent = art(String.raw`
@@ -1208,71 +1208,121 @@ const SHADOW_EYES = [[2, 12], [5, 6], [6, 38], [8, 20], [11, 5], [11, 36], [12, 
 // The BONUS characters' drawings (the owner's second list).
 // =====================================================================
 
-// ----- Salvage sign: pops up on the camera when you try to shock -----
-// The last line is filled in by render.js with how many more presses it needs.
+// ----- Salvage sign: pops up on the camera when you try to shock. Redrawn on request, 2026-11-25, from
+// the official picture the owner shared: a round wooden face on a post, winking (- for the shut eye, O for
+// the open one) with a wide smile, over a wooden plaque. The wood is its own color (c-slv), with darker
+// grain (~). render.js writes on the plaque how many more presses it needs. -----
 SPRITES.slv = {
   sign: art(String.raw`
- .----------------------.
- |   S A L V A G E  !   |
- |                      |
- '----------.  .--------'
-            |  |`),
+      .--------.
+    .'  --   O  '.
+    |  \______/  |
+    '. ~      ~ .'
+      '--------'
+          ||
+.--------------------.
+|                    |
+'--------------------'`),
 };
+tintBox(SPRITES.slv.sign, 1, 2, 0, 99, 'x', '-O\\_/');   // the wink and the smile
+tintBox(SPRITES.slv.sign, 3, 3, 0, 99, 'n', '~');        // the wood grain
 
-// ----- Watermelon Chica: in a doorway (only her eyes show in the dark) -----
+// ----- Watermelon Chica. Redrawn on request, 2026-11-25, from the official picture the owner shared:
+// Chica as a watermelon, rind green (her own color, c-wmc) with dark green stripes, pink ring eyes in dark
+// sockets, a pink-red open mouth and her LET'S EAT bib in pink. In a doorway only her eyes show in the
+// dark. Her head is filled with rind (:), and stripes() paints every other 2-column band of it dark
+// green, so the light and dark stripes run down her head like a watermelon's. -----
+function stripes(lines, r1, r2, color) {
+  for (let c = 1; c < 60; c += 4) tintBox(lines, r1, r2, c, c + 1, color);
+  return lines;
+}
 SPRITES.wmc = {
   door: art(String.raw`
-  \ | /
- .-----.
-/ O   O \
-|  /\   |
-|  \/   |
- \_____/
-(:::::::)`),
-  // Chica's jumpscare with a watermelon slice instead of her bib.
-  scare: SPRITES.chi.scare.map(line => line.replace("|LET'S EAT!!!|", '(::::::::::::)').replace("'------------'", " '----------' ")),
+   \ | /
+  .-----.
+ /(O):(O)\
+ |::/\:::|
+ |::\/:::|
+  \:::::/
+ |LET'S |
+ | EAT!!|`),
+  // Chica's jumpscare shape, with ring eyes and a rind-filled head.
+  scare: art(String.raw`
+       \ | /
+     .-------.
+    /:(O):(O):\
+   |::::/\:::::|
+   |::::\/:::::|
+    \::_____::/
+     '-------'
+   |LET'S EAT!!!|
+   '------------'`),
 };
-SPRITES.wmc.door.accent = ['', '', '  v   v', '   oo', '   oo', '', 'gggggggg'];
-SPRITES.wmc.door.eyes = { at: [[2, 2], [2, 6]], color: 'v' };
-tintBox(SPRITES.wmc.scare, 2, 2, 0, 99, 'v', 'O');
-tintBox(SPRITES.wmc.scare, 3, 4, 0, 99, 'o', '/\\');
-tintBox(SPRITES.wmc.scare, 7, 8, 0, 99, 'g');
+// For each drawing: [the drawing, its eye row, its mouth rows, its bib rows, its bib's lettered rows].
+for (const [d, eyeRow, mouth, bib, letters] of [
+  [SPRITES.wmc.door, 2, [3, 4], [6, 7], [6, 7]],
+  [SPRITES.wmc.scare, 2, [3, 4], [7, 8], [7, 7]],
+]) {
+  stripes(d, 0, mouth[1] + 1, 'd');                    // the rind's dark stripes
+  tintBox(d, eyeRow, eyeRow, 0, 99, 'D', '()');        // dark eye sockets...
+  tintBox(d, eyeRow, eyeRow, 0, 99, 'p', 'O');         // ...with pink ring eyes
+  tintBox(d, mouth[0], mouth[1], 0, 99, 'r', '/\\');  // the open mouth
+  tintBox(d, bib[0], bib[1], 0, 99, 'w');              // the white bib...
+  tintBox(d, letters[0], letters[1], 0, 99, 'p', "LETSA!'");   // ...with pink letters
+}
+SPRITES.wmc.door.eyes = { at: [[2, 3], [2, 7]], color: 'p' };
 
-// ----- Hand-unit: a robot hand on a stand, with a little screen for a face -----
+// ----- Hand-unit: no body, like in Sister Location (redrawn on request, 2026-11-25, "more accurate").
+// There HandUnit is a voice and a computer system, and the one thing you SEE of him is the elevator
+// keypad where you type your name (and he fills in a name of his own). So here he's that keypad: a
+// screen with his name and a name field on top, rows of letter keys below. render.js types into the
+// name field as you mash (HAND_NAME), and the screen glitches once you're halfway. -----
 SPRITES.hnd = {
   office: art(String.raw`
-    _  _  _  _
-   | || || || |
-   | || || || | _
-   |          |/ /
-   |  [o_o]   | /
-   |__________|/
-       |  |
-    ___|__|___`),
+.----------------.
+| HANDUNIT       |
+| >              |
+|----------------|
+| [A][B][C][D][E]|
+| [F][G][H][I][J]|
+| [K][L][M][N][O]|
+'----------------'`),
   scare: art(String.raw`
-     _   _   _   _
-    | | | | | | | |
-    | | | | | | | |
-    | | | | | | | |   __
-    | '-' '-' '-' |  / /
-    |             | / /
-    |   [ O_O ]   |/ /
-    |   HELLO!!   | /
-    |_____________|/
-         |   |`),
+.------------------------------.
+|  HANDUNIT                    |
+|                              |
+|  NAME: EGGS BENEDICT         |
+|                              |
+|  YOUR SHIFT IS OVER.         |
+|------------------------------|
+| [A][B][C][D][E][F][G][H][I]  |
+| [J][K][L][M][N][O][P][Q][R]  |
+| [S][T][U][V][W][X][Y][Z][<]  |
+'------------------------------'`),
 };
-tintBox(SPRITES.hnd.office, 4, 4, 0, 99, 'c', '[o_]');
-tintBox(SPRITES.hnd.scare, 6, 7, 0, 99, 'c');
+// The screen glows sky blue; the frame and the keys keep Hand-unit's steel color.
+tintBox(SPRITES.hnd.office, 1, 2, 1, 16, 'c');
+tintBox(SPRITES.hnd.scare, 1, 5, 1, 30, 'c');
 
-// ----- Bounce pot: a flower pot with a face and a sprout (drawn over the whole view) -----
+// ----- Bounce pot (drawn over the whole view). Redrawn on request, 2026-11-25, from the official
+// picture the owner shared: a round yellow-green head (its own color, c-bpt) with a two-leaf sprout, big
+// white eyes and an open grin, on a coiled green spring with curly tendril arms (~), sitting in an orange
+// clay pot. Two flies (`) buzz around his head. -----
 SPRITES.bpt = {
   pot: art(String.raw`
-  @
- \|/
-[o_o]
- \_/`),
+    \v/
+ ${'`'} (O o) ${'`'}
+   (\_/)
+  ~ )@( ~
+   [===]
+    \_/`),
 };
-SPRITES.bpt.pot.accent = ['  y', ' ggg', ' w w'];
+tintBox(SPRITES.bpt.pot, 0, 0, 0, 99, 'g');          // the sprout
+tintBox(SPRITES.bpt.pot, 1, 1, 0, 99, 'G', '`');     // the flies
+tintBox(SPRITES.bpt.pot, 1, 1, 0, 99, 'w', 'Oo');    // the eyes
+tintBox(SPRITES.bpt.pot, 2, 2, 0, 99, 'w', '\\_/');  // the grin
+tintBox(SPRITES.bpt.pot, 3, 3, 0, 99, 'g');          // the spring and the tendrils
+tintBox(SPRITES.bpt.pot, 4, 5, 0, 99, 'o');          // the clay pot
 
 // ----- Munchie: a set of chattering teeth (redrawn on request, 2026-11-25, from the official design the
 // owner shared, then again to match it more closely). Two big eyes sit at the back: heavy black lids (#)
@@ -1443,7 +1493,10 @@ const KITCHEN_JARS = {
   CHOCOLATE: [2, 4, 2, 12], SPRINKLES: [2, 4, 15, 25],
   FROSTING: [5, 7, 2, 12], CARAMEL: [5, 7, 15, 25],
 };
-const HAND_SPOT = [6, 14];        // Hand-unit, in front of the desk
+const HAND_SPOT = [6, 13];        // Hand-unit's keypad, in front of the desk
+// What Hand-unit types into his name field as you mash: one more letter per press, whatever keys you hit
+// (in Sister Location he fills in a name for you, too).
+const HAND_NAME = 'EGGS BENEDICT';
 const COOKIE_SPOT = [6, 1];       // Cookie Freddy, on the left of the desk
 const ENDO_SPOT = [8, 33];        // the Flamethrower endo, on the right
-const SALVAGE_SPOT = [3, 8];      // the Salvage sign, on the camera picture
+const SALVAGE_SPOT = [1, 9];      // the Salvage sign, on the camera picture (its plaque is 7 rows down)
