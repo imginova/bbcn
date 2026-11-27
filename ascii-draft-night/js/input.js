@@ -34,6 +34,7 @@ onClick('btnL', () => toggleDoor('L'));
 onClick('btnR', () => toggleDoor('R'));
 onClick('btnCam', toggleCam);
 onClick('btnMask', toggleMask);
+onClick('btnTurn', toggleTurn);
 onClick('btnFan', toggleFan);
 onClick('btnShock', shock);
 onClick('btnWind', windBox);
@@ -82,6 +83,23 @@ $('ventMap').addEventListener('pointerdown', e => {
   if (!b || e.button !== 0) return;
   sfx.init();
   playLure(Number(b.dataset.vent));
+  e.preventDefault();
+});
+
+// The SHOP tab (update 3.0): the item buttons (data-item says which), and the death coin's list of who
+// to use it on (data-target). Redrawn often, so like the vents we react on the press.
+$('shopItems').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-item]');
+  if (!b || e.button !== 0) return;
+  sfx.init();
+  buy(b.dataset.item);
+  e.preventDefault();
+});
+$('shopPick').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-target]');
+  if (!b || e.button !== 0) return;
+  sfx.init();
+  useDeathCoin(b.dataset.target);
   e.preventDefault();
 });
 
@@ -145,6 +163,8 @@ const view = $('viewport');
 const AIM_AREAS = [['office', 'officeArt', OFFICE_W, OFFICE_H], ['feed', 'feed', 40, 11],   // [name, element id, columns, rows]
   ['doorL', 'doorL', 12, 16], ['doorR', 'doorR', 12, 16]];                               // the doorways (doorLit in game.js)
 function updateAim(e) {
+  // Ghost Freddy froze your pointer (update 3.0): the aim stays where it was until it thaws.
+  if (currentScreen === 'game' && ghostFrozen()) return;
   const box = view.getBoundingClientRect();
   aim.x = e.clientX - box.left;
   aim.y = e.clientY - box.top;
@@ -175,6 +195,7 @@ view.addEventListener('pointerleave', () => { aim.where = null; });
 view.addEventListener('pointerdown', e => {
   updateAim(e);
   if (e.button !== 0) return;
+  if (currentScreen === 'game' && ghostFrozen()) return;   // a frozen pointer can't click anything
   sfx.init();
   if (aim.where === 'office') clickOffice(aim.r, aim.c);
   else if (aim.where === 'feed') clickFeed(aim.r, aim.c);
@@ -251,6 +272,10 @@ document.addEventListener('keydown', e => {
     // mashing the keyboard can't slam doors or flip the monitor. Holding a key down doesn't count:
     // e.repeat is true for the extra presses a held key sends.
     if (G.hnd.present) { e.preventDefault(); if (!e.repeat) mashHand(); return; }
+    // Turned round with a sum on H.E.L.P.I's tablet (update 3.0): digits, Backspace and Enter go to it.
+    if (!e.repeat && helpiKey(k)) { e.preventDefault(); return; }
+    // Shift turns around (update 3.0). e.key is 'Shift' for either Shift key.
+    if (k === 'Shift') { if (!e.repeat) toggleTurn(); return; }
     // e.repeat is true for the extra presses a held-down key sends; most keys ignore those, so
     // holding A doesn't slam the door open and shut over and over.
     if (k === 'f') { flashKey = true; return; }          // held: released in keyup below
@@ -262,6 +287,7 @@ document.addEventListener('keydown', e => {
     else if (k === ' ' || k === 's') { e.preventDefault(); toggleCam(); }
     else if (k === 'c') setTab('cams');
     else if (k === 'v') setTab('vents');
+    else if (k === 'b') setTab('shop');
     // W does two jobs: on the monitor it winds the music box (on CAM 6); in the office it puts the
     // mask on or takes it off. That works because the mask can't be worn with the monitor up.
     else if (k === 'w') { if (G.cam) windBox(); else toggleMask(); }
@@ -269,8 +295,8 @@ document.addEventListener('keydown', e => {
     // vent. The number keys do nothing there.
     else if (G.cam && G.tab === 'vents' && k in VENT_ARROWS) { e.preventDefault(); moveVentSel(...VENT_ARROWS[k]); }
     else if (G.cam && G.tab === 'vents' && k === 'Enter') { e.preventDefault(); playLure(G.ventSel); }
-    // Anywhere else, 1 to 9 pick a camera. /^[1-9]$/ means "exactly one digit from 1 to 9".
-    else if (/^[1-9]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[Number(k) - 1]);
+    // Anywhere else, 1 to 9 pick a camera, and 0 picks CAM 10. /^[0-9]$/ means "exactly one digit".
+    else if (/^[0-9]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[k === '0' ? 9 : Number(k) - 1]);
     else if (k === 'h') openHowto();
 
   } else if (currentScreen === 'emblems') {

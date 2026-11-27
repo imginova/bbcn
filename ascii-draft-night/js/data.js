@@ -16,12 +16,18 @@ const ROOMS = {
   prize:  { cam: 6, name: 'PRIZE CORNER' },
   audit:  { cam: 7, name: 'FUNTIME AUDITORIUM' },
   parts:  { cam: 8, name: 'PARTS & SERVICE' },
-  kitchen: { cam: 9, name: 'KITCHEN' },   // added with Cookie Freddy: where his coatings are
+  // Update 3.0: two cameras OUTSIDE, in the yards behind the office (each has its own light: yardLit in
+  // game.js). They took the place of CAM 9, the kitchen, which moved to the back of the office.
+  yardL:  { cam: 9, name: 'LEFT YARD' },
+  yardR:  { cam: 10, name: 'RIGHT YARD' },
 };
-// Which room each number key (1 to 9) opens.
-const CAM_ORDER = ['stage', 'dining', 'cove', 'whall', 'ehall', 'prize', 'audit', 'parts', 'kitchen'];
-// The ingredients on the kitchen's shelf (CAM 9), for Cookie Freddy. Their places in the picture are
-// KITCHEN_JARS in art.js.
+// Which room each number key opens: 1 to 9, then 0 for CAM 10.
+const CAM_ORDER = ['stage', 'dining', 'cove', 'whall', 'ehall', 'prize', 'audit', 'parts', 'yardL', 'yardR'];
+// The yards, by side, and the side of each yard.
+const YARDS = { L: 'yardL', R: 'yardR' };
+const yardSide = room => room === 'yardL' ? 'L' : room === 'yardR' ? 'R' : null;
+// The ingredients on the shelf at the back of the office, for Cookie Freddy (it was a kitchen camera,
+// CAM 9, until update 3.0). Their places in the back picture are KITCHEN_JARS in art.js.
 const INGREDIENTS = ['CHOCOLATE', 'SPRINKLES', 'FROSTING', 'CARAMEL'];
 
 // ---------- the vents ----------
@@ -232,7 +238,7 @@ const MUNCHIE = {
 };
 const COOKIE = {
   id: 'ckf', name: 'Cookie Freddy', rarity: 'rare', bonus: true, where: 'OFFICE',
-  desc: 'Turns up in your office and says what he wants to be coated with. Go to the Kitchen (CAM 9) and click those ingredients before time runs out. The wrong one wastes time.',
+  desc: 'Turns up in your office and says what he wants to be coated with. Turn around and click those ingredients on the shelf at the back before time runs out. The wrong one wastes time.',
   how: 'didn\'t get his coating',
 };
 const FENDO = {
@@ -274,11 +280,51 @@ const GRAVEWEED = {
   how: 'pulled you under',
 };
 
+// ----- update 3.0 (2026-11-26), sorted into rarities by Claude -----
+const FCHICA = {
+  id: 'fch', name: 'Funtime Chica', rarity: 'common', where: 'SHOP',
+  desc: 'Makes everything in the shop cost more (death coins and battery packs; not Rockstar Bonnie\'s guitar). Never attacks.',
+};
+const GFREDDY = {
+  id: 'gfr', name: 'Ghost Freddy', rarity: 'common', where: 'SCREEN',
+  desc: 'Drifts across your screen now and then. If he touches your mouse pointer, it freezes for a few seconds: no aiming the light and no clicking (keys still work). Never attacks.',
+};
+const RBONNIE = {
+  id: 'rsb', name: 'Rockstar Bonnie', rarity: 'uncommon', where: 'SHOP',
+  desc: 'The shopkeeper has his guitar. Save up Fazcoins and buy it back in the SHOP before 6 AM, or he gets you at 5:59.',
+  how: 'wanted his guitar back',
+};
+const NHELPY = {
+  id: 'hlp', name: 'Nightmare Helpy', rarity: 'uncommon', where: 'BACK DESK',
+  desc: 'When you turn around, he may be sitting on the back desk. Click him again and again, fast, to knock him off.',
+  how: 'jumped off the desk',
+};
+const HELPI = {
+  id: 'hpi', name: 'H.E.L.P.I', rarity: 'uncommon', where: 'BACK TABLET',
+  desc: 'The tablet on the back desk buzzes with a sum. Turn around, type the answer and press Enter before time runs out.',
+  how: 'marked your answer wrong',
+};
+const TWOLF = {
+  id: 'twf', name: 'Twisted Wolf', rarity: 'uncommon', where: 'YARDS',
+  desc: 'Hard to see on the yard cameras, but he howls when he reaches a back window: turn around and flash that window.',
+  how: 'came through the window',
+};
+const DREADBEAR = {
+  id: 'dbr', name: 'Dreadbear', rarity: 'rare', where: 'YARDS',
+  desc: 'Crosses a yard without a sound (watch the yard cameras with their lights on), then stands at that back window: turn around and flash it.',
+  how: 'came through the window',
+};
+const TFOXY = {
+  id: 'tfx', name: 'Twisted Foxy', rarity: 'rare', where: 'YARDS',
+  desc: 'Shows as a mound in the ground of one yard. When you hear digging he\'s gone from view: light THAT yard\'s camera. Lighting the other yard while he digs gets you.',
+  how: 'dug his way in',
+};
+
 // Every character that can be picked, in roster order (grouped by rarity, the bonus ones last). The pick
 // screen offers only these.
-const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT,
-  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET, BB,
-  WBONNIE, WFOXY, SPRING, NCHICA, BABY, MANGLE, NBB,
+const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT, FCHICA, GFREDDY,
+  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET, BB, RBONNIE, NHELPY, HELPI, TWOLF,
+  WBONNIE, WFOXY, SPRING, NCHICA, BABY, MANGLE, NBB, DREADBEAR, TFOXY,
   SBONNIE, PLUSH, FFREDDY,
   WFREDDY, FFOXY, NFREDBEAR,
   SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY, NSTAFFBOT, GRAVEWEED];

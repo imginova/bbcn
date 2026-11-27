@@ -115,6 +115,14 @@ const ICONS = {
   nbb: ['[=^=]', '(O O)', '(VVV)'],          // Nightmare BB: a dark beanie, a mouth full of teeth
   nsb: ['.---.', '| ! |', '[o_o]'],          // the Nightmare staff bot: its caution bot's sign
   grw: ['v/ \\v', 'xX Xx', '|RIP|'],         // Grave weed: two spiky heads on a tombstone
+  fch: [' \\|/ ', '(o>o)', '$+$+$'],          // Funtime Chica: price tags
+  gfr: [' [_] ', '(o o)', ' ~~~ '],          // Ghost Freddy: a see-through Freddy
+  rsb: ['/\\ /\\', '(o o)', '==#=>'],        // Rockstar Bonnie: and his guitar
+  hlp: ['.-.-.', '(O O)', '\\VVV/'],          // Nightmare Helpy: a little bear with teeth
+  hpi: ['.---.', '|7+5|', "'---'"],          // H.E.L.P.I: the tablet with a sum on it
+  twf: ['/\\ /\\', '(o o)', '\\VVV/'],        // Twisted Wolf
+  dbr: ['[===]', '(o o)', '-|=|-'],          // Dreadbear: bolts in his neck
+  tfx: ['/\\ /\\', '(O O)', '_/:\\_'],        // Twisted Foxy: coming out of the ground
 };
 // A text with every character escaped for HTML (see esc above).
 const escText = s => Array.from(s).map(esc).join('');
@@ -160,6 +168,14 @@ const ICON_ACCENTS = {
   nbb: ['DDrDD', ' y y', ' www'],         // Nightmare BB: a dark beanie, yellow eyes, white teeth
   nsb: ['yyyyy', 'yyryy', ' c c'],        // the Nightmare staff bot: a yellow caution sign, a red !
   grw: ['dd dd', 'rr rr', 'GGGGG'],       // Grave weed: dark leaves, two pairs of red eyes, a grey tombstone
+  fch: ['', ' pop', 'kkkkk'],             // Funtime Chica: pink eyes, an orange beak, gold price tags
+  gfr: ['', ' w w', ' ccc'],              // Ghost Freddy: white eyes, a pale wisp
+  rsb: ['', ' r r', 'vvkvv'],             // Rockstar Bonnie: red eyes, a purple guitar
+  hlp: ['', ' r r', ' www'],              // Nightmare Helpy: red eyes, white teeth
+  hpi: ['', ' ccc'],                      // H.E.L.P.I: the sum glows
+  twf: ['', ' y y', ' www'],              // Twisted Wolf: yellow eyes, white teeth
+  dbr: ['', ' g g', 'G   G'],             // Dreadbear: green eyes, grey bolts
+  tfx: ['', ' y y', 'nnnnn'],             // Twisted Foxy: yellow eyes, brown earth
 };
 // One line of text as HTML, with the characters its accent mask marks wrapped in their color.
 const accentText = (line, mask = '') => Array.from(line).map((ch, k) =>
@@ -243,17 +259,6 @@ const ROOM_ART = {
   ====|________________________|====
    .   .   .   .   .   .   .   .   .
  ------------------------------------`,
-  // The kitchen (CAM 9), added with Cookie Freddy: his four coatings on the shelf (KITCHEN_JARS below).
-  kitchen: String.raw`
- K I T C H E N  ~  the coatings shelf
- .---------.  .---------.     ____
- |CHOCOLATE|  |SPRINKLES|    |oven|
- '---------'  '---------'    |    |
- .---------.  .---------.    |____|
- | FROSTING|  | CARAMEL |
- '---------'  '---------'
- ____________________________________
- | sink        stove        counter |`,
   parts: String.raw`
  .---. .---. .---.       [ ][ ][ ]
  |o o| |x x| |o -|       [ ][ ][ ]
@@ -1199,7 +1204,8 @@ const NCHICA_SPOTS = {
   prize: [[2, 25], [4, 30], [9, 4]],
   audit: [[8, 12], [5, 34], [2, 36]],
   parts: [[2, 8], [8, 18], [3, 28]],
-  kitchen: [[9, 30], [3, 32], [8, 5]],
+  yardL: [[9, 4], [9, 33], [2, 3]],
+  yardR: [[9, 4], [9, 33], [2, 34]],
 };
 
 // In the office ([row, column] in the 44 x 16 office picture).
@@ -1521,11 +1527,12 @@ for (const d of [SPRITES.pbb.small, SPRITES.pbb.corner, SPRITES.pbb.scare]) {
 }
 
 // ---------- where the bonus characters go ----------
-// The kitchen's ingredient jars on CAM 9 (for Cookie Freddy): [first row, last row, first column, last
-// column] of each in the framed camera picture. A click anywhere on a jar takes that ingredient.
+// The ingredient jars on the shelf at the BACK of the office (for Cookie Freddy; see BACK_ART): [first row,
+// last row, first column, last column] of each in the back picture. A click anywhere on a jar takes that
+// ingredient. (Until update 3.0 they were on a kitchen camera, CAM 9.)
 const KITCHEN_JARS = {
-  CHOCOLATE: [2, 4, 2, 12], SPRINKLES: [2, 4, 15, 25],
-  FROSTING: [5, 7, 2, 12], CARAMEL: [5, 7, 15, 25],
+  CHOCOLATE: [1, 3, 10, 20], SPRINKLES: [1, 3, 23, 33],
+  FROSTING: [4, 6, 10, 20], CARAMEL: [4, 6, 23, 33],
 };
 const HAND_SPOT = [6, 13];        // Hand-unit's keypad, in front of the desk
 // What Hand-unit types into his name field as you mash: one more letter per press, whatever keys you hit
@@ -1694,3 +1701,222 @@ for (const d of [SPRITES.grw.pot, SPRITES.grw.squash, SPRITES.grw.crouch, SPRITE
   tintBox(d, 0, 99, 0, 99, 'g', '~=');       // green tendrils
   tintBox(d, d === SPRITES.grw.scare ? 7 : 4, 99, 0, 99, 'G');   // the grey tombstone (its bottom rows)
 }
+
+// =====================================================================
+// Update 3.0: the BACK of the office (turn around with Shift) and the two yard cameras outside it.
+// =====================================================================
+
+// The back of the office: 44 x 16, like the front. Two windows looking out on the yards (BACK_WINDOWS),
+// Cookie Freddy's ingredient shelf between them (KITCHEN_JARS), and a back desk with H.E.L.P.I's tablet.
+const BACK_ART = art(String.raw`
+____________________________________________
+.-------. .---------.  .---------. .-------.
+|       | |CHOCOLATE|  |SPRINKLES| |       |
+|       | '---------'  '---------' |       |
+|       | .---------.  .---------. |       |
+'-------' | FROSTING|  | CARAMEL | '-------'
+          '---------'  '---------'
+
+               .------------.
+               |            |
+               '------------'
+  ________________________________________
+ |                                        |
+ |________________________________________|
+   ||                                  ||
+. . . . . . . . . . . . . . . . . . . . . .`);
+// The inside of each back window ([row, column] of its top-left corner): 7 wide, 3 tall. The threats
+// outside come right up to these; flash the window to send them off.
+const BACK_WINDOWS = { L: [2, 1], R: [2, 36] };
+const BACK_WIN_W = 7, BACK_WIN_H = 3;
+// H.E.L.P.I's tablet on the back desk: its screen line ([row, column], 12 wide).
+const TABLET_SCREEN = [9, 16];
+// Where Nightmare Helpy sits on the back desk.
+const HELPY_SPOT = [8, 2];
+
+// The back of the office as a grid. The window glass is dim, so it looks set back into the wall.
+function backGrid() {
+  const g = grid(BACK_ART, OFFICE_W);
+  for (const [r0, c0] of Object.values(BACK_WINDOWS)) {
+    for (let r = r0; r < r0 + BACK_WIN_H; r++) {
+      for (let c = c0; c < c0 + BACK_WIN_W; c++) g[r][c] = { ch: r === r0 + 1 && (c - c0) % 3 === 2 ? '/' : ' ', cls: 'glass' };
+    }
+  }
+  return g;
+}
+
+// Where the doorways are at the front, the back has plain wall: the same size as a door (12 x 16), so the
+// view doesn't jump about when you turn round.
+function backWallGrid() {
+  const lines = ['+' + '-'.repeat(10) + '+'];
+  for (let r = 0; r < 14; r++) lines.push('|' + (r === 13 ? ' , , , , ,' : ' '.repeat(10)) + '|');
+  lines.push('+' + '='.repeat(10) + '+');
+  return grid(lines, 12, 'dim');
+}
+
+// ----- the yards (CAM 9 and CAM 10) -----
+// Drawn by code, like the halls in ASCII FNAF: Line 2: a fenced yard stretching away from the office, the
+// fences closing in toward a far gate, grass that gets thicker up close, and a tree on the outer side.
+// Everything is dark until the camera's own light is on (`lit`). 40 x 11, like every camera picture.
+const YARD_W = 40, YARD_H = 11;
+// Where someone stands in the yard as they come closer: [row, column] of the top-left corner of their
+// drawing for stage 0 (far, by the gate), 1 (half way) and 2 (close, nearly at your window).
+const YARD_SLOTS = [[3, 18], [4, 16], [5, 14]];
+// Twisted Foxy's mound in the ground: on the left or right of the yard ([row, column]).
+const MOUND_SPOTS = { L: [8, 4], R: [8, 30] };
+// A straight line of character `ch` from (r1, c1) to (r2, c2), one cell per row or column, whichever
+// there are more of.
+function yardLine(g, r1, c1, r2, c2, ch, cls) {
+  const n = Math.max(Math.abs(r2 - r1), Math.abs(c2 - c1));
+  for (let i = 0; i <= n; i++) {
+    const r = Math.round(r1 + (r2 - r1) * i / (n || 1)), c = Math.round(c1 + (c2 - c1) * i / (n || 1));
+    if (g[r] && g[r][c]) g[r][c] = { ch, cls };
+  }
+}
+function yardGrid(side, lit) {
+  const g = blank(YARD_W, YARD_H);
+  const cls = lit ? 'yard lit' : 'yard';
+  // Stars, then the grass: a few blades far away, more up close.
+  for (const [r, c] of [[1, 5], [1, 14], [1, 26], [1, 33], [2, 9], [2, 30]]) g[r][c] = { ch: '.', cls };
+  for (let r = 4; r <= 9; r++) {
+    for (let c = 2 + (r % 3); c < YARD_W - 2; c += 9 - r / 2 | 0) g[r][c] = { ch: r > 6 ? '"' : ',', cls };
+  }
+  // The fences closing in toward the gate at the far end, and the gate itself.
+  yardLine(g, 9, 1, 3, 12, '/', cls);
+  yardLine(g, 9, 38, 3, 27, '\\', cls);
+  yardLine(g, 3, 12, 3, 27, '-', cls);
+  write(g, 2, 16, '|=|=|=|', cls);
+  // A tree on the outer side of the yard (left yard: on the left; right yard: on the right).
+  const tc = side === 'L' ? 2 : 32;
+  write(g, 2, tc, ' .@@. ', cls);
+  write(g, 3, tc, '(@@@@)', cls);
+  write(g, 4, tc, '  ||  ', cls);
+  // The border, like every camera picture.
+  yardLine(g, 0, 0, 0, YARD_W - 1, '-', 'yard-frame');
+  yardLine(g, YARD_H - 1, 0, YARD_H - 1, YARD_W - 1, '-', 'yard-frame');
+  yardLine(g, 0, 0, YARD_H - 1, 0, '|', 'yard-frame');
+  yardLine(g, 0, YARD_W - 1, YARD_H - 1, YARD_W - 1, '|', 'yard-frame');
+  for (const [r, c] of [[0, 0], [0, YARD_W - 1], [YARD_H - 1, 0], [YARD_H - 1, YARD_W - 1]]) g[r][c] = { ch: '+', cls: 'yard-frame' };
+  return g;
+}
+
+// ----- update 3.0 characters -----
+// Rockstar Bonnie: only seen when he gets you (his guitar hangs in the shop).
+SPRITES.rsb = {
+  scare: art(String.raw`
+      /\      /\
+     /  \    /  \
+    |  O      O  |   *
+    |     __     |
+     \   \__/   /
+      '--------'
+  ====[##]=========> `),
+};
+tintBox(SPRITES.rsb.scare, 2, 2, 0, 18, 'r', 'O');
+tintBox(SPRITES.rsb.scare, 2, 2, 19, 99, 'k');
+tintBox(SPRITES.rsb.scare, 6, 6, 0, 99, 'v');
+tintBox(SPRITES.rsb.scare, 6, 6, 0, 99, 'k', '#');
+
+// Ghost Freddy: a pale, see-through Freddy drifting across your screen (drawn over the view, like Bounce pot).
+SPRITES.gfr = {
+  ghost: art(String.raw`
+  [___]
+ ( o o )
+ ( ___ )
+  ~~~~~`),
+};
+tintBox(SPRITES.gfr.ghost, 1, 1, 0, 99, 'w', 'o');
+
+// Nightmare Helpy: a little torn-up bear with sharp teeth, sitting on the back desk.
+SPRITES.hlp = {
+  office: art(String.raw`
+ .-. .-.
+( O ' O )
+ \VVVVV/
+  /| |\ `),
+  scare: art(String.raw`
+    .--.        .--.
+   (    )______(    )
+    |   O      O   |
+    |    VVVVVV    |
+    |    AAAAAA    |
+     \____________/`),
+};
+for (const d of [SPRITES.hlp.office, SPRITES.hlp.scare]) {
+  tintBox(d, 0, 99, 0, 99, 'r', 'O');
+  tintBox(d, 0, 99, 0, 99, 'w', 'VA');
+}
+
+// H.E.L.P.I: the tablet's angry face when you got it wrong.
+SPRITES.hpi = {
+  scare: art(String.raw`
+  .--------------------.
+  |  H . E . L . P . I |
+  |                    |
+  |       >:(          |
+  |   WRONG ANSWER!    |
+  |  X   X   X   X   X |
+  '--------------------'`),
+};
+tintBox(SPRITES.hpi.scare, 3, 5, 0, 99, 'r', '>:(WRONGASWE!X');
+
+// Dreadbear and Twisted Wolf out in the yards: by the far gate (yard[0], just eyes), half way (yard[1])
+// and close (yard[2]); then at a back window (window, 7 wide and 3 tall) and their jumpscares.
+SPRITES.dbr = {
+  yard: [['[=]', 'o.o'], [' [==] ', '-(oo)-', ' /||\\'], ['  [====]', '-( o  o )-', ' ( \\__/ )', '  /|  |\\']],
+  window: [' [===]', '-(o o)-', ' (=-=)'],
+  scare: art(String.raw`
+        [==========]
+     ==(  O      O  )==
+        (   ____   )
+        (  |VVVV|  )
+         \ |AAAA| /
+          '------'`),
+};
+SPRITES.twf = {
+  yard: [['/\\/\\', 'o o'], ['/\\ /\\', '(o o)', ' \\V/'], ['/\\   /\\', '( o o )', ' \\VVV/', '  | |']],
+  window: ['/\\ _ /\\', '( o o )', ' \\VVV/'],
+  scare: art(String.raw`
+    /\            /\
+   /  \__________/  \
+   |    O      O    |
+    \    VVVVVV    /
+     \   AAAAAA   /
+      '----------'`),
+};
+for (const id of ['dbr', 'twf']) {
+  const S = SPRITES[id], eye = id === 'dbr' ? 'g' : 'y';
+  for (const d of [...S.yard, S.window, S.scare]) {
+    tintBox(d, 0, 99, 0, 99, eye, 'oO');
+    tintBox(d, 0, 99, 0, 99, 'w', 'VA');
+  }
+}
+tintBox(SPRITES.dbr.window, 1, 1, 0, 99, 'G', '-');   // the bolts in his neck
+tintBox(SPRITES.dbr.scare, 1, 1, 0, 99, 'G', '=');
+
+// Twisted Foxy: a mound in the yard with his ear tips poking out, and his jumpscare (bursting out of the ground).
+SPRITES.tfx = {
+  mound: ['  /\\/\\', '_/::::\\_'],
+  scare: art(String.raw`
+    /\          /\
+   /  \  ____  /  \
+   |   O      O   |
+    \  VVVVVVVV  /
+  ___\_AAAAAAAA_/___
+  ::::::::::::::::::`),
+};
+tintBox(SPRITES.tfx.mound, 1, 1, 0, 99, 'n');
+tintBox(SPRITES.tfx.scare, 2, 2, 0, 99, 'y', 'O');
+tintBox(SPRITES.tfx.scare, 3, 4, 0, 99, 'w', 'VA');
+tintBox(SPRITES.tfx.scare, 4, 5, 0, 99, 'n', '_:');
+
+// The shopkeeper on the SHOP tab: a staff bot with a monocle (@), and the coin drawn on the cameras.
+const SHOPKEEPER = art(String.raw`
+ .---------.
+ | o    (@)|
+ |   ___   |
+ '---------'
+  /|$ $ $|\ `);
+tintBox(SHOPKEEPER, 1, 1, 0, 99, 'k', '@');
+tintBox(SHOPKEEPER, 4, 4, 0, 99, 'k', '$');
+const COIN_ART = '(c)';

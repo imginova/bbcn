@@ -51,20 +51,33 @@ const inBeam = (r, c) => {
   const dx = (aim.c - c) / BEAM_COLS, dy = (aim.r - r) / BEAM_ROWS;
   return dx * dx + dy * dy <= 1;
 };
-// Is the flashlight shining on row r, column c of the office?
-const beamOn = (r, c) => flashOn() && !G.cam && aim.where === 'office' && inBeam(r, c);
+// Is the flashlight shining on row r, column c of the office (the FRONT of it)?
+const beamOn = (r, c) => flashOn() && !G.cam && !G.back && aim.where === 'office' && inBeam(r, c);
+// ...or on row r, column c of the BACK of the office (turned around: G.back)?
+const backBeamOn = (r, c) => flashOn() && !G.cam && G.back && aim.where === 'office' && inBeam(r, c);
+// Is the flashlight shining into back window `side`? Anywhere over its glass counts.
+const backWindowLit = side => {
+  const [r0, c0] = BACK_WINDOWS[side];
+  return flashOn() && !G.cam && G.back && aim.where === 'office'
+    && aim.r >= r0 - 0.5 && aim.r <= r0 + BACK_WIN_H - 0.5 && aim.c >= c0 - 0.5 && aim.c <= c0 + BACK_WIN_W - 0.5;
+};
+// Is yard `side`'s own camera light on? On a yard camera, the flashlight controls work its light, which
+// lights up the whole picture (it lets you see out there, but it doesn't scare anyone off... except
+// Twisted Foxy, while he's digging).
+const yardLit = side => flashOn() && onCam(YARDS[side]);
 // Is the flashlight shining on row r, column c of the camera picture you're looking at?
 const camsShowing = () => G.cam && G.tab === 'cams';
 const beamOnFeed = (r, c) => flashOn() && camsShowing() && aim.where === 'feed' && inBeam(r, c);
 // Is the flashlight shining into doorway `side` ('L' or 'R')? Anywhere over the doorway counts, but a
 // shut door blocks the light.
-const doorLit = side => flashOn() && !G.cam && !G.doors[side] && aim.where === 'door' + side;
+const doorLit = side => flashOn() && !G.cam && !G.back && !G.doors[side] && aim.where === 'door' + side;
 // Are you looking at camera `room` right now?
 const onCam = room => camsShowing() && G.camRoom === room;
 // Is the VENTS tab worth showing tonight? Only if a vent crawler is in your lineup.
 const ventsOn = () => CRAWLERS.some(isOn);
-// Can you see the office right now? (Not with the monitor up or the mask over your eyes.)
-const seeingOffice = () => !G.cam && !G.mask;
+// Can you see the (front of the) office right now? (Not with the monitor up, the mask over your eyes,
+// or turned around to the back.)
+const seeingOffice = () => !G.cam && !G.mask && !G.back;
 
 // Turn seconds into the clock: with 20-second hours, 0-19s is 12 AM, 20-39s is 1 AM, and so on.
 const hourOf = t => Math.min(NIGHT_HOURS, Math.floor(t / HOUR_SECONDS));
@@ -99,6 +112,7 @@ function newGame() {
     tab: 'cams',                   // which tab the monitor shows: 'cams' or 'vents'
     camRoom: 'stage',              // which camera you are looking at
     mask: false,                   // are you wearing the mask?
+    back: false,                   // turned around to the back of the office? (update 3.0, Shift)
     powerOut: false, outTimer: 0,
     over: false, paused: false,
     staticUntil: 0,                // camera shows static until this time (milliseconds)
@@ -209,10 +223,38 @@ function newGame() {
     // Grave weed: bounces like Bounce pot (see bouncer below), slower.
     grw: bouncer(isOn(GRAVEWEED), GRAVE_SPEED, GRAVE_CHARGE, GRAVE_JUMP),
 
+    // ----- update 3.0 -----
+    // Fazcoins (they start at 0 every night), the coin lying on a camera right now (room: null for none),
+    // how many of each item the shop has left tonight, and whether the death coin's "use on whom?" list is open.
+    coins: 0,
+    coin: { room: null, spot: null, timer: waitFrom(COIN_WAIT) },
+    stock: Object.fromEntries(Object.entries(SHOP).map(([key, item]) => [key, item.stock])),
+    picking: false,
+    gone: [],                       // ids got rid of with a death coin tonight
+    // Ghost Freddy: drifting across the view (x, y as fractions, dir 1 = to the right) and until when your
+    // pointer is frozen.
+    gfr: { on: isOn(GFREDDY), active: false, x: 0, y: 0, dir: 1, timer: waitFrom(GHOST_WAIT), frozenUntil: 0 },
+    // Rockstar Bonnie: has his guitar been bought back, and which hour's reminder twang has played.
+    rsb: { on: isOn(RBONNIE), bought: false, warned: 0 },
+    // Funtime Chica: nothing to track, only whether she's on (she puts the shop's prices up: priceOf).
+    fch: { on: isOn(FCHICA) },
+    // Nightmare Helpy: sitting on the back desk or not, clicks so far, and his clock.
+    hlp: { on: isOn(NHELPY), present: false, clicks: 0, deadline: 0 },
+    // H.E.L.P.I: the sum on the tablet (null: none), its answer, what you've typed, its clock.
+    hpi: { on: isOn(HELPI), sum: null, answer: 0, typed: '', deadline: 0, timer: waitFrom(HELPI_WAIT) },
+    // Dreadbear and Twisted Wolf: which yard (side), how far across it (stage 0 to 2, or 3 = at the back
+    // window), their move timer, their clock at the window, and how long the light has been on them.
+    dbr: yarder(isOn(DREADBEAR), DREAD_INTERVAL),
+    twf: yarder(isOn(TWOLF), WOLF_INTERVAL),
+    // Twisted Foxy: 'away', a 'mound' in one yard (side), or 'digging'; and his clocks.
+    tfx: { on: isOn(TFOXY), phase: 'away', side: 'L', timer: waitFrom(TFOXY_WAIT), deadline: 0, flashT: 0 },
+
     // The controlled shock: when it's charged again (G.t), and until when its flash shows (milliseconds).
     shockReady: 0, zapUntil: 0,
   };
 }
+// Someone who crosses a yard to a back window (Dreadbear, Twisted Wolf).
+const yarder = (on, interval) => ({ on, side: pick(['L', 'R']), stage: 0, timer: around(interval), deadline: 0, flashT: 0 });
 // Something that bounces around the view (Bounce pot, Grave weed). It starts crouched on the floor at a
 // random spot, charging up its first bounce, heading left or right (dir). `jump` is its [lowest, highest]
 // spring off the floor.
@@ -250,7 +292,8 @@ function update(dt) {
     updateShadowBonnie, updatePlushtrap, updateFuntimeFreddy,
     updateWitheredFreddy, updateFuntimeFoxy, updateFredbear,
     updateWatermelon, updateHandUnit, updateBouncePot, updateMunchie, updateCookie, updateEndo, updatePlushBabies,
-    updateMangle, updateNightmareBB, updateStaffBot, updateGraveWeed]) {
+    updateMangle, updateNightmareBB, updateStaffBot, updateGraveWeed,
+    updateCoin, updateGhost, updateRockstar, updateHelpy, updateHelpi, updateDreadbear, updateWolf, updateTwistedFoxy]) {
     if (G.over || G.powerOut) return;
     step(dt);
   }
@@ -294,7 +337,7 @@ function updateFreddy(dt) {
   if (!F.on) return;
   if (F.step === FREDDY_STEPS) {
     if (G.doors[F.side]) {
-      sfx.bonk(F.side);
+      sfx.bonk(F.side); earn();
       F.step = 0;   // back on the stage
       F.timer = around(FREDDY_INTERVAL);
       if (onCam('stage')) camStatic(0.5);
@@ -346,7 +389,7 @@ function updateWalker(W, who, interval, chance, pitch, speed, dt) {
 }
 // Shut out: a bonk, and back to the stage. Chica leaves cupcakes behind when she goes.
 function walkerHome(W, who, interval) {
-  sfx.bonk(doorOf(who));
+  sfx.bonk(doorOf(who)); earn();
   W.step = 0;
   W.timer = around(interval);
   if (who === CHICA) dropCupcakes();
@@ -382,6 +425,7 @@ function updateCupcakes(dt) {
 // counts.
 function clickOffice(r, c) {
   if (!ready()) return;
+  if (G.back) { clickBack(r, c); return; }               // turned round: it's a click on the back of the office
   if (G.hnd.present && !G.cam) { mashHand(); return; }   // tapping Hand-unit counts as mashing
   if (!seeingOffice()) return;
   if (boopBonnet(r, c)) return;
@@ -455,7 +499,7 @@ function maskCheck(V, hold, dt, react = REACT_WINDOW) {
 function crawlerInOffice(c, V, dt) {
   const result = maskCheck(V, VENT_HOLD, dt);
   if (result === 'gone') {
-    sfx.ventOut(VENT_PITCH[c.id]);
+    sfx.ventOut(VENT_PITCH[c.id]); earn();
     V.present = false;
     V.room = VENT_START;
     V.stall = 0;
@@ -553,7 +597,7 @@ function updateNightmare(dt) {
     const [r, c] = FREDDLE_SPOTS[i];
     if (beamOn(r + 0.5, c + 2)) {   // + 0.5, + 2: the middle of the 5-wide, 2-tall Freddle
       N.shine[i] += dt;
-      if (N.shine[i] >= FREDDLE_SHINE) { N.freddles[i] = false; N.shine[i] = 0; sfx.freddleOff(); dirty = true; }
+      if (N.shine[i] >= FREDDLE_SHINE) { N.freddles[i] = false; N.shine[i] = 0; sfx.freddleOff(); earn(); dirty = true; }
     } else {
       N.shine[i] = 0;
     }
@@ -623,7 +667,7 @@ function typeLol(letter) {
   if (letter !== LOL_WORD[L.typed]) { L.typed = letter === LOL_WORD[0] ? 1 : 0; sfx.deny(); dirty = true; return; }
   L.typed++;
   sfx.lolKey(L.typed);
-  if (L.typed === LOL_WORD.length) { L.active = false; L.timer = waitFrom(LOL_WAIT); sfx.lolOut(); }
+  if (L.typed === LOL_WORD.length) { L.active = false; L.timer = waitFrom(LOL_WAIT); sfx.lolOut(); earn(); }
   dirty = true;
 }
 
@@ -664,6 +708,12 @@ function powerOutStart() {
   G.mgl.room = null;
   G.nbb.awake = false;
   if (G.nsb.phase !== 'idle') { G.nsb.phase = 'idle'; G.nsb.timer = waitFrom(NSB_WAIT); }
+  // Update 3.0's: Helpy and the tablet give up, the yard walkers go back to the gate, Foxy goes under.
+  G.hlp.present = false;
+  G.hpi.sum = null;
+  G.dbr.stage = G.twf.stage = 0;
+  G.tfx.phase = 'away';
+  G.picking = false;
   sfx.humOff();
   sfx.powerDown();
   dirty = true;
@@ -708,7 +758,7 @@ function raiseWhileAwake() {
 // Raise or lower the monitor.
 function toggleCam() {
   if (!ready()) return;
-  if (!powered() || G.mask) { sfx.deny(); return; }   // no monitor without power, or with the mask on
+  if (!powered() || G.mask || G.back) { sfx.deny(); return; }   // no monitor without power, with the mask on, or turned round
   if (raiseWhileAwake()) return;
   G.cam = !G.cam;
   sfx.cam();
@@ -720,7 +770,7 @@ function toggleCam() {
 // Jump to a camera (raising the monitor on the CAMS tab first if needed).
 function setCam(room) {
   if (!ready()) return;
-  if (!powered() || G.mask) { sfx.deny(); return; }
+  if (!powered() || G.mask || G.back) { sfx.deny(); return; }
   if (raiseWhileAwake()) return;
   G.cam = true;
   G.tab = 'cams';
@@ -733,7 +783,7 @@ function setCam(room) {
 // Switch the monitor to the CAMS or VENTS tab (raising it if needed).
 function setTab(tab) {
   if (!ready()) return;
-  if (!powered() || G.mask || (tab === 'vents' && !ventsOn())) { sfx.deny(); return; }
+  if (!powered() || G.mask || G.back || (tab === 'vents' && !ventsOn())) { sfx.deny(); return; }
   if (raiseWhileAwake()) return;
   if (!G.cam) camStatic(0.2);
   G.cam = true;
@@ -899,7 +949,7 @@ function lookedBack() {
 function updateGolden() {
   const Go = G.gol;
   if (!Go.present) return;
-  if (G.mask) { Go.present = false; sfx.goldenOut(); dirty = true; }
+  if (G.mask) { Go.present = false; sfx.goldenOut(); earn(); dirty = true; }
   else if (G.t >= Go.deadline) lose(GOLDEN);
 }
 
@@ -925,7 +975,7 @@ function updateToyFreddy(dt) {
   if (result === 'gone') {
     T.present = false;
     T.timer = waitFrom(TOY_FREDDY_WAIT);
-    sfx.walkOut(70);
+    sfx.walkOut(70); earn();
     dirty = true;
   } else if (result === 'fail') lose(TFREDDY);
 }
@@ -946,7 +996,7 @@ function updateWitheredBonnie(dt) {
   if (result === 'gone') {
     W.present = false;
     W.timer = waitFrom(WBN_WAIT);
-    sfx.walkOut(55);
+    sfx.walkOut(55); earn();
     dirty = true;
   } else if (result === 'fail') lose(WBONNIE);
 }
@@ -972,7 +1022,7 @@ function updateNightmareBonnie(dt) {
     if (N.flashT >= NBN_FLASH) {
       N.side = null;
       N.timer = waitFrom(NBN_WAIT);
-      sfx.foxyBack();
+      sfx.foxyBack(); earn();
       dirty = true;
       return;
     }
@@ -1021,7 +1071,7 @@ function boopBonnet(r, c) {
   if (Math.abs(r - noseR) > 1 || Math.abs(c - noseC) > 1.5) return false;
   N.active = false;
   N.timer = waitFrom(BONNET_WAIT);
-  sfx.boop();
+  sfx.boop(); earn();
   dirty = true;
   return true;
 }
@@ -1096,7 +1146,7 @@ function updateWitheredFoxy(dt) {
         X.phase = 'away';
         X.timer = waitFrom(WFX_WAIT);
         sfx.bonk('L');
-        sfx.retreat();
+        sfx.retreat(); earn();
         dirty = true;
       } else if (G.t >= X.deadline) lose(WFOXY, 'L');
   }
@@ -1172,6 +1222,7 @@ function shock() {
   const M = G.mgl;   // Mangle, hiding on this camera: she's gone
   if (M.room === G.camRoom) { M.room = null; M.timer = waitFrom(MANGLE_WAIT); sfx.mangleOut(); hit = true; }
   sfx.shock(hit);
+  if (hit) earn();   // sent someone back: a coin
   if (G.power <= 0) powerOutStart();
   dirty = true;
 }
@@ -1195,17 +1246,18 @@ function updateNightmareChica(dt) {
   if (G.t >= N.deadline) lose(NCHICA);
 }
 // A click on the camera picture at row r, column c (from input.js): did it hit her cupcake?
-// (Also Cookie Freddy's ingredients on the kitchen camera: see pickIngredient.)
+// (Coins on the cameras too, from update 3.0: see grabCoin.)
 function clickFeed(r, c) {
   if (!ready() || !camsShowing() || performance.now() < G.staticUntil) return;
-  if (onCam('kitchen') && pickIngredient(r, c)) return;
+  if (grabCoin(r, c)) return;   // a Fazcoin lying on this camera
+  // (Cookie Freddy's ingredients used to be on a kitchen camera; since update 3.0 they're at the back: clickBack.)
   const N = G.nch;
   if (!N.room || !onCam(N.room)) return;
   const [row, col] = N.spot;
   if (Math.abs(r - row) > 0.8 || c < col - 0.8 || c > col + 2.8) return;
   N.room = null;
   N.timer = waitFrom(NCH_WAIT);
-  sfx.pop();
+  sfx.pop(); earn();
   dirty = true;
 }
 
@@ -1231,7 +1283,7 @@ function updateShadowBonnie(dt) {
     if (S.shineT >= SBN_SHINE) {
       S.active = false;
       S.timer = waitFrom(SBN_WAIT);
-      sfx.lightsOn();
+      sfx.lightsOn(); earn();
       dirty = true;
       return;
     }
@@ -1260,7 +1312,7 @@ function updatePlushtrap(dt) {
   if (beamOn(r + 0.5, c + 1.5)) {   // + 0.5 and + 1.5: the middle of his 4 x 2 drawing
     P.spot = null;
     P.timer = waitFrom(PLU_WAIT);
-    sfx.pop();
+    sfx.pop(); earn();
     dirty = true;
   } else if (G.t >= P.deadline) {
     lose(PLUSH);
@@ -1319,7 +1371,7 @@ function updateFuntimeFreddy(dt) {
 // Shut out: a bonk, and back to his side of the auditorium.
 function ffrBack() {
   const F = G.ffr;
-  sfx.bonk(F.pos);
+  sfx.bonk(F.pos); earn();
   F.phase = 'idle';
   dirty = true;
 }
@@ -1343,7 +1395,7 @@ function updateWitheredFreddy(dt) {
   const W = G.wfr;
   if (!W.on) return;
   if (W.trying) {
-    if (G.doors[W.side]) { W.trying = false; dirty = true; }   // shut out: he turns round, silently
+    if (G.doors[W.side]) { W.trying = false; earn(); dirty = true; }   // shut out: he turns round, silently
     else if (G.t >= W.deadline) lose(WFREDDY, W.side);
     return;
   }
@@ -1449,6 +1501,7 @@ function fredbearDone() {
   N.side = null;
   N.spot = null;
   N.timer = waitFrom(NFB_WAIT);
+  earn();   // only ever called when you beat one of his attacks
   dirty = true;
 }
 
@@ -1488,7 +1541,7 @@ function watermelonShut(side) {
   const W = G.wmc;
   W.shuts++;
   if (W.shuts >= WMC_SHUTS) {
-    sfx.bonk(side);
+    sfx.bonk(side); earn();
     W.side = null;
     W.popAt = 0;
     W.timer = waitFrom(WMC_WAIT);
@@ -1511,7 +1564,7 @@ function mashHand() {
   sfx.handTick(H.presses / HAND_PRESSES);
   if (H.presses >= HAND_PRESSES) {
     H.present = false;
-    sfx.handFall();
+    sfx.handFall(); earn();
   }
   dirty = true;
 }
@@ -1617,7 +1670,7 @@ function updateNightmareBB(dt) {
   } else if (N.shineT >= NBB_SHINE) {
     N.awake = false;
     N.shineT = 0;
-    sfx.nbbSleep();
+    sfx.nbbSleep(); earn();
   }
 }
 
@@ -1663,7 +1716,7 @@ function updateStaffBot(dt) {
 // Shut out: it bonks on the door and goes away until next time.
 function staffBotGone() {
   const N = G.nsb;
-  sfx.bonk(N.side);
+  sfx.bonk(N.side); earn();
   N.phase = 'idle';
   N.timer = waitFrom(NSB_WAIT);
   dirty = true;
@@ -1702,13 +1755,13 @@ function flickMunchie() {
   if (!ready() || !M.active) return;
   M.active = false;
   M.timer = waitFrom(MUNCHIE_WAIT);
-  sfx.munchieFlick();
+  sfx.munchieFlick(); earn();
   dirty = true;
 }
 
 // ---------- Cookie Freddy (bonus, rare) ----------
 // He turns up in your office wanting COOKIE_ASKS coatings (shown on the floor in front of him). Click them
-// on the kitchen camera (CAM 9) before COOKIE_TIME runs out. The wrong one costs COOKIE_WRONG seconds.
+// on the shelf at the back of the office (turn around: G.back) before COOKIE_TIME runs out. The wrong one costs COOKIE_WRONG seconds.
 function updateCookie(dt) {
   const C = G.ckf;
   if (!C.on) return;
@@ -1724,7 +1777,7 @@ function updateCookie(dt) {
   }
   if (G.t >= C.deadline) lose(COOKIE);
 }
-// A click on the kitchen camera at row r, column c (clickFeed). Returns true if it was on a jar.
+// A click on the back of the office at row r, column c (clickBack). Returns true if it was on a jar.
 function pickIngredient(r, c) {
   const name = INGREDIENTS.find(n => {
     const [r1, r2, c1, c2] = KITCHEN_JARS[n];
@@ -1739,7 +1792,7 @@ function pickIngredient(r, c) {
     if (C.got.length === C.wants.length) {   // all of them: a happy crunch, and he's gone
       C.wants = [];
       C.timer = waitFrom(COOKIE_WAIT);
-      sfx.cookieOut();
+      sfx.cookieOut(); earn();
     }
   } else {
     C.deadline -= COOKIE_WRONG;
@@ -1789,7 +1842,7 @@ function updatePlushBabies(dt) {
     if (!B) continue;
     if (plushLit(spot)) {
       B.shineT += dt;
-      if (B.shineT >= PB_SHINE) { P.spots[spot] = null; sfx.pop(); dirty = true; continue; }
+      if (B.shineT >= PB_SHINE) { P.spots[spot] = null; sfx.pop(); earn(); dirty = true; continue; }
     } else {
       B.shineT = 0;
     }
@@ -1810,4 +1863,290 @@ function updatePlushBabies(dt) {
   P.spots[pick(free)] = { since: G.t, shineT: 0 };
   sfx.plushBaby();
   dirty = true;
+}
+
+// =====================================================================
+// Update 3.0: turning around, Fazcoins and the shop, and its eight characters.
+// =====================================================================
+
+// ---------- turning around (Shift, or the Turn button) ----------
+// Flips you between the front of the office and the back (G.back). Not with the monitor up. Turned
+// round, the doors, the mask and the flashlight (on the back) still work; the front can't be seen.
+function toggleTurn() {
+  if (!ready()) return;
+  if (G.cam) { sfx.deny(); return; }
+  G.back = !G.back;
+  sfx.turn();
+  if (G.back) lookedBehind();
+  dirty = true;
+}
+// You just turned to the back: Nightmare Helpy may be sitting on the back desk.
+function lookedBehind() {
+  const H = G.hlp;
+  if (H.on && !H.present && Math.random() < HELPY_CHANCE) {
+    H.present = true;
+    H.clicks = 0;
+    H.deadline = G.t + HELPY_TIME;
+    sfx.helpyIn();
+  }
+}
+// A click on the back of the office (row r, column c): Nightmare Helpy, or one of Cookie Freddy's jars.
+function clickBack(r, c) {
+  if (G.mask) return;
+  const H = G.hlp;
+  if (H.present) {
+    const [hr, hc] = HELPY_SPOT;
+    if (r >= hr - 0.8 && r <= hr + 3.8 && c >= hc - 0.8 && c <= hc + 9.8) {
+      H.clicks++;
+      sfx.helpyHit(H.clicks / HELPY_CLICKS);
+      if (H.clicks >= HELPY_CLICKS) { H.present = false; sfx.helpyOff(); earn(); }
+      dirty = true;
+      return;
+    }
+  }
+  pickIngredient(r, c);
+}
+
+// ---------- Fazcoins ----------
+// Earn coins (FEND_COINS unless said otherwise), with a ding.
+function earn(n = FEND_COINS) {
+  G.coins += n;
+  sfx.coin();
+  dirty = true;
+}
+// Every COIN_WAIT seconds a coin turns up on a random camera, at one of its hiding spots, until you
+// click it there.
+function updateCoin(dt) {
+  const C = G.coin;
+  if (C.room) return;
+  C.timer -= dt;
+  if (C.timer > 0) return;
+  C.room = pick(CAM_ORDER);
+  C.spot = pick(NCHICA_SPOTS[C.room]);
+  dirty = true;
+}
+// A click on the camera picture at row r, column c (from clickFeed): was it on the coin? The coin is 3
+// characters wide; anywhere on it, or almost a row above or below, counts.
+function grabCoin(r, c) {
+  const C = G.coin;
+  if (!C.room || !onCam(C.room)) return false;
+  const [row, col] = C.spot;
+  if (Math.abs(r - row) > 0.8 || c < col - 0.8 || c > col + 2.8) return false;
+  C.room = null;
+  C.timer = waitFrom(COIN_WAIT);
+  earn(COIN_VALUE);
+  return true;
+}
+
+// ---------- the shop (the SHOP tab on the monitor) ----------
+// An item's price tonight: Funtime Chica puts up the price of everything but Rockstar Bonnie's guitar.
+const priceOf = key => key !== 'guitar' && G.fch.on ? Math.ceil(SHOP[key].price * PRICE_UP) : SHOP[key].price;
+// Can you buy it right now? It has to be in stock and you need the coins (and the guitar only matters
+// with Rockstar Bonnie here and not bought yet).
+function canBuy(key) {
+  if (!G.cam || G.tab !== 'shop' || G.stock[key] <= 0 || G.coins < priceOf(key)) return false;
+  if (key === 'guitar') return G.rsb.on && !G.rsb.bought;
+  return true;
+}
+// Buy item `key`. A death coin opens the "use it on whom?" list instead (see useDeathCoin).
+function buy(key) {
+  if (!ready()) return;
+  if (key === 'death') { G.picking = !G.picking && canBuy('death'); if (!G.picking) sfx.deny(); dirty = true; return; }
+  if (!canBuy(key)) { sfx.deny(); return; }
+  pay(key);
+  if (key === 'battery') G.power = Math.min(100, G.power + BATTERY_POWER);
+  if (key === 'guitar') G.rsb.bought = true;
+}
+function pay(key) {
+  G.coins -= priceOf(key);
+  G.stock[key]--;
+  sfx.buy();
+  dirty = true;
+}
+// The characters a death coin can be used on: everyone on tonight who hasn't been got rid of already.
+const coinTargets = () => charsOf(tonightIds()).filter(c => G[c.id] && G[c.id].on && !G.gone.includes(c.id));
+// Use a death coin on character `id`: it's gone for the rest of the night (it stays in your lineup).
+function useDeathCoin(id) {
+  if (!ready() || !G.picking || !canBuy('death') || !coinTargets().some(c => c.id === id)) { sfx.deny(); return; }
+  pay('death');
+  G.picking = false;
+  G.gone.push(id);
+  banish(id);
+  sfx.deathCoin();
+}
+// Switch a character off for the rest of the night, clearing whatever it was doing so nothing of it is
+// left on screen. Every character's state has `on`; the rest are the usual names for "here right now".
+function banish(id) {
+  const S = G[id];
+  S.on = false;
+  for (const key of ['present', 'active', 'trying', 'awake']) if (key in S) S[key] = false;
+  for (const key of ['side', 'room', 'spot', 'mode', 'sum']) if (key in S) S[key] = null;
+  if ('wants' in S) S.wants = [];
+  if ('freddles' in S) S.freddles = S.freddles.map(() => false);
+  if (id === 'chi') G.cups.spots = [];
+  if (id === 'pbb') for (const spot in S.spots) S.spots[spot] = null;
+  if (id === 'tfx') S.phase = 'away';
+  if (id === 'dbr' || id === 'twf') S.stage = 0;
+  dirty = true;
+}
+
+// ---------- Ghost Freddy (common) ----------
+// He drifts across the whole view at a random height. If he touches the pointer, it freezes (input.js
+// stops moving the aim and ignores clicks while ghostFrozen()).
+const GHOST_W = 0.08, GHOST_H = 0.2;   // his size, as fractions of the view
+const ghostFrozen = () => !!G && G.t < G.gfr.frozenUntil;
+function updateGhost(dt) {
+  const H = G.gfr;
+  if (!H.on) return;
+  if (!H.active) {
+    H.timer -= dt;
+    if (H.timer > 0) return;
+    H.active = true;
+    H.dir = pick([-1, 1]);
+    H.x = H.dir > 0 ? -GHOST_W : 1;
+    H.y = rand(0.05, 0.7);
+    sfx.ghostIn();
+    return;
+  }
+  H.x += H.dir * GHOST_SPEED * dt;
+  if (H.x < -GHOST_W - 0.01 || H.x > 1.01) { H.active = false; H.timer = waitFrom(GHOST_WAIT); dirty = true; return; }
+  if (aim.where && !ghostFrozen() && aim.fx >= H.x && aim.fx <= H.x + GHOST_W && aim.fy >= H.y && aim.fy <= H.y + GHOST_H) {
+    H.frozenUntil = G.t + GHOST_FREEZE;
+    sfx.ghostFreeze();
+    dirty = true;
+  }
+}
+
+// ---------- Rockstar Bonnie (uncommon) ----------
+// A guitar twang at 4 and 5 AM while his guitar isn't bought back; at 5:59 he gets you.
+function updateRockstar() {
+  const R = G.rsb;
+  if (!R.on || R.bought) return;
+  const hour = hourOf(G.t);
+  if (hour >= 4 && R.warned < hour) { R.warned = hour; sfx.guitar(); }
+  if (G.t >= NIGHT_END - HOUR_SECONDS / 60) lose(RBONNIE);   // one in-game minute before 6 AM
+}
+
+// ---------- Nightmare Helpy (uncommon) ----------
+// lookedBehind sits him on the back desk; clickBack knocks him about. Too slow, and he gets you.
+function updateHelpy() {
+  const H = G.hlp;
+  if (H.present && G.t >= H.deadline) lose(NHELPY);
+}
+
+// ---------- H.E.L.P.I (uncommon) ----------
+// Every HELPI_WAIT seconds the tablet on the back desk buzzes with a sum: an addition, or a small
+// times table. Turn around, type the answer (helpiKey) and press Enter before HELPI_TIME runs out.
+function updateHelpi(dt) {
+  const T = G.hpi;
+  if (!T.on) return;
+  if (T.sum === null) {
+    T.timer -= dt;
+    if (T.timer > 0) return;
+    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
+    const times = Math.random() < 0.4;
+    T.sum = times ? `${a} x ${b}` : `${a} + ${b}`;
+    T.answer = times ? a * b : a + b;
+    T.typed = '';
+    T.deadline = G.t + HELPI_TIME;
+    sfx.helpiBuzz();
+    dirty = true;
+    return;
+  }
+  if (G.t >= T.deadline) lose(HELPI);
+}
+// A key while turned round with a sum on the tablet (from input.js): a digit types it, Backspace takes
+// one away, Enter answers. Returns true if the key was used.
+function helpiKey(k) {
+  const T = G.hpi;
+  if (!ready() || !G.back || T.sum === null) return false;
+  if (/^[0-9]$/.test(k) && T.typed.length < 3) T.typed += k;
+  else if (k === 'Backspace') T.typed = T.typed.slice(0, -1);
+  else if (k === 'Enter') {
+    if (Number(T.typed) === T.answer && T.typed !== '') {
+      T.sum = null;
+      T.timer = waitFrom(HELPI_WAIT);
+      sfx.helpiRight();
+      earn();
+    } else {
+      T.typed = '';
+      sfx.deny();
+    }
+  } else return false;
+  dirty = true;
+  return true;
+}
+
+// ---------- Dreadbear (rare) and Twisted Wolf (uncommon): across the yards ----------
+// They cross a yard a stage at a time (each move is a chance every `interval`), then come up to that
+// yard's back window (stage 3). There, flash the window (backWindowLit) for YARD_FLASH seconds within
+// `time`, and they go back out to a gate (maybe the other yard). `atWindow` is the sound they make there
+// (Dreadbear makes none).
+function updateYarder(Y, who, interval, chance, time, atWindow, dt) {
+  if (!Y.on) return;
+  if (Y.stage === 3) {
+    if (backWindowLit(Y.side)) {
+      Y.flashT += dt;
+      if (Y.flashT >= YARD_FLASH) {
+        sfx.yelp(Y.side);
+        Y.stage = 0;
+        Y.side = pick(['L', 'R']);
+        Y.timer = around(interval);
+        earn();
+        dirty = true;
+        return;
+      }
+    } else Y.flashT = 0;
+    if (G.t >= Y.deadline) lose(who);
+    return;
+  }
+  Y.timer -= dt;
+  if (Y.timer > 0) return;
+  Y.timer = around(interval);
+  if (Math.random() >= chance) return;
+  Y.stage++;
+  if (Y.stage === 3) { Y.deadline = G.t + time; Y.flashT = 0; if (atWindow) atWindow(Y.side); }
+  dirty = true;
+}
+const updateDreadbear = dt => updateYarder(G.dbr, DREADBEAR, DREAD_INTERVAL, DREAD_CHANCE, DREAD_TIME, null, dt);
+const updateWolf = dt => updateYarder(G.twf, TWOLF, WOLF_INTERVAL, WOLF_CHANCE, WOLF_TIME, sfx.howl, dt);
+
+// ---------- Twisted Foxy (rare) ----------
+// 'away' -> a 'mound' in one yard (seen only with that yard's light on) -> 'digging' (heard, not seen):
+// light THAT yard's camera for TFOXY_FLASH seconds within TFOXY_TIME. Lighting the other yard while he
+// digs gets you at once.
+function updateTwistedFoxy(dt) {
+  const F = G.tfx;
+  if (!F.on) return;
+  if (F.phase === 'away' || F.phase === 'mound') {
+    F.timer -= dt;
+    if (F.timer > 0) return;
+    if (F.phase === 'away') {
+      F.phase = 'mound';
+      F.side = pick(['L', 'R']);
+      F.timer = waitFrom(TFOXY_MOUND);
+      sfx.moundUp();
+    } else {
+      F.phase = 'digging';
+      F.deadline = G.t + TFOXY_TIME;
+      F.flashT = 0;
+      sfx.dig();
+    }
+    dirty = true;
+    return;
+  }
+  // Digging.
+  if (yardLit(otherSide(F.side))) { lose(TFOXY); return; }
+  if (yardLit(F.side)) {
+    F.flashT += dt;
+    if (F.flashT >= TFOXY_FLASH) {
+      F.phase = 'away';
+      F.timer = waitFrom(TFOXY_WAIT);
+      sfx.yelp(F.side);
+      earn();
+      dirty = true;
+      return;
+    }
+  } else F.flashT = 0;
+  if (G.t >= F.deadline) lose(TFOXY);
 }
