@@ -180,6 +180,9 @@ function camPaints() {
 function renderOffice(now) {
   $('office').classList.toggle('dark', G.powerOut);
   $('office').classList.toggle('back', G.back);
+  // The doors are at the front, so turned round they're not there at all (on request). visibility (not
+  // `hidden`) keeps their space, so the back picture stays where the front one was.
+  for (const side of ['L', 'R']) $('door' + side).style.visibility = G.back ? 'hidden' : '';
   if (G.back) { renderBack(now); return; }
   const paints = officePaints();
   for (const side of ['L', 'R']) {
@@ -192,13 +195,9 @@ function renderOffice(now) {
 }
 
 // ---------- the back of the office (update 3.0: turned around) ----------
-// Plain wall where the doorways are at the front, and the back picture: the windows (with whoever has
-// come up to them), Cookie Freddy's shelf, H.E.L.P.I's tablet and maybe Nightmare Helpy on the desk.
+// The back picture: the windows (with whoever has come up to them), Cookie Freddy's shelf, H.E.L.P.I's
+// tablet and maybe Nightmare Helpy on the desk. (The doors aren't shown: see renderOffice.)
 function renderBack(now) {
-  for (const side of ['L', 'R']) {
-    setHtml($('door' + side), toHtml(backWallGrid()));
-    $('door' + side).classList.remove('lit');
-  }
   const g = backGrid();
   if (!G.powerOut) {
     // The jars Cookie Freddy wants light up in his color; the ones you've taken already dim again.

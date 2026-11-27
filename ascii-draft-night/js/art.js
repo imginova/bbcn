@@ -1745,14 +1745,6 @@ function backGrid() {
   return g;
 }
 
-// Where the doorways are at the front, the back has plain wall: the same size as a door (12 x 16), so the
-// view doesn't jump about when you turn round.
-function backWallGrid() {
-  const lines = ['+' + '-'.repeat(10) + '+'];
-  for (let r = 0; r < 14; r++) lines.push('|' + (r === 13 ? ' , , , , ,' : ' '.repeat(10)) + '|');
-  lines.push('+' + '='.repeat(10) + '+');
-  return grid(lines, 12, 'dim');
-}
 
 // ----- the yards (CAM 9 and CAM 10) -----
 // Drawn by code, like the halls in ASCII FNAF: Line 2: a fenced yard stretching away from the office, the
