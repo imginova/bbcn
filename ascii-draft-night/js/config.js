@@ -386,3 +386,72 @@ const GRAVE_SPEED = 0.17;
 const GRAVE_CHARGE = 0.8;
 const GRAVE_GRACE = 3;
 const GRAVE_JUMP = [0.95, 1.3];   // its jump: Bounce pot's old one (about halfway up the view)
+
+// =====================================================================
+// Update 3.0: turning around, the yard cameras, Fazcoins and the shop, and eight more characters.
+// =====================================================================
+
+// ---------- Fazcoins and the shop ----------
+// Coins start at 0 every night. A coin turns up on a random camera every COIN_WAIT seconds (click it on
+// the camera for COIN_VALUE), and sending a character away clearly (shutting a door on them, masking them
+// off, flashing them, shocking them...) gives FEND_COINS. The SHOP tab on the monitor sells them back.
+const COIN_WAIT = [10, 16];
+const COIN_VALUE = 1;
+const FEND_COINS = 1;
+// The shop's items: price in coins, and how many it has each night.
+const SHOP = {
+  death:   { name: 'Death coin',   price: 15, stock: 3, desc: 'Gets rid of one character for the rest of the night (it stays in your lineup)' },
+  battery: { name: 'Battery pack', price: 5,  stock: 5, desc: 'Gives back 10% power' },
+  guitar:  { name: "Rockstar Bonnie's guitar", price: 10, stock: 1, desc: 'Buy it back before 6 AM, or he gets you at 5:59' },
+};
+const BATTERY_POWER = 10;     // percent of power a battery pack gives back
+const PRICE_UP = 1.5;         // Funtime Chica: the death coin and the battery pack cost this many times more
+
+// ---------- the yard cameras ----------
+// Holding the light on a yard camera uses power like the flashlight (it IS the flashlight controls).
+
+// ---------- Ghost Freddy (common) ----------
+// Every GHOST_WAIT seconds he drifts across the view from one side to the other, at GHOST_SPEED (views per
+// second) and a random height. If he touches the mouse pointer it freezes for GHOST_FREEZE seconds: the
+// flashlight stays where it was and clicks don't work (keys still do).
+const GHOST_WAIT = [16, 26];
+const GHOST_SPEED = 0.16;
+const GHOST_FREEZE = 3;
+
+// ---------- Rockstar Bonnie (uncommon) ----------
+// The shopkeeper has his guitar. Buy it back (SHOP.guitar) before 6 AM, or he gets you at 5:59.
+
+// ---------- Nightmare Helpy (uncommon) ----------
+// Each time you turn around, HELPY_CHANCE that he's sitting on the back desk. Click him HELPY_CLICKS times
+// within HELPY_TIME seconds to knock him off, or he gets you.
+const HELPY_CHANCE = 0.3;
+const HELPY_CLICKS = 10;
+const HELPY_TIME = 4;
+
+// ---------- H.E.L.P.I (uncommon) ----------
+// Every HELPI_WAIT seconds the tablet on the back desk buzzes with a sum. Turn around, type the answer and
+// press Enter within HELPI_TIME seconds. A wrong answer clears what you typed (the clock keeps going).
+const HELPI_WAIT = [24, 36];
+const HELPI_TIME = 10;
+
+// ---------- Dreadbear (rare) and Twisted Wolf (uncommon) ----------
+// They cross a yard (stage 0 by the far gate, 1 half way, 2 close) and then come up to that yard's back
+// window. Each move is a chance every interval. At the window, flash it for YARD_FLASH seconds within their
+// time. Dreadbear is silent (watch the yard cameras); Twisted Wolf is hard to see out there, but howls at
+// the window.
+const DREAD_INTERVAL = 6;
+const DREAD_CHANCE = 0.6;
+const DREAD_TIME = 6;
+const WOLF_INTERVAL = 5;
+const WOLF_CHANCE = 0.6;
+const WOLF_TIME = REACT_WINDOW + 1.5;
+const YARD_FLASH = 0.5;
+
+// ---------- Twisted Foxy (rare) ----------
+// Every TFOXY_WAIT seconds he shows as a mound in the ground of one yard for TFOXY_MOUND seconds (only
+// seen with that yard's light on). Then he digs (you hear it, and he's gone from view): flash THAT yard's
+// camera light for TFOXY_FLASH seconds within TFOXY_TIME. Lighting the other yard while he digs gets you.
+const TFOXY_WAIT = [22, 34];
+const TFOXY_MOUND = [8, 12];
+const TFOXY_TIME = 7;
+const TFOXY_FLASH = 0.4;

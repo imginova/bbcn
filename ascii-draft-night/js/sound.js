@@ -402,6 +402,33 @@ const sfx = (() => {
     nbbSleep() { tone(330, 0.5, { type: 'sine', vol: 0.1, slide: -200 }); },
     // The caution bot's blink: a short beep from the middle (it doesn't tell you which door).
     nsbBlink() { tone(1320, 0.06, { type: 'square', vol: 0.1 }); },
+
+    // ----- update 3.0 -----
+    // Turning around in your chair: a short creak and a whoosh.
+    turn() { tone(220, 0.15, { type: 'triangle', vol: 0.08, slide: 60 }); noise(0.18, { vol: 0.06, freq: 900 }); },
+    // A Fazcoin: a bright two-note ding. Buying something: a cash-register "ka-ching".
+    coin() { tone(1320, 0.07, { type: 'square', vol: 0.1 }); tone(1760, 0.12, { type: 'square', vol: 0.1, delay: 0.07 }); },
+    buy() { noise(0.05, { vol: 0.15, freq: 3000, type: 'highpass' }); [1050, 1400].forEach((f, i) => tone(f, 0.12, { type: 'triangle', vol: 0.15, delay: 0.06 + i * 0.08 })); },
+    // A death coin being used: a low, final bong.
+    deathCoin() { tone(110, 0.9, { type: 'sine', vol: 0.35, slide: -40 }); tone(220, 0.6, { type: 'triangle', vol: 0.12 }); },
+    // Ghost Freddy: a cold, hollow "ooo" as he comes; a sharp chill when he freezes your pointer.
+    ghostIn() { tone(330, 1.2, { type: 'sine', vol: 0.08, slide: -80 }); },
+    ghostFreeze() { tone(1800, 0.3, { type: 'sine', vol: 0.12, slide: -1400 }); },
+    // Rockstar Bonnie's reminder (an out-of-tune guitar twang) at 4 and 5 AM while his guitar isn't bought.
+    guitar() { [196, 247, 233].forEach((f, i) => tone(f, 0.5, { type: 'sawtooth', vol: 0.1, delay: i * 0.12 })); },
+    // Nightmare Helpy on the back desk (a giggle) and each click on him (a thump); knocked off: a tumble.
+    helpyIn() { [700, 900, 700].forEach((f, i) => tone(f, 0.07, { type: 'square', vol: 0.1, delay: i * 0.08 })); },
+    helpyHit(progress) { tone(200 + 300 * progress, 0.05, { type: 'triangle', vol: 0.18 }); },
+    helpyOff() { noise(0.3, { vol: 0.3, freq: 700 }); tone(500, 0.3, { type: 'triangle', vol: 0.12, slide: -350 }); },
+    // H.E.L.P.I's tablet buzzing (from behind you), a right answer (a cheerful chime) and a wrong one.
+    helpiBuzz() { for (let i = 0; i < 3; i++) tone(150, 0.12, { type: 'sawtooth', vol: 0.12, delay: i * 0.18 }); },
+    helpiRight() { [880, 1100, 1320].forEach((f, i) => tone(f, 0.1, { type: 'triangle', vol: 0.12, delay: i * 0.07 })); },
+    // Twisted Wolf at a back window: a long, loud howl from that side. Flashed off: a yelp.
+    howl(side) { tone(380, 1.4, { type: 'sawtooth', vol: 0.3, slide: 260, pan: panOf(side) }); tone(370, 1.4, { type: 'sine', vol: 0.2, slide: 240, pan: panOf(side) }); },
+    yelp(side) { tone(900, 0.2, { type: 'triangle', vol: 0.2, slide: -500, pan: panOf(side) }); },
+    // Twisted Foxy digging (from the middle: it doesn't say which yard) and his mound appearing.
+    dig() { for (let i = 0; i < 4; i++) noise(0.12, { vol: 0.25, freq: 500, delay: i * 0.22 }); },
+    moundUp() { noise(0.25, { vol: 0.12, freq: 400 }); },
     // Munchie grabbing your screen: a scrabble of little claws and a chomp. Flicked off: a whoosh.
     munchieIn() {
       for (let i = 0; i < 5; i++) noise(0.04, { vol: 0.2, freq: 3500, type: 'highpass', delay: i * 0.05 });

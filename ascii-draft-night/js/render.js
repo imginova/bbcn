@@ -101,6 +101,15 @@ function renderGame(now) {
     mun.style.top = G.mun.y * 100 + '%';
     mun.classList.toggle('blink', G.mun.deadline - G.t < 3);
   }
+  // Ghost Freddy drifting across (update 3.0), and the frozen pointer he leaves you with.
+  const ghost = $('ghost');
+  ghost.hidden = !G.gfr.active || G.powerOut;
+  if (!ghost.hidden) {
+    setHtml(ghost, drawingHtml(SPRITES.gfr.ghost, 'c-gfr'));
+    ghost.style.left = G.gfr.x * 100 + '%';
+    ghost.style.top = G.gfr.y * 100 + '%';
+  }
+  $('viewport').classList.toggle('frozen', ghostFrozen());
   for (const [id, n] of [['pbCornerL', 1], ['pbCornerR', 2]]) {
     $(id).hidden = G.pbb.onScreen < n;
     if (!$(id).hidden) setHtml($(id), drawingHtml(SPRITES.pbb.corner, 'c-pbb'));
@@ -125,11 +134,16 @@ function renderGame(now) {
   $('btnCam').setAttribute('aria-pressed', String(G.cam));
   $('btnCam').disabled = off;
   // When the music box runs low, a ♪! warning shows on the Camera button (and on CAM 6's map button).
-  $('stCam').textContent = off ? 'NO POWER' : G.mask ? 'MASK ON' : G.cam ? 'UP' : 'DOWN';
+  $('stCam').textContent = off ? 'NO POWER' : G.mask ? 'MASK ON' : G.back ? 'TURNED' : G.cam ? 'UP' : 'DOWN';
   $('camWarn').hidden = !boxLow() || off;
   $('btnFlash').classList.toggle('on', flashOn());
   $('stFlash').textContent = off ? 'NO POWER' : G.noFlash ? 'BB TOOK IT' : flashOn() ? 'ON' : 'HOLD';
   $('btnFlash').disabled = off || G.noFlash;
+  // Update 3.0: the Turn button (which way you're facing) and your Fazcoins.
+  $('btnTurn').classList.toggle('on', G.back);
+  $('btnTurn').setAttribute('aria-pressed', String(G.back));
+  $('stTurn').textContent = G.back ? 'BACK' : 'FRONT';
+  $('coins').textContent = G.coins;
   $('btnMask').classList.toggle('on', G.mask);
   $('btnMask').setAttribute('aria-pressed', String(G.mask));
   $('stMask').textContent = G.mask ? 'ON' : G.cam ? 'CAM UP' : 'OFF';
@@ -165,6 +179,8 @@ function camPaints() {
 
 function renderOffice(now) {
   $('office').classList.toggle('dark', G.powerOut);
+  $('office').classList.toggle('back', G.back);
+  if (G.back) { renderBack(now); return; }
   const paints = officePaints();
   for (const side of ['L', 'R']) {
     setHtml($('door' + side), toHtml(doorGrid(side, paints)));
@@ -172,6 +188,47 @@ function renderOffice(now) {
   }
   const g = officeGrid(G.fan, now, paints);
   if (!G.powerOut) drawVisitors(g, now);
+  setHtml($('officeArt'), toHtml(g));
+}
+
+// ---------- the back of the office (update 3.0: turned around) ----------
+// Plain wall where the doorways are at the front, and the back picture: the windows (with whoever has
+// come up to them), Cookie Freddy's shelf, H.E.L.P.I's tablet and maybe Nightmare Helpy on the desk.
+function renderBack(now) {
+  for (const side of ['L', 'R']) {
+    setHtml($('door' + side), toHtml(backWallGrid()));
+    $('door' + side).classList.remove('lit');
+  }
+  const g = backGrid();
+  if (!G.powerOut) {
+    // The jars Cookie Freddy wants light up in his color; the ones you've taken already dim again.
+    const C = G.ckf;
+    for (const name of C.wants) {
+      const [r1, r2, c1, c2] = KITCHEN_JARS[name];
+      const cls = C.got.includes(name) ? 'dim' : 'c-ckf order';
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = cls;
+    }
+    if (C.wants.length) {
+      const left = C.wants.filter(n => !C.got.includes(n));
+      write(g, 15, 1, `COAT ME IN: ${left.join(' + ')}`.padEnd(42), 'c-ckf order');
+    }
+    // Dreadbear and Twisted Wolf at a back window. Dark out there: only their eyes show, unless the
+    // flashlight is on that window (then all of them, glowing while it's on them).
+    for (const [Y, id] of [[G.dbr, 'dbr'], [G.twf, 'twf']]) {
+      if (!Y.on || Y.stage !== 3) continue;
+      const [r0, c0] = BACK_WINDOWS[Y.side];
+      if (backWindowLit(Y.side)) sprite(g, r0, c0, SPRITES[id].window, `c-${id} shone`);
+      else for (const [r, c] of [[1, 2], [1, 4]]) g[r0 + r][c0 + c] = { ch: 'o', cls: `c-${id} door-eyes` };
+    }
+    // H.E.L.P.I's tablet: the sum and what you've typed, blinking red in its last 3 seconds.
+    const T = G.hpi;
+    const screen = T.on && T.sum !== null ? `${T.sum} = ${T.typed}_` : T.on ? 'H.E.L.P.I' : '';
+    write(g, ...TABLET_SCREEN, screen.padEnd(12).slice(0, 12),
+      'c-hpi' + (T.sum !== null && T.deadline - G.t < 3 ? ' acc-red blink' : ''));
+    // Nightmare Helpy on the back desk, shaking more the more you've hit him.
+    const H = G.hlp;
+    if (H.present) sprite(g, ...HELPY_SPOT, SPRITES.hlp.office, 'c-hlp' + (H.clicks > HELPY_CLICKS / 2 ? ' wobble' : ''));
+  }
   setHtml($('officeArt'), toHtml(g));
 }
 
@@ -318,12 +375,35 @@ function inDoorway(g, side, row, col, drawing, cls) {
 // ---------- the monitor ----------
 // The tab bar (only when there's something in the vents tonight), then the camera or the vent map.
 function renderMonitor(now) {
-  $('tabs').hidden = !ventsOn();
-  for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-current', String(b.dataset.tab === G.tab));
+  // The tabs: CAMS and SHOP every night, VENTS only with something in the vents.
+  for (const b of document.querySelectorAll('#tabs button')) {
+    b.setAttribute('aria-current', String(b.dataset.tab === G.tab));
+    if (b.dataset.tab === 'vents') b.hidden = !ventsOn();
+  }
   $('camPane').hidden = G.tab !== 'cams';
   $('ventPane').hidden = G.tab !== 'vents';
+  $('shopPane').hidden = G.tab !== 'shop';
   if (G.tab === 'cams') renderFeed(now);
-  else renderVents();
+  else if (G.tab === 'vents') renderVents();
+  else renderShop();
+}
+
+// ---------- the SHOP tab (update 3.0) ----------
+// The shopkeeper, your coins, and a button for each item: price, how many are left tonight, and whether
+// you can afford it. The death coin opens a list of tonight's characters to use it on.
+function renderShop() {
+  setHtml($('shopKeeper'), drawingHtml(SHOPKEEPER, 'c-nsb'));
+  $('shopCoins').innerHTML = `You have <b>${G.coins}</b> Fazcoin${G.coins === 1 ? '' : 's'}` +
+    (G.fch.on ? ' · <span class="c-fch">Funtime Chica put the prices up!</span>' : '');
+  const keys = Object.keys(SHOP).filter(k => k !== 'guitar' || (G.rsb.on && !G.rsb.bought));
+  setHtml($('shopItems'), keys.map(k => {
+    const item = SHOP[k], left = G.stock[k], ok = canBuy(k) || (k === 'death' && G.picking);
+    return `<button type="button" class="shop-item${ok ? '' : ' cant'}${k === 'death' && G.picking ? ' on' : ''}" data-item="${k}">` +
+      `<b>${item.name}</b><span class="price">${priceOf(k)} coins · ${left} left</span><small>${item.desc}</small></button>`;
+  }).join(''));
+  $('shopPick').hidden = !G.picking;
+  if (G.picking) setHtml($('shopPick'), '<p class="lab">Use the death coin on:</p>' +
+    coinTargets().map(c => `<button type="button" class="${RARITIES[c.rarity].cls}" data-target="${c.id}">${c.name}</button>`).join(''));
 }
 
 // The camera screen: the room picture (or static), whoever is in it, the music box and its wind
@@ -332,7 +412,20 @@ function renderFeed(now) {
   const room = G.camRoom;
   $('feedName').textContent = `CAM ${ROOMS[room].cam} · ${ROOMS[room].name}`;
   let g;
-  if (now < G.staticUntil) {
+  const ySide = yardSide(room);
+  if (ySide && now >= G.staticUntil) {
+    // A yard (update 3.0): dark unless its own light is on. With the light on you see who's out there:
+    // Dreadbear and Twisted Wolf by how far across they are (Wolf only faintly, even in the light), and
+    // Twisted Foxy's mound (not while he's digging).
+    const lit = yardLit(ySide);
+    g = yardGrid(ySide, lit);
+    if (lit) {
+      for (const [Y, id] of [[G.dbr, 'dbr'], [G.twf, 'twf']]) {
+        if (Y.on && Y.side === ySide && Y.stage < 3) sprite(g, ...YARD_SLOTS[Y.stage], SPRITES[id].yard[Y.stage], `c-${id}` + (id === 'twf' ? ' faint' : ''));
+      }
+      if (G.tfx.on && G.tfx.phase === 'mound' && G.tfx.side === ySide) sprite(g, ...MOUND_SPOTS[ySide], SPRITES.tfx.mound, 'c-tfx');
+    }
+  } else if (now < G.staticUntil) {
     // Static: random characters.
     const chars = ' .:;*#%';
     g = Array.from({ length: 11 }, () =>
@@ -383,13 +476,16 @@ function renderFeed(now) {
       for (let r = 1; r <= 9; r++) write(g, r, 4, ' '.repeat(32));
       sprite(g, ...TRASH_SPOT, SPRITES.trs[G.trs.member], 'c-trs');
     }
-    // The kitchen: the coatings Cookie Freddy wants that you've already taken light up in his color.
-    if (room === 'kitchen') {
-      for (const name of G.ckf.got) {
-        const [r1, r2, c1, c2] = KITCHEN_JARS[name];
-        for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = 'c-ckf';
-      }
+  }
+  if (now >= G.staticUntil) {
+    // The yards get Nightmare Chica's cupcake and Trash and the Gang too (the rooms inside draw theirs above).
+    if (ySide && G.nch.room === room) write(g, ...G.nch.spot, SPRITES.nch.cupcake, 'c-nch hidden-cup');
+    if (ySide && G.trs.room === room) {
+      for (let r = 1; r <= 9; r++) write(g, r, 4, ' '.repeat(32));
+      sprite(g, ...TRASH_SPOT, SPRITES.trs[G.trs.member], 'c-trs');
     }
+    // A Fazcoin lying on this camera (update 3.0): click it.
+    if (G.coin.room === room) write(g, ...G.coin.spot, COIN_ART, 'coin');
   }
   // Salvage sign, in front of the picture (even over static), while it needs more presses.
   if (G.slv.presses > 0) {

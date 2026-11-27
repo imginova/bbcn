@@ -2,9 +2,9 @@
 
 A roguelite fan game in the style of Five Nights at Freddy's, drawn in ASCII art and played in the browser. Before every night you're dealt five character cards and take as many as you dare: they join your lineup for the rest of the run. Each character has a rarity (Common 5, Uncommon 10, Rare 20, Epic 35, Legendary 50 points) that says how hard it is and how much it's worth. **Survive a night with a lineup worth the goal to win the run.** The goal depends on the difficulty you pick before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points. You have three lives.
 
-There are 38 characters: 25 from the main list, 8 more obscure, gimmicky BONUS ones, and a third list of 5 (BB, Mangle, Nightmare BB, and two more bonus ones: Grave weed and the Nightmare staff bot), all mixed into the same rarities. Each works its own way (the rules are in the game's **How to play**, and on each card).
+There are 46 characters: 25 from the main list, 8 more obscure, gimmicky BONUS ones, a third list of 5 (BB, Mangle, Nightmare BB, and two more bonus ones: Grave weed and the Nightmare staff bot) and update 3.0's 8, all mixed into the same rarities. Each works its own way (the rules are in the game's **How to play**, and on each card).
 
-The office has two doors, two windows, a flashlight that works in the doorways and on the cameras too, a mask, a desk fan (the office heats up all night), a controlled shock, a monitor with 9 cameras and a vent map with audio lures, and a battery that drains whenever you use anything.
+The office has two doors, two windows, a flashlight that works in the doorways and on the cameras too, a mask, a desk fan (the office heats up all night), a controlled shock, a monitor with 10 cameras (two of them outside, in the yards), a vent map with audio lures and a shop, and a battery that drains whenever you use anything. Press Shift to turn around: the back of the office has two more windows, a shelf and a tablet. Fazcoins (on the cameras, and for sending characters away) buy things in the shop.
 
 > **A fan game.** ASCII FNAF: Draft Night is not affiliated with Scott Cawthon or Five Nights at Freddy's. The characters belong to their creator. The game is free and must stay free: no price, no ads, no donations. All the drawings and sounds were made from scratch for this game.
 

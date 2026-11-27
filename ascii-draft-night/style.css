@@ -72,6 +72,14 @@
   --c-nbb: #9a86aa;   /* Nightmare BB: a dark, dusky purple (yellow eyes) */
   --c-nsb: #f2d64b;   /* the Nightmare staff bot: caution yellow */
   --c-grw: #b083d6;   /* Grave weed: a sickly purple (dark green leaves) */
+  --c-fch: #ff9ec8;   /* Funtime Chica: pink */
+  --c-gfr: #c8d8ff;   /* Ghost Freddy: a ghostly pale blue */
+  --c-rsb: #7aa7ff;   /* Rockstar Bonnie: blue (a purple guitar) */
+  --c-hlp: #ddd3c8;   /* Nightmare Helpy: dirty white */
+  --c-hpi: #7ee0d0;   /* H.E.L.P.I: a tablet screen glow */
+  --c-twf: #a6adb6;   /* Twisted Wolf: grey */
+  --c-dbr: #8fbf6a;   /* Dreadbear: monster green */
+  --c-tfx: #d9844a;   /* Twisted Foxy: rusty orange */
   --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   /* The size of the ASCII pictures: the office row is 68 characters wide (two 12-wide doors and the
@@ -182,6 +190,8 @@ pre.art, .viewport, .hud, .controls, .map, .feed-head, .wind, .icon, .cards, .lv
 .c-fen { color: var(--c-fen); } .c-pbb { color: var(--c-pbb); }
 .c-bb { color: var(--c-bb); } .c-mgl { color: var(--c-mgl); } .c-nbb { color: var(--c-nbb); }
 .c-nsb { color: var(--c-nsb); } .c-grw { color: var(--c-grw); }
+.c-fch { color: var(--c-fch); } .c-gfr { color: var(--c-gfr); } .c-rsb { color: var(--c-rsb); } .c-hlp { color: var(--c-hlp); }
+.c-hpi { color: var(--c-hpi); } .c-twf { color: var(--c-twf); } .c-dbr { color: var(--c-dbr); } .c-tfx { color: var(--c-tfx); }
 /* Shadow Bonnie is black: a thin white glow outlines each character, or he'd vanish on the dark screen. */
 .c-sbn { text-shadow: 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #fff; }
 /* [class*="c-"] means "any element whose class contains c-": every character's drawing is bold. */
@@ -375,7 +385,7 @@ pre [class*="c-"] { font-weight: 600; }
 .map {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-areas: "prize stage parts" "cove dining audit" "whall you ehall" "kitchen kitchen kitchen";
+  grid-template-areas: "prize stage parts" "cove dining audit" "whall you ehall" "yardl . yardr";
   gap: 6px;
   width: min(270px, 100%);
   align-self: center;
@@ -494,3 +504,33 @@ pre#graveweed { text-shadow: 0 0 6px rgba(176,131,214,.55); }
 .pb-corner.left { left: 0; }
 .pb-corner.right { right: 0; }
 @media (prefers-reduced-motion: reduce) { .wobble, .bouncepot.hit, .bouncepot.charging { animation: none; } }
+
+/* =====================================================================
+   Update 3.0: the back of the office, the yard cameras, the shop, Ghost Freddy and Fazcoins.
+   ===================================================================== */
+/* The yards are dark until their camera light is on: then everything shows in a cold, bright light. */
+.yard { color: #2c3036; }
+.yard.lit { color: #c9d6e0; text-shadow: 0 0 4px rgba(201,214,224,.35); }
+.yard-frame { color: var(--dim); }
+/* Twisted Wolf is hard to see out there, even in the light. */
+.faint { opacity: .35; }
+/* A Fazcoin lying on a camera, and the coin counter. */
+.coin { color: #ffc94a; text-shadow: 0 0 6px rgba(255,201,74,.7); font-weight: 600; }
+#coins { color: #ffc94a; }
+/* The shop tab: the shopkeeper on the left, the items beside him. */
+.shop-pane { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: start; width: 100%; }
+.shop-pane #shopKeeper { grid-row: span 3; font-size: calc(var(--art) * 1.2); }
+.shop-coins { margin: 0; }
+.shop-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.shop-item { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left; text-transform: none; }
+.shop-item .price { color: #ffc94a; font-size: 12px; }
+.shop-item small { color: var(--dim); font-size: 11px; line-height: 1.35; letter-spacing: 0; }
+.shop-item.cant { opacity: .45; }
+.shop-item.on { border-color: #ffc94a; }
+.shop-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.shop-pick .lab { width: 100%; margin: 0; }
+@media (max-width: 640px) { .shop-pane { grid-template-columns: 1fr; } .shop-pane #shopKeeper { grid-row: auto; } }
+/* Ghost Freddy: see-through, drifting over the view; clicks go straight through him. */
+pre.ghost { position: absolute; z-index: 6; pointer-events: none; opacity: .55; text-shadow: 0 0 10px #c8d8ff; }
+/* Your pointer, frozen by Ghost Freddy. */
+.viewport.frozen { cursor: not-allowed; }

@@ -98,6 +98,7 @@
         <div class="meter"><span class="lab">POWER</span><b id="pw">100%</b><span class="bars" id="pwbar"></span></div>
         <div class="meter"><span class="lab">HEAT</span><b id="heat">10%</b></div>
         <div class="meter"><span class="lab">USAGE</span><span class="bars" id="usage"></span></div>
+        <div class="meter"><span class="lab">COINS</span><b id="coins">0</b></div>
       </div>
       <!-- Funtime Freddy's lines as subtitles (only on nights with him), filled by render.js. -->
       <p class="subtitle" id="subtitle" hidden></p>
@@ -114,6 +115,7 @@
           <div class="tabs" id="tabs">
             <button type="button" data-tab="cams">Cams <kbd>C</kbd></button>
             <button type="button" data-tab="vents">Vents <kbd>V</kbd></button>
+            <button type="button" data-tab="shop">Shop <kbd>B</kbd></button>
           </div>
           <div class="cam-pane" id="camPane">
             <div class="feed">
@@ -135,12 +137,20 @@
               <button type="button" data-room="whall" style="grid-area:whall">CAM 4<br>West hall<span class="mw"></span></button>
               <span class="you">YOU</span>
               <button type="button" data-room="ehall" style="grid-area:ehall">CAM 5<br>East hall<span class="mw"></span></button>
-              <button type="button" data-room="kitchen" style="grid-area:kitchen">CAM 9 · Kitchen<span class="mw"></span></button>
+              <button type="button" data-room="yardL" style="grid-area:yardl">CAM 9 · Left yard<span class="mw"></span></button>
+              <button type="button" data-room="yardR" style="grid-area:yardr">CAM 10 · Right yard<span class="mw"></span></button>
             </div>
           </div>
           <div class="vent-pane" id="ventPane" hidden>
             <div class="vent-map" id="ventMap"></div>
             <p class="keys" id="ventNote"></p>
+          </div>
+          <!-- Update 3.0: the SHOP. The shopkeeper, your coins, the items, and (for a death coin) who to use it on. -->
+          <div class="shop-pane" id="shopPane" hidden>
+            <pre class="art" id="shopKeeper"></pre>
+            <p class="shop-coins" id="shopCoins"></p>
+            <div class="shop-items" id="shopItems"></div>
+            <div class="shop-pick" id="shopPick" hidden></div>
           </div>
         </div>
         <!-- The flashlight's circle of light; render.js moves it to the pointer. -->
@@ -164,6 +174,8 @@
         <pre class="art pb-corner left" id="pbCornerL" hidden aria-hidden="true"></pre>
         <pre class="art pb-corner right" id="pbCornerR" hidden aria-hidden="true"></pre>
         <pre class="art bouncepot" id="bouncepot" hidden aria-hidden="true"></pre>
+        <!-- Update 3.0: Ghost Freddy drifting across the view (clicks go through him; touching him freezes your pointer). -->
+        <pre class="art ghost" id="ghost" hidden aria-hidden="true"></pre>
         <pre class="art bouncepot" id="graveweed" hidden aria-hidden="true"></pre>
         <div class="munchie" id="munchie" hidden role="button" aria-label="Munchie: drag and flick it off"><pre class="art" id="munchieArt"></pre></div>
         <!-- Lolbit's LOL screen: covers the view and blocks clicks under it until you type L O L
@@ -189,8 +201,9 @@
         <button id="btnFan" type="button"><span>Fan<kbd>E</kbd></span><span class="state" id="stFan">OFF</span></button>
         <!-- Only shown on nights with Springtrap or Circus Baby. -->
         <button id="btnShock" type="button" hidden><span>Shock<kbd>X</kbd></span><span class="state" id="stShock">READY</span></button>
+        <button id="btnTurn" type="button"><span>Turn<kbd>Shift</kbd></span><span class="state" id="stTurn">FRONT</span></button>
       </div>
-      <p class="keys hint">Hold F or the right mouse button to shine the flashlight where the mouse points (office, doorways and cameras) · E fan · X shock the camera you're on · C cams · V vents · 1–9 cameras · on VENTS, arrow keys pick a vent and Enter lures it · W: mask in the office, wind on CAM 6 · P pauses · M sound</p>
+      <p class="keys hint">Hold F or the right mouse button to shine the flashlight where the mouse points (office, doorways and cameras) · E fan · X shock the camera you're on · C cams · V vents · 1–9 and 0 cameras · Shift turns around · B shop · on VENTS, arrow keys pick a vent and Enter lures it · W: mask in the office, wind on CAM 6 · P pauses · M sound</p>
 
       <div class="overlay" id="pause" hidden>
         <h2>PAUSED</h2>
@@ -285,8 +298,8 @@
       <table>
         <tr><td>Left / right door</td><td>A / D, or click the door or its button</td></tr>
         <tr><td>Monitor up / down</td><td>Space or S, or the Camera button</td></tr>
-        <tr><td>Cams / vents tab</td><td>C / V, or the tabs on the monitor</td></tr>
-        <tr><td>Pick a camera</td><td>1 to 9, or click a room on the map</td></tr>
+        <tr><td>Cams / vents / shop tab</td><td>C / V / B, or the tabs on the monitor</td></tr>
+        <tr><td>Pick a camera</td><td>1 to 9 and 0, or click a room on the map</td></tr>
         <tr><td>Audio lure</td><td>On the VENTS tab: click a vent, or pick one with the arrow keys and press Enter</td></tr>
         <tr><td>Flashlight</td><td>Hold F or the right mouse button (or hold the Flashlight button) and point with the mouse</td></tr>
         <tr><td>Mask</td><td>W in the office, or the Mask button (not with the monitor up)</td></tr>
@@ -297,7 +310,11 @@
         <tr><td>Chica's cupcakes</td><td>Click them</td></tr>
         <tr><td>Hand-unit</td><td>Mash any keys (or tap his keypad) until he glitches out</td></tr>
         <tr><td>Munchie</td><td>Grab it and flick it off: drag and let go while still moving fast</td></tr>
-        <tr><td>Cookie Freddy</td><td>Click his coatings on the Kitchen camera (CAM 9)</td></tr>
+        <tr><td>Cookie Freddy</td><td>Turn around and click his coatings on the shelf at the back</td></tr>
+        <tr><td>Turn around</td><td>Shift, or the Turn button (not with the monitor up). Turned round you can still use the doors, the mask and the flashlight on the back</td></tr>
+        <tr><td>Shop</td><td>B, or the SHOP tab on the monitor: spend Fazcoins (click coins on the cameras, or send characters away to earn them)</td></tr>
+        <tr><td>Yard cameras</td><td>9 and 0. Hold the flashlight (F) to switch on that yard's own light</td></tr>
+        <tr><td>H.E.L.P.I</td><td>Turned round: type the answer and press Enter</td></tr>
         <tr><td>Lolbit's screen</td><td>Type L, O, L (or tap the letters)</td></tr>
         <tr><td>Pause</td><td>P or Esc</td></tr>
         <tr><td>Sound</td><td>M, or the button at the top</td></tr>
