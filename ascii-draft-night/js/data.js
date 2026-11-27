@@ -280,13 +280,14 @@ const GRAVEWEED = {
   how: 'pulled you under',
 };
 
-// ----- update 3.0 (2026-11-26), sorted into rarities by Claude -----
+// ----- update 3.0 (2026-11-26), sorted into rarities by Claude. The owner then marked Ghost Freddy,
+// Nightmare Helpy, H.E.L.P.I and the two Twisteds as BONUS (they're listed with the bonus ones in ROSTER). -----
 const FCHICA = {
   id: 'fch', name: 'Funtime Chica', rarity: 'common', where: 'SHOP',
   desc: 'Makes everything in the shop cost more (death coins and battery packs; not Rockstar Bonnie\'s guitar). Never attacks.',
 };
 const GFREDDY = {
-  id: 'gfr', name: 'Ghost Freddy', rarity: 'common', where: 'SCREEN',
+  id: 'gfr', name: 'Ghost Freddy', rarity: 'common', bonus: true, where: 'SCREEN',
   desc: 'Drifts across your screen now and then. If he touches your mouse pointer, it freezes for a few seconds: no aiming the light and no clicking (keys still work). Never attacks.',
 };
 const RBONNIE = {
@@ -295,17 +296,17 @@ const RBONNIE = {
   how: 'wanted his guitar back',
 };
 const NHELPY = {
-  id: 'hlp', name: 'Nightmare Helpy', rarity: 'uncommon', where: 'BACK DESK',
+  id: 'hlp', name: 'Nightmare Helpy', rarity: 'uncommon', bonus: true, where: 'BACK DESK',
   desc: 'When you turn around, he may be sitting on the back desk. Click him again and again, fast, to knock him off.',
   how: 'jumped off the desk',
 };
 const HELPI = {
-  id: 'hpi', name: 'H.E.L.P.I', rarity: 'uncommon', where: 'BACK TABLET',
+  id: 'hpi', name: 'H.E.L.P.I', rarity: 'uncommon', bonus: true, where: 'BACK TABLET',
   desc: 'The tablet on the back desk buzzes with a sum. Turn around, type the answer and press Enter before time runs out.',
   how: 'marked your answer wrong',
 };
 const TWOLF = {
-  id: 'twf', name: 'Twisted Wolf', rarity: 'uncommon', where: 'YARDS',
+  id: 'twf', name: 'Twisted Wolf', rarity: 'uncommon', bonus: true, where: 'YARDS',
   desc: 'Hard to see on the yard cameras, but he howls when he reaches a back window: turn around and flash that window.',
   how: 'came through the window',
 };
@@ -315,19 +316,20 @@ const DREADBEAR = {
   how: 'came through the window',
 };
 const TFOXY = {
-  id: 'tfx', name: 'Twisted Foxy', rarity: 'rare', where: 'YARDS',
+  id: 'tfx', name: 'Twisted Foxy', rarity: 'rare', bonus: true, where: 'YARDS',
   desc: 'Shows as a mound in the ground of one yard. When you hear digging he\'s gone from view: light THAT yard\'s camera. Lighting the other yard while he digs gets you.',
   how: 'dug his way in',
 };
 
 // Every character that can be picked, in roster order (grouped by rarity, the bonus ones last). The pick
 // screen offers only these.
-const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT, FCHICA, GFREDDY,
-  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET, BB, RBONNIE, NHELPY, HELPI, TWOLF,
-  WBONNIE, WFOXY, SPRING, NCHICA, BABY, MANGLE, NBB, DREADBEAR, TFOXY,
+const ROSTER = [FREDDY, BONNIE, CHICA, TBONNIE, TCHICA, PUPPET, NFREDDY, TRASH, LOLBIT, FCHICA,
+  FOXY, GOLDEN, TFREDDY, NBONNIE, BONNET, BB, RBONNIE,
+  WBONNIE, WFOXY, SPRING, NCHICA, BABY, MANGLE, NBB, DREADBEAR,
   SBONNIE, PLUSH, FFREDDY,
   WFREDDY, FFOXY, NFREDBEAR,
-  SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY, NSTAFFBOT, GRAVEWEED];
+  SALVAGE, WMCHICA, HANDUNIT, BOUNCEPOT, MUNCHIE, COOKIE, FENDO, PLUSHBABY, NSTAFFBOT, GRAVEWEED,
+  GFREDDY, NHELPY, HELPI, TWOLF, TFOXY];
 // Find a character by its id, for example byId('fre') is FREDDY.
 const byId = id => ROSTER.find(c => c.id === id);
 // The ones the controlled shock is for (it shows on nights with any of them): Springtrap and Circus Baby
