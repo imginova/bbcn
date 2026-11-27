@@ -200,12 +200,13 @@ function renderOffice(now) {
 function renderBack(now) {
   const g = backGrid();
   if (!G.powerOut) {
-    // The jars Cookie Freddy wants light up in his color; the ones you've taken already dim again.
+    // Only the jars you've already TAKEN for Cookie Freddy light up in his color, like on the old kitchen
+    // camera. (For a while the ones he wanted lit up as soon as he came, which gave the answer away: fixed on
+    // request.) What he wants is only on the floor, so you have to read it and find the jars yourself.
     const C = G.ckf;
-    for (const name of C.wants) {
+    for (const name of C.got) {
       const [r1, r2, c1, c2] = KITCHEN_JARS[name];
-      const cls = C.got.includes(name) ? 'dim' : 'c-ckf order';
-      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = cls;
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = 'c-ckf';
     }
     if (C.wants.length) {
       const left = C.wants.filter(n => !C.got.includes(n));
