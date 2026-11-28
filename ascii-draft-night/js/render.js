@@ -47,7 +47,10 @@ function renderGame(now) {
   viewH = $('viewport').clientHeight;
   // ----- HUD: clock, night and lives, power, heat, usage -----
   $('clock').textContent = clockLabel(G.t);
-  if (run) {
+  if (custom) {
+    $('nightLab').textContent = 'CUSTOM NIGHT';   // no run, no lives
+    $('hearts').textContent = '';
+  } else if (run) {
     $('nightLab').textContent = 'NIGHT ' + run.night;
     $('hearts').textContent = heartsText(run.lives);
   }
@@ -171,7 +174,7 @@ function renderGame(now) {
 // round again, so later picks paint over earlier ones. An empty lineup leaves the office all grey.
 function officePaints() {
   const paints = [];
-  if (run) charsOf(run.lineup).forEach((c, i) => { paints[i % OFFICE_PARTS.length] = RARITIES[c.rarity].cls; });
+  charsOf(nightLineup()).forEach((c, i) => { paints[i % OFFICE_PARTS.length] = RARITIES[c.rarity].cls; });
   return paints;
 }
 
@@ -181,7 +184,7 @@ function officePaints() {
 // Returns { room id: rarity class }, like { stage: 'r-common' }.
 function camPaints() {
   const paints = {};
-  if (run) charsOf(run.lineup).forEach((c, i) => { paints[CAM_ORDER[i % CAM_ORDER.length]] = RARITIES[c.rarity].cls; });
+  charsOf(nightLineup()).forEach((c, i) => { paints[CAM_ORDER[i % CAM_ORDER.length]] = RARITIES[c.rarity].cls; });
   return paints;
 }
 
@@ -210,15 +213,12 @@ function renderBack(now) {
   if (!G.powerOut) {
     // Only the jars you've already TAKEN for Cookie Freddy light up in his color, like on the old kitchen
     // camera. (For a while the ones he wanted lit up as soon as he came, which gave the answer away: fixed on
-    // request.) What he wants is only on the floor, so you have to read it and find the jars yourself.
+    // request.) What he wants is only written on the floor at the FRONT (on request, it isn't repeated
+    // back here), so you read it there, remember it, and find the jars yourself.
     const C = G.ckf;
     for (const name of C.got) {
       const [r1, r2, c1, c2] = KITCHEN_JARS[name];
       for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) if (g[r][c].ch !== ' ') g[r][c].cls = 'c-ckf';
-    }
-    if (C.wants.length) {
-      const left = C.wants.filter(n => !C.got.includes(n));
-      write(g, 15, 1, `COAT ME IN: ${left.join(' + ')}`.padEnd(42), 'c-ckf order');
     }
     // Dreadbear and Twisted Wolf at a back window. Dark out there: only their eyes show, unless the
     // flashlight is on that window (then all of them, glowing while it's on them).

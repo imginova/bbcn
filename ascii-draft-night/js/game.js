@@ -89,10 +89,15 @@ function clockLabel(t) {
   return `${h === 0 ? 12 : h}:${String(m).padStart(2, '0')} AM`;
 }
 
-// A random wait from a [lowest, highest] pair in config.js, like FREDDLE_WAIT.
-const waitFrom = range => rand(range[0], range[1]);
-// A timer for something that acts every `interval` seconds, give or take 30%, so it isn't too regular.
-const around = interval => interval * rand(0.7, 1.3);
+// How much longer the characters' waits are tonight: 1 normally; more on the very long nights (see
+// NIGHT_LENGTHS in config.js), so they come about as often over the night as in a 6-minute one. Set by
+// newGame from the night length setting, before it builds the night.
+let stretch = 1;
+// A random wait from a [lowest, highest] pair in config.js, like FREDDLE_WAIT (stretched on long nights).
+const waitFrom = range => rand(range[0], range[1]) * stretch;
+// A timer for something that acts every `interval` seconds, give or take 30%, so it isn't too regular
+// (stretched on long nights too).
+const around = interval => interval * rand(0.7, 1.3) * stretch;
 
 // A vent crawler's state: which vent it's in, its move timer, and (once it climbs in) whether it's in
 // your office and how long the mask has been on.
@@ -101,8 +106,17 @@ const crawler = c => ({ on: isOn(c), room: VENT_START, timer: around(c.interval)
 
 // Build a fresh night.
 function newGame() {
+  // The night length setting (run.js): how long an in-game hour lasts tonight, when 6 AM is, and how much
+  // longer the characters' waits are (this has to be set first: the timers below use it).
+  const secs = NIGHT_LENGTHS[nightLength].secs;
+  HOUR_SECONDS = secs / NIGHT_HOURS;
+  NIGHT_END = secs;
+  stretch = Math.max(1, secs / STRETCH_FROM);
   G = {
     t: 0,                          // seconds since 12 AM
+    // How fast the power drains and the heat rises compared with a 2-minute night: half as fast on a
+    // 4-minute night, twice as fast on a 1-minute one, so they last the same share of any night.
+    drainScale: BASE_NIGHT / secs,
     power: 100,                    // percent
     heat: HEAT_START,              // the office heat in percent (see updateHeat); 100 = you pass out
     hotWarns: 0,                   // how many of the HOT_WARN marks the heat is past (for the warning breaths)
@@ -263,13 +277,13 @@ function bouncer(on, speed, chargeTime, jump) {
 }
 // Showtimes land on a round time: a multiple of 10 in-game minutes (a sixth of an hour).
 const roundShow = t => Math.ceil(t / (HOUR_SECONDS / 6)) * (HOUR_SECONDS / 6);
-const NIGHT_END = HOUR_SECONDS * NIGHT_HOURS;
+let NIGHT_END = HOUR_SECONDS * NIGHT_HOURS;   // the end of the night (6 AM) in seconds: newGame sets it from the night length
 const otherSide = side => side === 'L' ? 'R' : 'L';
 
 // ---------- the main rule loop ----------
 function update(dt) {
   G.t += dt;
-  if (G.t >= HOUR_SECONDS * NIGHT_HOURS) return win();   // made it to 6 AM
+  if (G.t >= NIGHT_END) return win();   // made it to 6 AM
 
   updatePuppet(dt);   // the music box keeps unwinding even in a power-out
   if (G.over) return;
@@ -304,7 +318,7 @@ function update(dt) {
 const powerUnits = () => G.cam + G.doors.L + G.doors.R + flashOn() + G.fan;
 
 function updatePower(dt) {
-  G.power -= UNIT_DRAIN * powerUnits() * dt;
+  G.power -= UNIT_DRAIN * G.drainScale * powerUnits() * dt;   // drainScale: see newGame
   if (G.power <= 0) powerOutStart();
 }
 
@@ -314,7 +328,7 @@ function updatePower(dt) {
 // (to FAN_SLOW of it); if it reaches 100% while he's here, he gets the blame.
 function updateHeat(dt) {
   const endo = G.fen.present;
-  const rise = HEAT_RISE + (endo ? ENDO_HEAT : 0);
+  const rise = HEAT_RISE * G.drainScale + (endo ? ENDO_HEAT : 0);   // the normal rise scales with the night length
   if (!G.fan) G.heat += rise * dt;
   else if (endo) G.heat += rise * FAN_SLOW * dt;
   else G.heat = Math.max(0, G.heat - FAN_COOL * dt);
@@ -557,7 +571,7 @@ function updatePuppet(dt) {
     if (P.outTimer <= 0) lose(PUPPET);
     return;
   }
-  P.wind -= BOX_DRAIN * dt;
+  P.wind -= BOX_DRAIN * dt / stretch;   // the music box unwinds slower on the very long nights too
   if (P.wind < BOX_LOW) {
     P.warnT -= dt;
     if (P.warnT <= 0) { sfx.boxWarn(); P.warnT = 4; }
@@ -1155,7 +1169,7 @@ function updateWitheredFoxy(dt) {
 function wfoxyShutOut() {
   const X = G.wfx;
   X.phase = 'wait';
-  X.waitT = waitFrom(WFX_STOMP);
+  X.waitT = rand(...WFX_STOMP);   // (a wait in the middle of his routine: not stretched)
   sfx.bang();
   dirty = true;
 }
@@ -1811,7 +1825,7 @@ function updateEndo(dt) {
     E.timer -= dt;
     if (E.timer > 0) return;
     E.present = true;
-    E.until = G.t + waitFrom(ENDO_STAY);
+    E.until = G.t + rand(...ENDO_STAY);   // how long he stays: not stretched
     sfx.flameOn();
     dirty = true;
   } else if (G.t >= E.until) {
@@ -2124,7 +2138,7 @@ function updateTwistedFoxy(dt) {
     if (F.phase === 'away') {
       F.phase = 'mound';
       F.side = pick(['L', 'R']);
-      F.timer = waitFrom(TFOXY_MOUND);
+      F.timer = rand(...TFOXY_MOUND);   // how long the mound shows: not stretched
       sfx.moundUp();
     } else {
       F.phase = 'digging';

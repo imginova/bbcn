@@ -25,6 +25,13 @@ onClick('btnNewRun', pressNewRun);
 onClick('btnHowTitle', openHowto);
 onClick('btnEmblems', () => show('emblems'));
 onClick('btnEmblemsBack', () => show('title'));
+onClick('btnCustom', () => show('custom'));
+onClick('btnCustomStart', startCustom);
+onClick('btnCustomAll', () => customAll(true));
+onClick('btnCustomNone', () => customAll(false));
+onClick('btnCustomBack', () => show('title'));
+onClick('btnCustomWin', () => show('custom'));
+onClick('btnCustomLose', () => { hideScare(); show('custom'); });
 onClick('btnHowPick', openHowto);
 onClick('btnHowPause', openHowto);
 onClick('btnHowClose', closeHowto);
@@ -146,6 +153,21 @@ $('emblemGroups').addEventListener('pointerover', e => {
   if (who !== hoverEmblem) { hoverEmblem = who; renderEmblems(); }
 });
 $('emblemGroups').addEventListener('pointerleave', () => { hoverEmblem = null; renderEmblems(); });
+// The custom night menu: clicking a character switches it on or off; pointing at one shows how it works.
+$('customGroups').addEventListener('click', e => {
+  const card = e.target.closest('[data-id]');
+  if (!card) return;
+  sfx.init();
+  toggleCustom(card.dataset.id);
+});
+$('customGroups').addEventListener('pointerover', e => {
+  const card = e.target.closest('[data-id]');
+  const who = card ? card.dataset.id : null;
+  if (who !== hoverCustom) { hoverCustom = who; renderCustom(); }
+});
+$('customGroups').addEventListener('pointerleave', () => { hoverCustom = null; renderCustom(); });
+// The night length slider on the title screen ("input" fires while it's being dragged).
+$('nightLen').addEventListener('input', e => { sfx.init(); setNightLength(Number(e.target.value)); });
 // The same on the pause panel's cards.
 $('pauseRoster').addEventListener('pointerover', e => {
   const card = e.target.closest('[data-id]');
@@ -255,6 +277,9 @@ document.addEventListener('keydown', e => {
     else if (k === 'n') pressNewRun();
     else if (k === 'h') openHowto();
     else if (k === 'e') show('emblems');
+    else if (k === 'c') show('custom');
+    // L steps to the next night length (after 6 hours it goes back to 1 minute).
+    else if (k === 'l') setNightLength((nightLength + 1) % NIGHT_LENGTHS.length);
     // D steps to the next difficulty (after Nightmare it goes back to Easy).
     else if (k === 'd') setDifficulty(DIFF_ORDER[(DIFF_ORDER.indexOf(difficulty) + 1) % DIFF_ORDER.length]);
 
@@ -299,11 +324,16 @@ document.addEventListener('keydown', e => {
     else if (/^[0-9]$/.test(k) && !(G.cam && G.tab === 'vents')) setCam(CAM_ORDER[k === '0' ? 9 : Number(k) - 1]);
     else if (k === 'h') openHowto();
 
+  } else if (currentScreen === 'custom') {
+    if (k === 'Enter') { e.preventDefault(); startCustom(); }
+    else if (k === 'Escape') show('title');
+    else if (k === 'h') openHowto();
+
   } else if (currentScreen === 'emblems') {
     if (k === 'Escape' || k === 'Enter') { e.preventDefault(); show('title'); }
 
   } else if (currentScreen === 'win') {
-    if (k === 'Enter') { e.preventDefault(); lastWin && lastWin.result === 'won' ? newRun() : showPick(); }
+    if (k === 'Enter') { e.preventDefault(); lastWin && lastWin.result === 'custom' ? show('custom') : lastWin && lastWin.result === 'won' ? newRun() : showPick(); }
     else if (k === 'Escape') show('title');
   }
 });

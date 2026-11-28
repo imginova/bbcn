@@ -8,7 +8,7 @@
    element.hidden = true hides it, element.hidden = false shows it.
    ===================================================================== */
 
-let currentScreen = 'title';   // which screen is showing: 'title', 'pick', 'game', 'win' or 'emblems'
+let currentScreen = 'title';   // which screen is showing: 'title', 'pick', 'game', 'win', 'emblems' or 'custom'
 let scareTimer = 0;            // the timer that swaps the jumpscare for the Game Over text
 let confirmNew = false;        // "New run" was clicked once while a run is saved: the next click starts over
 let lastWin = null;            // what the last 6 AM screen was about ({ result: 'won' or 'next', ... })
@@ -19,10 +19,13 @@ function show(name) {
   // A button on the screen we're leaving may still have keyboard focus, even though it's hidden now.
   // Then Enter would go to that hidden button and do nothing, so let go of it.
   if (document.activeElement instanceof HTMLButtonElement) document.activeElement.blur();
-  for (const s of ['title', 'pick', 'game', 'win', 'emblems']) $('scr-' + s).hidden = s !== name;
+  for (const s of ['title', 'pick', 'game', 'win', 'emblems', 'custom']) $('scr-' + s).hidden = s !== name;
+  // Leaving a custom night for the menus: from here on, nights are the run's again (until the next one).
+  if (name === 'title' || name === 'pick' || name === 'custom') custom = null;
   if (name === 'title') renderTitle();
   if (name === 'pick') renderPick();
   if (name === 'emblems') renderEmblems();
+  if (name === 'custom') renderCustom();
   if (name === 'game') dirty = true;
 }
 
@@ -82,10 +85,29 @@ function renderTitle() {
     const mine = records.diffs[d];
     return `<span class="${DIFFICULTIES[d].cls}">${DIFFICULTIES[d].name}</span> <b>${mine.wins}</b> (fastest: ${mine.fastestWin} nights)`;
   });
-  $('recordLine').innerHTML = r.runs
+  $('recordLine').innerHTML = (r.runs
     ? `Runs: <b>${r.runs}</b> · won: <b>${r.wins}</b> · best night: <b>${r.bestNight}</b> · most points survived: <b>${r.bestPoints}</b>` +
       (wins.length ? `<br>Wins: ${wins.join(' · ')}` : '') + `<br>Emblems: <b>${emblemCount()}</b> of ${EMBLEM_TOTAL}`
-    : 'No runs yet.';
+    : 'No runs yet.') + (r.customBest ? `<br>Custom night best: <b>${r.customBest}</b> points survived` : '');
+  // The night length slider: its position and the length it stands for.
+  $('nightLen').value = nightLength;
+  $('lenText').textContent = NIGHT_LENGTHS[nightLength].label;
+}
+
+// ---------- the custom night menu ----------
+// Every character, grouped by rarity: the ones switched on are lit, the rest faded. Pointing at one shows
+// how it works. The status line says how many are on, what they're worth and your best.
+let hoverCustom = null;   // the id of the card the mouse is over
+function renderCustom() {
+  const on = customPick.filter(byId);
+  $('customStatus').innerHTML = `<b>${on.length}</b> on · worth <b>${pointsOfIds(on)}</b> points · night length <b>${NIGHT_LENGTHS[nightLength].label}</b>` +
+    (records.customBest ? ` · your best: <b>${records.customBest}</b> points survived` : '');
+  setHtml($('customGroups'), RARITY_ORDER.map(r =>
+    `<p class="lab ${RARITIES[r].cls}">${RARITIES[r].name}</p><div class="mini-roster">` +
+    ROSTER.filter(c => c.rarity === r).map(c => miniCard(c).replace('mini-card', `mini-card pickable${on.includes(c.id) ? ' on' : ''}`)).join('') +
+    '</div>').join(''));
+  const c = hoverCustom && byId(hoverCustom);
+  $('customWho').innerHTML = c ? whoHtml(c) : '<span class="dim">Click characters to switch them on or off. Point at one to see how it works.</span>';
 }
 // The "New run" button. With a run saved, the first click only asks ("This ends your run"), and a
 // second click starts over, so one stray click can't throw a run away.
@@ -145,7 +167,7 @@ function renderWho() {
 function showPause(visible) {
   $('pause').hidden = !visible;
   if (!visible || !run) return;
-  const on = charsOf(run.lineup);
+  const on = charsOf(nightLineup());
   $('pauseRoster').innerHTML = on.length ? on.map(miniCard).join('') : '<p class="dim">Nobody is on tonight.</p>';
   $('pauseInfo').innerHTML = on.length ? '<span class="dim">Point at someone to see how they work.</span>' : '';
 }
@@ -166,14 +188,25 @@ function quitNight() {
 function showScare(message, artHtml, outcome, shake) {
   const art = $('scareArt'), cover = $('scare');
   const R = outcome.run;
-  $('loseTitle').textContent = outcome.over ? 'RUN OVER' : 'CAUGHT';
-  $('loseMsg').innerHTML = message + (outcome.over
-    ? `<br><br>That was your last life. Your run ended on night ${R.night}, with a lineup worth ${pointsOfIds(R.lineup)} points.`
-    : `<br><br>You lost a life. Night ${R.night} starts again with the same lineup.`);
-  $('loseLives').textContent = heartsText(R.lives);
-  $('btnRetry').hidden = outcome.over;
-  $('btnRetry').innerHTML = `Retry night ${R.night} <kbd>Enter</kbd>`;
-  $('btnNewRunLose').hidden = !outcome.over;
+  $('btnCustomLose').hidden = !outcome.custom;
+  if (outcome.custom) {
+    // A custom night: no lives and no run to end. Try again, or go back and change who's on.
+    $('loseTitle').textContent = 'CAUGHT';
+    $('loseMsg').innerHTML = message + '<br><br>A custom night has no lives: try it again, or change who\'s on.';
+    $('loseLives').textContent = '';
+    $('btnRetry').hidden = false;
+    $('btnRetry').innerHTML = 'Retry custom night <kbd>Enter</kbd>';
+    $('btnNewRunLose').hidden = true;
+  } else {
+    $('loseTitle').textContent = outcome.over ? 'RUN OVER' : 'CAUGHT';
+    $('loseMsg').innerHTML = message + (outcome.over
+      ? `<br><br>That was your last life. Your run ended on night ${R.night}, with a lineup worth ${pointsOfIds(R.lineup)} points.`
+      : `<br><br>You lost a life. Night ${R.night} starts again with the same lineup.`);
+    $('loseLives').textContent = heartsText(R.lives);
+    $('btnRetry').hidden = outcome.over;
+    $('btnRetry').innerHTML = `Retry night ${R.night} <kbd>Enter</kbd>`;
+    $('btnNewRunLose').hidden = !outcome.over;
+  }
   art.innerHTML = artHtml;
   art.hidden = false;
   $('scareMsg').hidden = true;
@@ -199,6 +232,22 @@ function hideScare() {
 // `outcome` comes from nightSurvived() in run.js: { result: 'won' or 'next', run, points }.
 function showWin(outcome, powerLeft) {
   lastWin = outcome;
+  $('btnCustomWin').hidden = outcome.result !== 'custom';
+  if (outcome.result === 'custom') {
+    // A custom night: just how you did, and your best.
+    const ids = custom.ids;
+    $('winEyebrow').textContent = 'Custom night complete';
+    $('winBig').textContent = '6:00 AM';
+    $('winMsg').innerHTML = `You survived a custom night against ${ids.length} character${ids.length === 1 ? '' : 's'} worth ` +
+      `<b>${outcome.points}</b> points, with ${powerLeft}% power left.`;
+    setHtml($('winLineup'), charsOf(ids).map(miniCard).join(''));
+    $('winRecord').innerHTML = outcome.best ? '<b>Your best custom night yet.</b>' : '';
+    $('winEmblems').hidden = true;
+    $('btnNext').hidden = $('btnNewRunWin').hidden = true;
+    show('win');
+    $('btnCustomWin').focus({ preventScroll: true });
+    return;
+  }
   const R = outcome.run, won = outcome.result === 'won';
   const night = won ? R.night : R.night - 1;   // for 'next', run.night has already moved on
   const d = diffOf(R), D = DIFFICULTIES[d];
