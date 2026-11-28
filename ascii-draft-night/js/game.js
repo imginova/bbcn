@@ -1910,7 +1910,7 @@ function clickBack(r, c) {
   const H = G.hlp;
   if (H.present) {
     const [hr, hc] = HELPY_SPOT;
-    if (r >= hr - 0.8 && r <= hr + 3.8 && c >= hc - 0.8 && c <= hc + 9.8) {
+    if (r >= hr - 0.5 && r <= hr + HELPY_H - 0.5 && c >= hc - 0.5 && c <= hc + HELPY_W - 0.5) {   // anywhere on him
       H.clicks++;
       sfx.helpyHit(H.clicks / HELPY_CLICKS);
       if (H.clicks >= HELPY_CLICKS) { H.present = false; sfx.helpyOff(); earn(); }

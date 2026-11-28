@@ -233,6 +233,8 @@ function renderBack(now) {
     const screen = T.on && T.sum !== null ? `${T.sum} = ${T.typed}_` : T.on ? 'H.E.L.P.I' : '';
     write(g, ...TABLET_SCREEN, screen.padEnd(12).slice(0, 12),
       'c-hpi' + (T.sum !== null && T.deadline - G.t < 3 ? ' acc-red blink' : ''));
+    // H.E.L.P.I himself pops up beside his tablet while a sum is waiting for its answer.
+    if (T.on && T.sum !== null) sprite(g, ...HELPI_SPOT, SPRITES.hpi.peek, 'c-hpi');
     // Nightmare Helpy on the back desk, shaking more the more you've hit him.
     const H = G.hlp;
     if (H.present) sprite(g, ...HELPY_SPOT, SPRITES.hlp.office, 'c-hlp' + (H.clicks > HELPY_CLICKS / 2 ? ' wobble' : ''));
