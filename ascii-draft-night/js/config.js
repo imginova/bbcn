@@ -35,8 +35,25 @@ const DEFAULT_DIFF = 'normal';
 // ---------- the clock ----------
 // It was 30 seconds (3-minute nights) until the owner asked for shorter nights. Power drain and heat were
 // sped up to match (times 1.5), so they still last the same share of the night.
-const HOUR_SECONDS = 20;   // real seconds per in-game hour (a whole night lasts 2 minutes)
+// HOUR_SECONDS is `let` because the night length slider changes it: newGame (game.js) sets it to the chosen
+// night's length divided by NIGHT_HOURS. 20 (2-minute nights) is the default.
+let HOUR_SECONDS = 20;     // real seconds per in-game hour (a whole night lasts 2 minutes)
 const NIGHT_HOURS = 6;     // 12 AM to 6 AM
+
+// The night length slider on the title screen (on request, 2026-11-27), for runs and custom nights alike.
+// Each choice is a whole night in real seconds. The power drain and the heat's rise scale with it (their
+// numbers were made for BASE_NIGHT), so they last the same share of any night. Nights longer than
+// STRETCH_FROM also stretch the characters' waits to match (the owner chose "characters come less often"),
+// so a 1-hour or 6-hour night has about as many visits as a 6-minute one instead of nonstop attacks.
+const NIGHT_LENGTHS = [
+  { label: '1 min', secs: 60 }, { label: '2 min', secs: 120 }, { label: '3 min', secs: 180 },
+  { label: '4 min', secs: 240 }, { label: '4½ min (45-second hours)', secs: 270 },
+  { label: '5 min', secs: 300 }, { label: '6 min', secs: 360 },
+  { label: '1 hour', secs: 3600 }, { label: '6 hours', secs: 21600 },
+];
+const DEFAULT_LENGTH = 1;   // 2 minutes: what every night was before the slider
+const BASE_NIGHT = 120;     // the night length the power and heat numbers were made for
+const STRETCH_FROM = 360;   // longer nights than this stretch the characters' waits
 
 // ---------- power ----------
 // The monitor, each closed door, the flashlight and the fan each cost this much per second while

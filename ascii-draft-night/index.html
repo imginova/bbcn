@@ -20,13 +20,14 @@
   "charset utf-8" makes symbols like ♥ display correctly, and
   "viewport" makes it fit a phone screen.
 
-  The game has five screens, and only one is visible at a time
+  The game has six screens, and only one is visible at a time
   (the others carry the `hidden` attribute):
     #scr-title  title screen (start or continue a run)
     #scr-pick   the pick screen: take characters for your lineup
     #scr-game   the night itself (HUD, office or monitor, controls)
     #scr-win    6 AM: on to the next night, or the run is won
     #scr-emblems  every character's completion emblems (from the title)
+    #scr-custom  the custom night menu (from the title)
   plus #scare (jumpscare and game over) and #howto ("How to play"),
   which cover the whole window.
   =====================================================================
@@ -57,11 +58,17 @@
         <p class="lab" id="diffLab">Difficulty for a new run <kbd>D</kbd></p>
         <div class="diffs" id="diffs" role="group" aria-labelledby="diffLab"></div>
       </div>
+      <!-- The night length slider (for runs and custom nights): 9 lengths, from 1 minute to 6 hours. -->
+      <div class="len-pick">
+        <label class="lab" for="nightLen">Night length <kbd>L</kbd>: <b id="lenText">2 min</b></label>
+        <input type="range" id="nightLen" min="0" max="8" step="1" value="1">
+      </div>
       <div class="menu">
         <button id="btnContinue" type="button" class="primary" hidden>Continue run <kbd>Enter</kbd></button>
         <button id="btnNewRun" type="button">New run <kbd>N</kbd></button>
         <button id="btnHowTitle" type="button">How to play <kbd>H</kbd></button>
         <button id="btnEmblems" type="button">Emblems <kbd>E</kbd></button>
+        <button id="btnCustom" type="button">Custom night <kbd>C</kbd></button>
       </div>
       <!-- Your records over every run, filled by renderTitle() in screens.js. -->
       <p class="best" id="recordLine"></p>
@@ -233,6 +240,7 @@
         <button id="btnNext" type="button" class="primary">Pick characters <kbd>Enter</kbd></button>
         <button id="btnNewRunWin" type="button" class="primary">New run <kbd>Enter</kbd></button>
         <button id="btnTitleWin" type="button">Title</button>
+        <button id="btnCustomWin" type="button" class="primary" hidden>Custom night menu <kbd>Enter</kbd></button>
       </div>
     </section>
 
@@ -253,6 +261,23 @@
   </div>
 </div>
 
+    <!-- CUSTOM NIGHT: switch any characters on or off and play one night against them (no run, no lives) -->
+    <section id="scr-custom" class="pick" hidden>
+      <p class="eyebrow">Practice · no run, no lives</p>
+      <h2>CUSTOM NIGHT</h2>
+      <!-- How many are on, what they're worth and your best, filled by renderCustom() in screens.js. -->
+      <p class="run-status" id="customStatus"></p>
+      <!-- One group per rarity, filled by renderCustom(). -->
+      <div id="customGroups"></div>
+      <p class="who-box" id="customWho" aria-live="polite"></p>
+      <div class="setup-actions">
+        <button id="btnCustomStart" type="button" class="primary">Start night <kbd>Enter</kbd></button>
+        <button id="btnCustomAll" type="button">Everyone</button>
+        <button id="btnCustomNone" type="button">Nobody</button>
+        <button id="btnCustomBack" type="button">Title <kbd>Esc</kbd></button>
+      </div>
+    </section>
+
 <!-- JUMPSCARE / GAME OVER -->
 <div id="scare" hidden>
   <pre class="art" id="scareArt"></pre>
@@ -264,6 +289,7 @@
       <button id="btnRetry" type="button" class="primary">Retry night <kbd>Enter</kbd></button>
       <button id="btnNewRunLose" type="button" class="primary">New run <kbd>Enter</kbd></button>
       <button id="btnTitleLose" type="button">Title</button>
+      <button id="btnCustomLose" type="button" hidden>Custom night menu</button>
     </div>
   </div>
 </div>
@@ -280,10 +306,11 @@
       <li><b>Survive a night with a lineup worth the run's goal or more and you win the run.</b> The goal is set by the difficulty you pick on the title screen before a new run: Easy 100, Normal 150, Hard 250 or Nightmare 400 points.</li>
       <li>You have <b>3 lives</b>. Getting caught (or passing out from the heat) costs one, and you replay that night with the same lineup. Lose all three and the run is over.</li>
       <li><b>Completion emblems:</b> win a run, and everyone in your lineup earns a medal for that difficulty. Each character has four to collect (Easy, Normal, Hard, Nightmare): they show on the cards, and the title screen's <b>Emblems</b> button (E) lists them all.</li>
+      <li><b>Custom night</b> (C on the title screen): switch on anyone you like and play a single night against them. No lives and no run; it keeps its own best (the most points you've survived).</li>
     </ul>
     <p class="lab">The office</p>
     <ul>
-      <li>Survive from 12 AM to 6 AM. Each hour lasts 20 real seconds, so a night takes 2 minutes.</li>
+      <li>Survive from 12 AM to 6 AM. A night takes 2 minutes unless you change it with the <b>Night length</b> slider on the title screen (1 minute up to 6 hours). Power and heat last the same share of any night; on the 1-hour and 6-hour nights the characters also come less often.</li>
       <li>The monitor, each closed door, the flashlight and the fan each use the same amount of power. The mask and the audio lures are free. If the power runs out, everything shuts off and Freddy finds you in the dark.</li>
       <li>The office <b>heats up</b> all night. Switch the fan on to cool it down; at 100% you pass out.</li>
       <li>The flashlight lights up the area around your mouse pointer (hold F or the right mouse button). It works in the office, in the doorways (only while that door is open) and on the cameras.</li>

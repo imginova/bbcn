@@ -85,14 +85,62 @@ function setDifficulty(d) {
   renderTitle();
 }
 
+// The night length (an index into NIGHT_LENGTHS in config.js), picked with the slider on the title screen.
+// It's used by every night, in a run or a custom night. A saved value this version doesn't know is left
+// saved but not used.
+let nightLength = store.get('nightLength', DEFAULT_LENGTH);
+if (!NIGHT_LENGTHS[nightLength]) nightLength = DEFAULT_LENGTH;
+function setNightLength(i) {
+  if (!NIGHT_LENGTHS[i] || i === nightLength) return;
+  nightLength = i;
+  store.set('nightLength', i);
+  sfx.pickCard(true);
+  renderTitle();
+}
+
+// ---------- the custom night (on request, 2026-11-27) ----------
+// A single practice night against anyone you like: no run, no lives, no emblems. `custom` is the custom
+// night being played ({ ids }), or null when it's a run's night (or nothing). `customPick` is who's
+// switched on in the custom night menu, saved so it's there next time (ids this version doesn't know stay
+// saved). records.customBest (below) is the most points you've survived in one.
+let custom = null;
+let customPick = store.get('customPick', []) || [];
+function toggleCustom(id) {
+  customPick = customPick.includes(id) ? customPick.filter(x => x !== id) : [...customPick, id];
+  store.set('customPick', customPick);
+  sfx.pickCard(customPick.includes(id));
+  renderCustom();
+}
+// Switch everyone on (all = true) or off. Ids this version doesn't know are kept.
+function customAll(all) {
+  const known = ROSTER.map(c => c.id);
+  customPick = [...customPick.filter(id => !known.includes(id)), ...(all ? known : [])];
+  store.set('customPick', customPick);
+  sfx.pickCard(all);
+  renderCustom();
+}
+function startCustom() {
+  custom = { ids: customPick.filter(byId) };
+  startNight();
+}
+// The custom night reached 6 AM (nightSurvived passes it here): keep the best.
+function customSurvived() {
+  const points = pointsOfIds(custom.ids);
+  const best = points > (records.customBest || 0);
+  if (best) { records.customBest = points; saveRecords(); }
+  return { result: 'custom', points, best };
+}
+
 // The characters in a list of ids. An id this version of the game doesn't know (from a newer or
 // older version) is skipped here, but it stays in the saved run, so nothing is lost.
 const charsOf = ids => ids.map(byId).filter(Boolean);
 // How many points a list of ids is worth.
 const pointsOfIds = ids => charsOf(ids).reduce((total, c) => total + pointsOf(c), 0);
 
-// Everyone who'll be on tonight: the lineup, plus the cards picked on this pick screen.
-const tonightIds = () => run ? [...run.lineup, ...run.picked] : [];
+// Everyone who'll be on tonight: a custom night's picks, or the run's lineup plus the cards picked on this
+// pick screen. nightLineup is the same without the cards still being picked (the office's paint, the pause list).
+const tonightIds = () => custom ? custom.ids : run ? [...run.lineup, ...run.picked] : [];
+const nightLineup = () => custom ? custom.ids : run ? run.lineup : [];
 // Is character c on tonight? (game.js asks this for every character.)
 const isOn = c => tonightIds().includes(c.id);
 
@@ -124,6 +172,7 @@ function makeOffer(owned) {
 // ---------- the steps of a run ----------
 // Start a brand new run (throwing away the one in progress, if any).
 function newRun() {
+  custom = null;
   run = { night: 1, lives: LIVES, lineup: [], offer: makeOffer([]), picked: [], diff: difficulty };
   records.runs++;
   saveRecords();
@@ -143,6 +192,7 @@ function togglePick(id) {
 
 // "Start night": the picked cards join the lineup for good, and the night begins.
 function beginNight() {
+  custom = null;
   if (!run) return;
   run.lineup = [...run.lineup, ...run.picked];
   run.picked = [];
@@ -154,6 +204,7 @@ function beginNight() {
 // You made it to 6 AM (called by win() in game.js). Returns what happened, for the win screen:
 // 'won' (the whole run), or 'next' (on to the next pick screen).
 function nightSurvived() {
+  if (custom) return customSurvived();   // a custom night isn't part of a run
   const points = pointsOfIds(run.lineup);
   records.bestNight = Math.max(records.bestNight, run.night);
   records.bestPoints = Math.max(records.bestPoints, points);
@@ -182,6 +233,7 @@ function nightSurvived() {
 // You got caught (called by the lose functions in game.js). One life gone; at 0 the run is over.
 // Returns the run as it was (for the game over screen) and whether it's over.
 function nightLost() {
+  if (custom) return { over: false, custom: true };   // no lives on a custom night: just try again
   run.lives--;
   if (run.lives > 0) { saveRun(); return { over: false, run }; }
   const done = run;
