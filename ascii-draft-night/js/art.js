@@ -130,8 +130,8 @@ const ICONS = {
   fch: [' \\|/ ', '(o>o)', '$+$+$'],          // Funtime Chica: price tags
   gfr: [' [_] ', '(o o)', ' ~~~ '],          // Ghost Freddy: a see-through Freddy
   rsb: ['/\\ /\\', '(o o)', '==#=>'],        // Rockstar Bonnie: and his guitar
-  hlp: ['.-.-.', '(O O)', '\\VVV/'],          // Nightmare Helpy: a little bear with teeth
-  hpi: ['.---.', '|7+5|', "'---'"],          // H.E.L.P.I: the tablet with a sum on it
+  hlp: [' [=] ', '(@ @)', '(VVV)'],          // Nightmare Helpy: a top hat, red eyes, a mouth full of teeth
+  hpi: [' |=| ', '(#.o)', '[=H=]'],          // H.E.L.P.I: tall hat, a visor over one eye, his jumpsuit
   twf: ['/\\ /\\', '(o o)', '\\VVV/'],        // Twisted Wolf
   dbr: ['[===]', '(o o)', '-|=|-'],          // Dreadbear: bolts in his neck
   tfx: ['/\\ /\\', '(O O)', '_/:\\_'],        // Twisted Foxy: coming out of the ground
@@ -183,8 +183,8 @@ const ICON_ACCENTS = {
   fch: ['', ' pop', 'kkkkk'],             // Funtime Chica: pink eyes, an orange beak, gold price tags
   gfr: ['', ' w w', ' ccc'],              // Ghost Freddy: white eyes, a pale wisp
   rsb: ['', ' r r', 'vvkvv'],             // Rockstar Bonnie: red eyes, a purple guitar
-  hlp: ['', ' r r', ' www'],              // Nightmare Helpy: red eyes, white teeth
-  hpi: ['', ' ccc'],                      // H.E.L.P.I: the sum glows
+  hlp: [' xxx', 'vr rv', 'rwwwr'],        // Nightmare Helpy: black hat, red eyes, white teeth on red gums
+  hpi: [' bbb', ' o c', 'bbwbb'],         // H.E.L.P.I: blue hat, orange visor, blue eye, blue jumpsuit
   twf: ['', ' y y', ' www'],              // Twisted Wolf: yellow eyes, white teeth
   dbr: ['', ' g g', 'G   G'],             // Dreadbear: green eyes, grey bolts
   tfx: ['', ' y y', 'nnnnn'],             // Twisted Foxy: yellow eyes, brown earth
@@ -1743,8 +1743,9 @@ const BACK_WINDOWS = { L: [2, 1], R: [2, 36] };
 const BACK_WIN_W = 7, BACK_WIN_H = 3;
 // H.E.L.P.I's tablet on the back desk: its screen line ([row, column], 12 wide).
 const TABLET_SCREEN = [9, 16];
-// Where Nightmare Helpy sits on the back desk.
-const HELPY_SPOT = [8, 2];
+// Where Nightmare Helpy sits on the back desk, and where H.E.L.P.I pops up beside his tablet.
+const HELPY_SPOT = [7, 2];
+const HELPI_SPOT = [6, 31];
 
 // The back of the office as a grid. The window glass is dim, so it looks set back into the wall.
 function backGrid() {
@@ -1831,38 +1832,102 @@ SPRITES.gfr = {
 };
 tintBox(SPRITES.gfr.ghost, 1, 1, 0, 99, 'w', 'o');
 
-// Nightmare Helpy: a little torn-up bear with sharp teeth, sitting on the back desk.
+// Nightmare Helpy: redrawn on request (2026-11-27) from two pictures the owner shared, merged as asked. A
+// white-and-lavender Helpy (his own color, c-hlp) with round purple ears (O), a little black top hat, red
+// eyes under purple lids, pink cheeks (*), a purple snout, a huge mouth packed with sharp teeth on red gums,
+// a black bow tie, a purple belly with two buttons and long white claws. `office` is him sitting on the
+// back desk (HELPY_SPOT, HELPY_W x HELPY_H: clicks anywhere on him count).
 SPRITES.hlp = {
   office: art(String.raw`
- .-. .-.
-( O ' O )
- \VVVVV/
-  /| |\ `),
+    [=]
+(O).---.(O)
+ |(@) (@)|
+ |*\vvv/*|
+ |(^^^^^)|
+  '->o<-'`),
   scare: art(String.raw`
-    .--.        .--.
-   (    )______(    )
-    |   O      O   |
-    |    VVVVVV    |
-    |    AAAAAA    |
-     \____________/`),
+              ___
+             |###|
+         .---|###|---.
+   (O)  /             \  (O)
+     \ |   (@)   (@)   | /
+       | *    (o)    * |
+       |  /VVVVVVVVV\  |
+       | |VVVVVVVVVVV| |
+       | |AAAAAAAAAAA| |
+       |  \AAAAAAAAA/  |
+        \_____>o<_____/
+     ///      ( o )      \\\ `),
 };
-for (const d of [SPRITES.hlp.office, SPRITES.hlp.scare]) {
-  tintBox(d, 0, 99, 0, 99, 'r', 'O');
-  tintBox(d, 0, 99, 0, 99, 'w', 'VA');
-}
+// The colors, the same on both: black hat and bow tie, purple ears and snout, red eyes and gums, pink
+// cheeks, white teeth.
+tintBox(SPRITES.hlp.office, 0, 0, 0, 99, 'x');
+tintBox(SPRITES.hlp.office, 1, 1, 0, 99, 'v', 'O()');
+tintBox(SPRITES.hlp.office, 2, 2, 0, 99, 'r', '@');
+tintBox(SPRITES.hlp.office, 2, 2, 0, 99, 'v', '()');
+tintBox(SPRITES.hlp.office, 3, 3, 0, 99, 'p', '*');
+tintBox(SPRITES.hlp.office, 3, 4, 2, 8, 'r', '\\/()');
+tintBox(SPRITES.hlp.office, 3, 4, 0, 99, 'w', 'v^');
+tintBox(SPRITES.hlp.office, 5, 5, 0, 99, 'x', '>o<');
+tintBox(SPRITES.hlp.scare, 0, 2, 13, 17, 'x');
+tintBox(SPRITES.hlp.scare, 3, 3, 0, 99, 'v', 'O()');
+tintBox(SPRITES.hlp.scare, 4, 4, 0, 99, 'r', '@');
+tintBox(SPRITES.hlp.scare, 4, 4, 9, 21, 'v', '()');
+tintBox(SPRITES.hlp.scare, 5, 5, 0, 99, 'p', '*');
+tintBox(SPRITES.hlp.scare, 5, 5, 0, 99, 'v', '(o)');
+tintBox(SPRITES.hlp.scare, 6, 9, 0, 99, 'r', '/\\|');
+tintBox(SPRITES.hlp.scare, 6, 9, 0, 99, 'w', 'VA');
+tintBox(SPRITES.hlp.scare, 10, 10, 0, 99, 'x', '>o<');
+tintBox(SPRITES.hlp.scare, 11, 11, 13, 17, 'v');
+tintBox(SPRITES.hlp.scare, 11, 11, 0, 99, 'w', '/\\');
+const HELPY_W = 11, HELPY_H = 6;
 
-// H.E.L.P.I: the tablet's angry face when you got it wrong.
+// H.E.L.P.I: redrawn on request (2026-11-27) from the picture the owner shared. A purple Helpy (his own
+// color, c-hpi) in a blue work jumpsuit with a name tag (H), a tall blue-and-black top hat, gadgets on his
+// ears, an orange visor over one eye ([#]), a blue eye, pink cheeks, a big toothy grin and an orange phone.
+// `peek` is him popping up beside his tablet on the back desk while a sum is up (HELPI_SPOT); the
+// jumpscare is all of him, phone and all.
 SPRITES.hpi = {
+  peek: art(String.raw`
+   _|=|_
+ (O.---.O)
+ |[#] (o)|
+ |*\___/*|
+  [==H==]`),
   scare: art(String.raw`
-  .--------------------.
-  |  H . E . L . P . I |
-  |                    |
-  |       >:(          |
-  |   WRONG ANSWER!    |
-  |  X   X   X   X   X |
-  '--------------------'`),
+              _____
+             |=====|
+             |#####|
+       (O)___|_____|___(O)
+         @/             \@
+         |  [###]   (O)  |
+         |  [###]        |
+         | *   (===)   * |
+         |    \vvvvv/    |
+          \_____________/
+   .-.  ____|   [H]   |____
+   |#|=/    |  |   |  |
+   |#|      |__|___|__| `),
 };
-tintBox(SPRITES.hpi.scare, 3, 5, 0, 99, 'r', '>:(WRONGASWE!X');
+// Blue hat, ear gadgets and jumpsuit; orange visor and phone; a blue eye; pink cheeks; white teeth.
+tintBox(SPRITES.hpi.peek, 0, 0, 0, 99, 'b');
+tintBox(SPRITES.hpi.peek, 1, 1, 0, 99, 'c', 'O');
+tintBox(SPRITES.hpi.peek, 2, 2, 0, 99, 'o', '[#]');
+tintBox(SPRITES.hpi.peek, 2, 2, 5, 99, 'c', 'o');
+tintBox(SPRITES.hpi.peek, 3, 3, 0, 99, 'p', '*');
+tintBox(SPRITES.hpi.peek, 3, 3, 0, 99, 'w', '_');
+tintBox(SPRITES.hpi.peek, 4, 4, 0, 99, 'b');
+tintBox(SPRITES.hpi.peek, 4, 4, 0, 99, 'w', 'H');
+tintBox(SPRITES.hpi.scare, 0, 3, 12, 20, 'b');
+tintBox(SPRITES.hpi.scare, 1, 1, 12, 20, 'x', '=');
+tintBox(SPRITES.hpi.scare, 3, 4, 0, 99, 'c', 'O@');
+tintBox(SPRITES.hpi.scare, 5, 6, 0, 99, 'o', '[#]');
+tintBox(SPRITES.hpi.scare, 5, 5, 18, 22, 'c', 'O');
+tintBox(SPRITES.hpi.scare, 7, 7, 0, 99, 'p', '*');
+tintBox(SPRITES.hpi.scare, 8, 8, 0, 99, 'w', 'v');
+tintBox(SPRITES.hpi.scare, 10, 12, 8, 99, 'b');
+tintBox(SPRITES.hpi.scare, 10, 10, 0, 99, 'w', 'H');
+tintBox(SPRITES.hpi.scare, 10, 12, 0, 6, 'o');
 
 // Dreadbear and Twisted Wolf out in the yards: by the far gate (yard[0], just eyes), half way (yard[1])
 // and close (yard[2]); then at a back window (window, 7 wide and 3 tall) and their jumpscares.
