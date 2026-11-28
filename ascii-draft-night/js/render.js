@@ -15,6 +15,16 @@ function setHtml(el, html) {
   el.innerHTML = html;
 }
 
+// The view's size in pixels, measured once at the start of each redraw (renderGame), for placeOnView.
+let viewW = 0, viewH = 0;
+// Put something that floats over the view (Bounce pot, Grave weed, Munchie, Ghost Freddy) at x, y: fractions
+// of the view, 0 = left/top. It's moved with a CSS transform, not left/top: a transform just slides its
+// picture along, while left/top makes the browser lay out the whole page again, which made the game lag
+// (on request, 2026-11-27: "the game is a tad laggy").
+function placeOnView(el, x, y) { el.style.transform = `translate(${x * viewW}px, ${y * viewH}px)`; }
+// The flashlight's circle of light: its radius in pixels (style.css makes .beam twice this wide).
+const BEAM_R = 70;
+
 // A bar like [|||||.....] that is `filled` out of `total` long.
 const bar = (filled, total) => '[' + '|'.repeat(filled) + '.'.repeat(total - filled) + ']';
 
@@ -33,6 +43,8 @@ const VENT_TAGS = { tbn: 'TB', tch: 'TC' };
 
 // Draw everything on the game screen: HUD, then either the office or the monitor, then the buttons.
 function renderGame(now) {
+  viewW = $('viewport').clientWidth;
+  viewH = $('viewport').clientHeight;
   // ----- HUD: clock, night and lives, power, heat, usage -----
   $('clock').textContent = clockLabel(G.t);
   if (run) {
@@ -61,8 +73,7 @@ function renderGame(now) {
   // The flashlight: a soft circle of light around the pointer (its position comes from input.js).
   const beam = $('beam');
   beam.hidden = !flashOn() || !aim.where;
-  beam.style.setProperty('--x', aim.x + 'px');
-  beam.style.setProperty('--y', aim.y + 'px');
+  beam.style.transform = `translate(${aim.x - BEAM_R}px, ${aim.y - BEAM_R}px)`;   // see placeOnView below
   // Shadow Bonnie's darkness over the office, with a hole where the flashlight shines.
   const dark = $('darkShade');
   dark.hidden = !G.sbn.active || G.powerOut || G.cam;
@@ -88,8 +99,7 @@ function renderGame(now) {
     const charging = P.charge > 0;
     const look = !charging ? SPRITES[id].pot : P.charge > P.chargeTime / 2 ? SPRITES[id].squash : SPRITES[id].crouch;
     setHtml(el, drawingHtml(look, 'c-' + id));
-    el.style.left = P.x * 100 + '%';
-    el.style.top = P.y * 100 + '%';
+    placeOnView(el, P.x, P.y);
     el.classList.toggle('hit', G.t < P.safeUntil);
     el.classList.toggle('charging', charging);
   }
@@ -97,8 +107,7 @@ function renderGame(now) {
   mun.hidden = !G.mun.active;
   if (G.mun.active) {
     setHtml($('munchieArt'), drawingHtml(SPRITES.mun.grab, 'c-mun'));
-    mun.style.left = G.mun.x * 100 + '%';
-    mun.style.top = G.mun.y * 100 + '%';
+    placeOnView(mun, G.mun.x, G.mun.y);
     mun.classList.toggle('blink', G.mun.deadline - G.t < 3);
   }
   // Ghost Freddy drifting across (update 3.0), and the frozen pointer he leaves you with.
@@ -106,8 +115,7 @@ function renderGame(now) {
   ghost.hidden = !G.gfr.active || G.powerOut;
   if (!ghost.hidden) {
     setHtml(ghost, drawingHtml(SPRITES.gfr.ghost, 'c-gfr'));
-    ghost.style.left = G.gfr.x * 100 + '%';
-    ghost.style.top = G.gfr.y * 100 + '%';
+    placeOnView(ghost, G.gfr.x, G.gfr.y);
   }
   $('viewport').classList.toggle('frozen', ghostFrozen());
   for (const [id, n] of [['pbCornerL', 1], ['pbCornerR', 2]]) {

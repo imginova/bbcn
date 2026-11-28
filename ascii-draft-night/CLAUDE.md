@@ -153,6 +153,7 @@ The owner's list ("Update 3.0"), planned with the owner before building. Choices
 - `show()` and `hideScare()` blur the focused button: a hidden button that kept focus swallowed Enter (found in testing).
 - The game loop's `dt` is clamped at 0, or the first frame could show "-1:-1 AM".
 - The loop only runs during a night; don't add timers that run outside one.
+- **Keep it smooth** (on request, 2026-11-27: "the game is a tad laggy"; a redraw of a painted office took about 25 ms, more than a 60 fps frame): `toHtml` puts neighbouring cells of the same color in one `<span>` (a painted office went from about 800 elements to about 160); things floating over the view (Bounce pot, Grave weed, Munchie, Ghost Freddy) and the flashlight circle are moved with a CSS `transform` (`placeOnView`, `BEAM_R`), not `left`/`top`, so the page isn't laid out again every frame; and they, the beam and the monitor's scanlines have `will-change: transform` (their own layers). Bounce pot's charging shake uses `translate` so it adds to that transform. Afterwards a frame with things moving took about 4–6 ms. Don't go back to `left`/`top` for anything that moves every frame.
 
 ## Publishing (the private Artifact link)
 
