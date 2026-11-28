@@ -35,11 +35,23 @@ function grid(lines, w, cls = '') {
 const blank = (w, h) => Array.from({ length: h }, () => Array.from({ length: w }, () => ({ ch: ' ', cls: '' })));
 
 // Turn a grid back into HTML: colored cells become <span>s, rows are joined with line breaks.
+// Cells next to each other with the same color share ONE <span> (a "run"), so "|____|" in one color is
+// one element, not six. The picture looks exactly the same, but the browser has far fewer elements to
+// lay out and paint, which keeps the game smooth (on request: "the game is a tad laggy"; a painted office
+// went from about 800 elements to a few dozen).
 function toHtml(g) {
-  return g.map(row =>
-    row.map(c => c.cls ? `<span class="${c.cls}">${esc(c.ch)}</span>` : esc(c.ch)).join('')
-  ).join('\n');
+  return g.map(row => {
+    let html = '', text = '', cls = null;
+    for (const c of row) {
+      const k = c.cls || '';
+      if (k !== cls) { html += wrapRun(text, cls); text = ''; cls = k; }   // the color changed: close the run
+      text += esc(c.ch);
+    }
+    return html + wrapRun(text, cls);
+  }).join('\n');
 }
+// One run of same-colored text: in a <span> if it has a color, as plain text if not.
+const wrapRun = (text, cls) => !text ? '' : cls ? `<span class="${cls}">${text}</span>` : text;
 
 // Draw a drawing (a list of text lines) into grid g with its top-left corner at row r, column c,
 // in the CSS class `cls`. Spaces INSIDE a line (between its first and last real character) are

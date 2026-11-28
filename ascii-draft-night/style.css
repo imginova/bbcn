@@ -122,6 +122,7 @@ body {
 }
 /* The faint horizontal "scanlines" of an old monitor: a see-through stripe pattern laid on top. */
 .monitor::after {
+  will-change: transform;   /* its own layer, so the scanlines aren't repainted whenever something under them changes */
   content: "";
   position: absolute; inset: 0;
   pointer-events: none;
@@ -328,11 +329,13 @@ pre [class*="c-"] { font-weight: 600; }
 .office.dark { color: var(--faint); }
 .office.dark .door, .office.dark .dim, .office.dark .fan, .office.dark .glass, .office.dark .paint { color: #16181b; text-shadow: none; }
 
-/* The flashlight: a soft circle of light centred on the pointer (--x and --y, set by render.js).
+/* The flashlight: a soft circle of light centred on the pointer. It's a 140px circle that render.js slides
+   to the pointer with a transform (cheap: the browser just moves the picture of it, nothing is redrawn).
    radial-gradient draws a circle that's bright in the middle and fades out to nothing.
    pointer-events: none lets clicks pass straight through it. */
-.beam { position: absolute; inset: 0; pointer-events: none; z-index: 1; mix-blend-mode: screen;
-  background: radial-gradient(circle 70px at var(--x) var(--y), rgba(255,248,215,.32), rgba(255,248,215,.12) 60%, transparent 100%); }
+.beam { position: absolute; left: 0; top: 0; width: 140px; height: 140px; border-radius: 50%; pointer-events: none; z-index: 1;
+  mix-blend-mode: screen; will-change: transform;
+  background: radial-gradient(circle 70px at 50% 50%, rgba(255,248,215,.32), rgba(255,248,215,.12) 60%, transparent 100%); }
 /* The heat: a red glow rising from the bottom of the view. render.js sets its opacity (0 = invisible). */
 .heat-glow { position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0;
   background: radial-gradient(ellipse at 50% 100%, rgba(255,74,36,.55), rgba(255,74,36,.15) 60%, transparent 90%); }
@@ -484,16 +487,17 @@ pre [class*="c-"] { font-weight: 600; }
 /* Its text is drawn smaller (0.75) so the 6-row drawing takes up about the same space as the old 4-row one
    and its hit box stays fair (POT_W, POT_H in game.js). It says "pre.bouncepot", not just ".bouncepot",
    so it beats the "pre.art" size rule above (the more exact rule wins).  */
-pre.bouncepot { position: absolute; z-index: 6; pointer-events: none; font-size: calc(var(--art) * 0.75); line-height: 1.1; text-shadow: 0 0 6px rgba(201,216,74,.5); }
+pre.bouncepot { position: absolute; left: 0; top: 0; will-change: transform; z-index: 6; pointer-events: none; font-size: calc(var(--art) * 0.75); line-height: 1.1; text-shadow: 0 0 6px rgba(201,216,74,.5); }
 /* Grave weed uses the same rules, with a sickly purple glow. */
 pre#graveweed { text-shadow: 0 0 6px rgba(176,131,214,.55); }
 .bouncepot.hit { animation: blink .15s steps(2) infinite; }
 /* Charging up a bounce: a quick side-to-side shake. */
 .bouncepot.charging { animation: pot-shake .1s linear infinite; }
-@keyframes pot-shake { 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
+/* (It shakes with `translate`, not `transform`, which render.js uses to place it: the two add up.) */
+@keyframes pot-shake { 25% { translate: -1px 0; } 75% { translate: 1px 0; } }
 /* Munchie: clinging to the screen, over everything (even the mask), and it catches the mouse so you can
    grab it. touch-action: none lets a finger drag it on a phone. */
-.munchie { position: absolute; z-index: 7; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+.munchie { position: absolute; left: 0; top: 0; will-change: transform; z-index: 7; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   background: rgba(8,9,10,.6); padding: 4px; border: 1px dashed var(--c-mun); }
 .munchie:active { cursor: grabbing; }
 .munchie pre { font-size: calc(var(--art) * 1.5); text-shadow: 0 0 6px var(--c-mun); }
@@ -531,6 +535,6 @@ pre#graveweed { text-shadow: 0 0 6px rgba(176,131,214,.55); }
 .shop-pick .lab { width: 100%; margin: 0; }
 @media (max-width: 640px) { .shop-pane { grid-template-columns: 1fr; } .shop-pane #shopKeeper { grid-row: auto; } }
 /* Ghost Freddy: see-through, drifting over the view; clicks go straight through him. */
-pre.ghost { position: absolute; z-index: 6; pointer-events: none; opacity: .55; text-shadow: 0 0 10px #c8d8ff; }
+pre.ghost { position: absolute; left: 0; top: 0; will-change: transform; z-index: 6; pointer-events: none; opacity: .55; text-shadow: 0 0 10px #c8d8ff; }
 /* Your pointer, frozen by Ghost Freddy. */
 .viewport.frozen { cursor: not-allowed; }
